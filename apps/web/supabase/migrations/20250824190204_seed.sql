@@ -4,13 +4,13 @@ insert into public.roles (id, role_name)
 values (gen_random_uuid(), 'admin')
 on conflict (role_name) do nothing;
 
--- 🔹 Seed OpsKings Support user
+-- 🔹 Seed The Preferred Recruit Support user
 insert into public."user" (
   id, name, email, "emailVerified", banned, role, "createdAt", "updatedAt"
 ) values (
   gen_random_uuid()::text,
-  'OpsKings Support',
-  'support@opskings.com',
+  'The Preferred Recruit Support',
+  'support@thepreferredrecruit.com',
   true,
   false,
   'admin',
@@ -19,18 +19,18 @@ insert into public."user" (
 )
 on conflict (email) do nothing;
 
--- 🔹 Seed OpsKings Support as a team member
+-- 🔹 Seed The Preferred Recruit Support as a team member
 insert into public.team_members (id, first_name, last_name, email, user_id, created_at, updated_at)
 select
   gen_random_uuid(),
-  'OpsKings',
+  'The Preferred Recruit',
   'Support',
-  'support@opskings.com',
+  'support@thepreferredrecruit.com',
   u.id,
   current_timestamp,
   current_timestamp
 from public."user" u
-where u.email = 'support@opskings.com'
+where u.email = 'support@thepreferredrecruit.com'
 on conflict (email) do nothing;
 
 -- 🔹 Seed onboarding statuses

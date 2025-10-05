@@ -1,5 +1,5 @@
 export const siteConfig = {
-	name: "OpsKings Operating System",
+	name: "The Preferred Recruit Management Portal",
 	logo: {
 		// Path to your logo files (relative to public folder)
 		light: "/logo.png", // Light mode logo
@@ -20,7 +20,7 @@ export const siteConfig = {
 		},
 		slackChannel: {
 			id: "C05PW0FSW0M",
-			name: "automation-team"
+			name: "recruitment-team"
 		}
 
 	}

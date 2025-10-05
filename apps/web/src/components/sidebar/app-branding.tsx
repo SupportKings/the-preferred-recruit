@@ -9,17 +9,16 @@ import { siteConfig } from "@/siteConfig";
 
 export default function AppBranding() {
 	return (
-		<div className="flex items-center justify-between rounded-sm border bg-card p-2">
-			<div className="flex items-center gap-2">
+		<div className="flex items-center justify-center rounded-sm border bg-card p-2">
+			<div className="relative h-auto w-auto">
 				<Image
 					src={siteConfig.logo.src}
 					alt={`${siteConfig.name} logo`}
-					width={24}
-					height={24}
+					width={0}
+					height={0}
+					sizes="100vw"
+					className="h-auto w-auto"
 				/>
-				<span className="font-medium text-foreground text-sm">
-					{siteConfig.name}
-				</span>
 			</div>
 		</div>
 	);

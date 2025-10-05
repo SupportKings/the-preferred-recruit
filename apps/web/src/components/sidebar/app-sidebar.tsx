@@ -29,8 +29,10 @@ import {
 	Cog,
 	CreditCard,
 	DollarSign,
+	FileClipboard,
 	FileText,
 	FocusIcon,
+	GraduationCap,
 	GoalIcon,
 	InboxIcon,
 	MessageSquare,
@@ -41,6 +43,7 @@ import {
 	Star,
 	Tag,
 	Users,
+	UserCircle,
 } from "lucide-react";
 import AppBranding from "./app-branding";
 import { NavMain } from "./nav-main";
@@ -103,17 +106,47 @@ export function AppSidebar({
 		session.session.impersonatedBy !== null &&
 		session.session.impersonatedBy !== undefined;
 
-	// Navigation data with full structure
+	// Navigation data with full structure based on XML specification
 	const data = {
 		navMain: [
 			{
-				title: "Clients",
+				title: "Operations",
 				url: "#",
-				icon: Users,
+				icon: Activity,
 				items: [
 					{
-						title: "Clients",
-						url: "/dashboard/clients",
+						title: "Athletes",
+						url: "/dashboard/athletes",
+					},
+					{
+						title: "Athlete Applications",
+						url: "/dashboard/athlete-applications",
+					},
+				],
+			},
+			{
+				title: "Directory",
+				url: "#",
+				icon: GraduationCap,
+				items: [
+					{
+						title: "Universities",
+						url: "/dashboard/universities",
+					},
+					{
+						title: "Coaches",
+						url: "/dashboard/coaches",
+					},
+				],
+			},
+			{
+				title: "Business Admin",
+				url: "#",
+				icon: ShieldCheckIcon,
+				items: [
+					{
+						title: "Team Members",
+						url: "/dashboard/team-members",
 					},
 				],
 			},

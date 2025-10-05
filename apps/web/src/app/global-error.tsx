@@ -46,8 +46,8 @@ export default function GlobalError({
 							</div>
 							<CardTitle className="text-xl">Something went wrong!</CardTitle>
 							<CardDescription>
-								An unexpected error occurred. Please send this information to
-								OpsKings in Slack.
+								An unexpected error occurred. Please send this information to The
+								Preferred Recruit team in Slack.
 							</CardDescription>
 						</CardHeader>
 						<CardContent className="space-y-4">
@@ -96,8 +96,8 @@ export default function GlobalError({
 							</div>
 
 							<p className="text-center text-muted-foreground text-xs">
-								Please send this information to OpsKings in Slack and we'll get
-								to it as soon as possible.
+								Please send this information to The Preferred Recruit team in
+								Slack and we'll get to it as soon as possible.
 							</p>
 						</CardContent>
 					</Card>
