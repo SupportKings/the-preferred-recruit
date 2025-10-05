@@ -14,9 +14,8 @@ export default function AppBranding() {
 				<Image
 					src={siteConfig.logo.src}
 					alt={`${siteConfig.name} logo`}
-					width={0}
+					width={120}
 					height={0}
-					sizes="100vw"
 					className="h-auto w-auto"
 				/>
 			</div>
