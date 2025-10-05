@@ -1,0 +1,108 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+
+import { actionClient } from "@/lib/safe-action";
+
+import { createClient } from "@/utils/supabase/server";
+
+import {
+	clientCreateSchema,
+	formatValidationError,
+} from "@/features/clients/types/client";
+
+import { getUser } from "@/queries/getUser";
+
+import { returnValidationErrors } from "next-safe-action";
+
+export const createClientAction = actionClient
+	.inputSchema(clientCreateSchema)
+	.action(async ({ parsedInput }) => {
+		const {
+			client_name,
+			email,
+			first_name,
+			last_name,
+			billing_status_id,
+			onboarding_status_id,
+		} = parsedInput;
+
+		try {
+			const supabase = await createClient();
+			const user = await getUser();
+
+			if (!user) {
+				return returnValidationErrors(clientCreateSchema, {
+					_errors: ["Authentication required. Please sign in."],
+				});
+			}
+
+			// 1. Check if client with this email already exists
+			const { data: existingClient } = await supabase
+				.from("clients")
+				.select("id")
+				.eq("email", email)
+				.single();
+
+			if (existingClient) {
+				return returnValidationErrors(clientCreateSchema, {
+					email: {
+						_errors: ["Client with this email already exists"],
+					},
+				});
+			}
+
+			// 2. Create the client record
+			const { data: newClient, error: clientError } = await supabase
+				.from("clients")
+				.insert({
+					client_name,
+					email,
+					first_name,
+					last_name,
+					billing_status_id: billing_status_id || null,
+					onboarding_status_id: onboarding_status_id || null,
+				})
+				.select()
+				.single();
+
+			if (clientError) {
+				console.error("Error creating client:", clientError);
+				return returnValidationErrors(clientCreateSchema, {
+					_errors: ["Failed to create client. Please try again."],
+				});
+			}
+
+			if (!newClient) {
+				return returnValidationErrors(clientCreateSchema, {
+					_errors: ["Client creation failed. Please try again."],
+				});
+			}
+
+			// 3. Revalidate relevant paths
+			revalidatePath("/dashboard/clients");
+			revalidatePath("/dashboard");
+
+			return {
+				success: true,
+				data: {
+					success: "Client created successfully",
+					client: {
+						id: newClient.id,
+						client_name: newClient.client_name,
+						first_name: newClient.first_name,
+						last_name: newClient.last_name,
+						email: newClient.email,
+						billing_status_id: newClient.billing_status_id,
+						onboarding_status_id: newClient.onboarding_status_id,
+					},
+				},
+			};
+		} catch (error) {
+			console.error("Unexpected error in createClient:", error);
+
+			return returnValidationErrors(clientCreateSchema, {
+				_errors: ["Failed to create client. Please try again."],
+			});
+		}
+	});

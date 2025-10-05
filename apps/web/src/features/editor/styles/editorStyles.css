@@ -1,0 +1,285 @@
+/* Basic editor styles */
+.tiptap {
+	outline: none !important;
+	border: none !important;
+
+	:first-child {
+		margin-top: 0;
+	}
+
+	/* List styles */
+	ul {
+		padding: 0 1rem !important;
+		margin: 1.25rem 1rem 1.25rem 0.4rem !important;
+		list-style-type: disc !important;
+
+		li p {
+			margin-top: 0.25em !important;
+			margin-bottom: 0.25em !important;
+		}
+	}
+
+	ol {
+		padding: 0 1rem !important;
+		margin: 1.25rem 1rem 1.25rem 0.4rem !important;
+		list-style-type: decimal !important;
+
+		li p {
+			margin-top: 0.25em !important;
+			margin-bottom: 0.25em !important;
+		}
+	}
+
+	/* Heading styles */
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		line-height: 1.1 !important;
+		margin-top: 1.5rem !important;
+		margin-bottom: 1.5rem !important;
+		text-wrap: pretty;
+	}
+
+	h1 {
+		font-size: 1.4rem !important;
+	}
+
+	h2 {
+		font-size: 1.2rem !important;
+	}
+
+	h3 {
+		font-size: 1.1rem !important;
+	}
+
+	h4,
+	h5,
+	h6 {
+		font-size: 1rem !important;
+	}
+
+	/* Code and preformatted text styles */
+	code {
+		background-color: rgba(157, 138, 255, 0.1);
+		border-radius: 0.4rem;
+		color: var(--black);
+		font-size: 0.85rem;
+		padding: 0.25em 0.3em;
+	}
+
+	pre {
+		background: var(--black);
+		border-radius: 0.5rem;
+		color: var(--white);
+		font-family: "JetBrainsMono", monospace;
+		margin: 1.5rem 0;
+		padding: 0.75rem 1rem;
+
+		code {
+			background: none;
+			color: inherit;
+			font-size: 0.8rem;
+			padding: 0;
+		}
+	}
+
+	mark {
+		background-color: #faf594;
+		border-radius: 0.4rem;
+		box-decoration-break: clone;
+		padding: 0.1rem 0.3rem;
+	}
+
+	blockquote {
+		border-left: 3px solid var(--gray-3);
+		margin: 1.5rem 0;
+		padding-left: 1rem;
+	}
+
+	hr {
+		border: none;
+		border-top: 1px solid var(--gray-2);
+		margin: 2rem 0;
+	}
+
+	/* Placeholder styles */
+	p.is-editor-empty:first-child::before {
+		color: var(--placeholder);
+		content: attr(data-placeholder);
+		float: left;
+		height: 0;
+		pointer-events: none;
+	}
+
+	/* Additional text styles */
+	.heading-node {
+		@apply relative font-semibold;
+	}
+
+	.heading-node:first-child {
+		@apply mt-0;
+	}
+
+	h1 {
+		@apply mb-6 mt-6 text-[1.375rem] leading-7 tracking-[-0.004375rem];
+	}
+
+	h2 {
+		@apply mb-6 mt-6 text-[1.1875rem] leading-7 tracking-[0.003125rem];
+	}
+
+	h3 {
+		@apply mb-6 mt-6 text-[1.0625rem] leading-6 tracking-[0.00625rem];
+	}
+
+	h4 {
+		@apply mb-6 mt-6 text-[0.9375rem] leading-6;
+	}
+
+	h5 {
+		@apply mb-6 mt-6 text-sm;
+	}
+
+	h6 {
+		@apply mb-6 mt-6 text-sm;
+	}
+
+	/* Link styles */
+	a {
+		@apply cursor-pointer text-primary underline;
+	}
+
+	a:hover {
+		@apply underline decoration-2;
+	}
+
+	a.link {
+		@apply cursor-pointer text-primary underline;
+	}
+
+	a.link:hover {
+		@apply underline decoration-2;
+	}
+
+	/* Enhanced list styles */
+	ol {
+		@apply list-decimal;
+	}
+
+	ol ol {
+		list-style: lower-alpha;
+	}
+
+	ol ol ol {
+		list-style: lower-roman;
+	}
+
+	ul {
+		list-style: disc;
+	}
+
+	ul ul {
+		list-style: circle;
+	}
+
+	ul ul ul {
+		list-style: square;
+	}
+
+	/* General text and layout styles */
+	@apply flex max-w-full cursor-text flex-col;
+	@apply z-0 outline-0;
+	word-break: break-word;
+	font-size: 15px !important;
+
+	> div.editor {
+		@apply block flex-1 whitespace-pre-wrap;
+	}
+
+	.block-node:not(:last-child),
+	.list-node:not(:last-child),
+	.text-node:not(:last-child) {
+		@apply mb-2.5;
+	}
+
+	ol,
+	ul {
+		@apply pl-6;
+	}
+
+	blockquote,
+	dl,
+	ol,
+	p,
+	pre,
+	ul {
+		@apply m-0;
+	}
+
+	li {
+		@apply leading-7;
+	}
+
+	p {
+		@apply break-words;
+		font-size: 15px !important;
+	}
+
+	li .text-node:has(+ .list-node),
+	li > .list-node,
+	li > .text-node,
+	li p {
+		@apply mb-0;
+	}
+
+	blockquote {
+		@apply relative pl-3.5;
+	}
+
+	blockquote::before,
+	blockquote.is-empty::before {
+		@apply bg-accent-foreground/15 absolute top-0 bottom-0 left-0 h-full w-1 rounded-sm content-[''];
+	}
+
+	hr {
+		@apply my-3 h-0.5 w-full border-none bg-[var(--mt-hr)];
+	}
+
+	&.ProseMirror-focused hr.ProseMirror-selectednode {
+		@apply rounded-full outline outline-2 outline-offset-1 outline-muted-foreground;
+	}
+
+	.ProseMirror-gapcursor {
+		@apply pointer-events-none absolute hidden;
+	}
+
+	.ProseMirror-hideselection {
+		@apply caret-transparent;
+	}
+
+	&.resize-cursor {
+		@apply cursor-col-resize;
+	}
+
+	.selection {
+		@apply inline-block;
+	}
+
+	s span {
+		@apply line-through;
+	}
+
+	.selection,
+	*::selection,
+	::selection {
+		@apply bg-primary/25;
+	}
+
+	/* Override native selection when custom selection is present */
+	.selection::selection {
+		background: transparent;
+	}
+}
