@@ -7,7 +7,7 @@ export async function getClient(id: string) {
 		const supabase = await createClient();
 
 		// Fetch client with related data
-		const { data: client, error } = await (supabase as any)
+		const { data: client, error } = await supabase
 			.from("clients")
 			.select(`
 				*,
@@ -33,7 +33,7 @@ export async function getAllClients() {
 	try {
 		const supabase = await createClient();
 
-		const { data: clients, error } = await (supabase as any)
+		const { data: clients, error } = await supabase
 			.from("clients")
 			.select(`
 				*,
@@ -162,7 +162,7 @@ export async function getClientsWithFaceted(
 		// Fetch faceted counts for each column in parallel
 		await Promise.all(
 			facetedColumns.map(async (columnId) => {
-				let facetQuery = (supabase as any)
+				let facetQuery = supabase
 					.from("clients")
 					.select(columnId, { count: "exact" });
 
@@ -263,7 +263,7 @@ export async function getClientsFaceted(columnId: string, filters: any[] = []) {
 	try {
 		const supabase = await createClient();
 
-		let query = (supabase as any).from("clients").select(columnId, { count: "exact" });
+		let query = supabase.from("clients").select(columnId, { count: "exact" });
 
 		// Apply existing filters (excluding the column we're faceting)
 		filters
@@ -370,7 +370,7 @@ export async function getBillingStatuses() {
 	try {
 		const supabase = await createClient();
 
-		const { data: statuses, error } = await (supabase as any)
+		const { data: statuses, error } = await supabase
 			.from("billing_status")
 			.select("id, status_name")
 			.order("status_name");
@@ -392,7 +392,7 @@ export async function getOnboardingStatuses() {
 	try {
 		const supabase = await createClient();
 
-		const { data: statuses, error } = await (supabase as any)
+		const { data: statuses, error } = await supabase
 			.from("onboarding_status")
 			.select("id, status_name")
 			.order("status_name");

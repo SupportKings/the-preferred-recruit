@@ -29,7 +29,6 @@ import {
 	Cog,
 	CreditCard,
 	DollarSign,
-	FileClipboard,
 	FileText,
 	FocusIcon,
 	GraduationCap,

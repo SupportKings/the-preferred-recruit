@@ -260,7 +260,7 @@ function ClientsTableContent({
 				.icon(TagIcon)
 				.build(),
 			options:
-				billingStatuses?.map((status: any) => ({
+				billingStatuses?.map((status) => ({
 					value: status.id,
 					label: status.status_name,
 				})) || [],
@@ -272,7 +272,7 @@ function ClientsTableContent({
 				.icon(TagIcon)
 				.build(),
 			options:
-				onboardingStatuses?.map((status: any) => ({
+				onboardingStatuses?.map((status) => ({
 					value: status.id,
 					label: status.status_name,
 				})) || [],

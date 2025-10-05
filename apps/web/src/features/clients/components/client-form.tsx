@@ -329,7 +329,7 @@ export default function ClientForm({
 									</SelectTrigger>
 									<SelectContent>
 										<SelectItem value="none">No status</SelectItem>
-										{billingStatuses.map((status) => (
+										{billingStatuses.map((status: any) => (
 											<SelectItem key={status.id} value={status.id}>
 												{status.status_name}
 											</SelectItem>
@@ -359,7 +359,7 @@ export default function ClientForm({
 									</SelectTrigger>
 									<SelectContent>
 										<SelectItem value="none">No status</SelectItem>
-										{onboardingStatuses.map((status) => (
+										{onboardingStatuses.map((status: any) => (
 											<SelectItem key={status.id} value={status.id}>
 												{status.status_name}
 											</SelectItem>
