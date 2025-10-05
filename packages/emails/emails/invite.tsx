@@ -86,7 +86,7 @@ export const InviteEmail = ({
 
 InviteEmail.PreviewProps = {
 	inviteUrl: "https://example.com/invite?token=abc123",
-	companyName: "OpsKingsTemplate",
+	companyName: "The Preferred Recruit",
 	inviterName: "John Doe",
 	inviterEmail: "john.doe@example.com",
 	role: "Coach",

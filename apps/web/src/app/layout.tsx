@@ -15,8 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-	title: "OpsKings",
-	description: "OpsOS Template",
+	title: "The Preferred Recruit Management Portal",
+	description:
+		"Management portal for The Preferred Recruit. Our protocol equips athletes with essential skills and guarantees communication with D1 athletes and their coaches.",
 };
 
 export default function RootLayout({

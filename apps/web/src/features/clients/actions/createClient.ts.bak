@@ -60,7 +60,7 @@ export const createClientAction = actionClient
 				onboarding_status_id: onboarding_status_id || null,
 			};
 
-			const { data: newClient, error: clientError } = await (supabase as any)
+			const { data: newClient, error: clientError } = await supabase
 				.from("clients")
 				.insert(clientData)
 				.select()

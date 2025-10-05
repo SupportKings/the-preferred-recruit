@@ -40,10 +40,24 @@ async function HomeAsync() {
 			<MainLayout headers={[<DashboardHeader key="dashboard-header" />]}>
 				<div className="space-y-6 p-6">
 					<div className="space-y-2">
-						<h1 className="text-3xl">Welcome to OpsKings Operating System</h1>
+						<h1 className="text-3xl">
+							Welcome to The Preferred Recruit Management Portal
+						</h1>
 						<p className="text-lg text-muted-foreground">
-							Welcome Aboard! As our relation goes by, you will see your
-							dedicated OS starting to get populated with features.
+							This management portal helps you track athletes, manage
+							applications, and coordinate with universities and coaches.
+						</p>
+					</div>
+
+					<div className="space-y-4 rounded-lg border bg-card p-6">
+						<h2 className="text-xl">About The Preferred Recruit</h2>
+						<p className="text-base text-muted-foreground">
+							The Preferred Recruit Protocol Equips Our Athletes With Essential
+							Skills and Guarantees Communication With D1 Athletes and their
+							Coaches. We specialize in personalized recruitment strategies that
+							get athletes noticed and connected with college programs. With a
+							focus on results, we ensure that our athletes receive the exposure
+							and support needed to secure their place on a college team.
 						</p>
 					</div>
 
@@ -71,7 +85,7 @@ async function HomeAsync() {
 									Slack Channel
 								</span>
 								<a
-									href={`https://opskings.slack.com/archives/${siteConfig.contact.slackChannel.id}`}
+									href={`https://thepreferredrecruit.slack.com/archives/${siteConfig.contact.slackChannel.id}`}
 									target="_blank"
 									rel="noopener noreferrer"
 									className="text-blue-600 text-sm hover:text-blue-800"
@@ -87,13 +101,12 @@ async function HomeAsync() {
 
 						<div className="space-y-3">
 							<p className="text-muted-foreground">
-								Ready to begin? Start by adding your first client to the system.
+								Ready to begin? Start managing your athletes and building
+								connections with college programs.
 							</p>
 
 							<Button asChild>
-								<Link href="/dashboard/clients/">
-									Review and Add Your First Client
-								</Link>
+								<Link href="/dashboard/athletes/">Manage Athletes</Link>
 							</Button>
 						</div>
 					</div>
