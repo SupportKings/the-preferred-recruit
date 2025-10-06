@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import MainLayout from "@/components/layout/main-layout";
 
+import AthletesContent from "@/features/athletes/components/athletes-content";
 import AthletesHeader from "@/features/athletes/layout/athletes-header";
 
 import { getUser } from "@/queries/getUser";
@@ -32,24 +33,16 @@ async function AthletesPageAsync() {
 		redirect("/");
 	}
 
+	// TODO: Add data prefetching here when implementing actual queries
+	// await Promise.all([
+	//   queryClient.prefetchQuery(athletesQueries.query1()),
+	//   queryClient.prefetchQuery(athletesQueries.query2()),
+	// ]);
+
 	return (
 		<HydrationBoundary state={dehydrate(queryClient)}>
 			<MainLayout headers={[<AthletesHeader key="athletes-header" />]}>
-				<div className="space-y-6 p-6">
-					<div className="space-y-2">
-						<h1 className="text-3xl">Athletes</h1>
-						<p className="text-lg text-muted-foreground">
-							Manage and track athlete profiles and progress.
-						</p>
-					</div>
-
-					<div className="space-y-4 rounded-lg border bg-card p-6">
-						<h2 className="text-xl">Coming Soon</h2>
-						<p className="text-muted-foreground">
-							Athletes management features will be available here.
-						</p>
-					</div>
-				</div>
+				<AthletesContent />
 			</MainLayout>
 		</HydrationBoundary>
 	);

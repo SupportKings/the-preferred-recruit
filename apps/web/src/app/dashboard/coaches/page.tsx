@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 
 import MainLayout from "@/components/layout/main-layout";
 
+import CoachesContent from "@/features/coaches/components/coaches-content";
 import CoachesHeader from "@/features/coaches/layout/coaches-header";
 
 import { getUser } from "@/queries/getUser";
@@ -32,24 +33,16 @@ async function CoachesPageAsync() {
 		redirect("/");
 	}
 
+	// TODO: Add data prefetching here when implementing actual queries
+	// await Promise.all([
+	//   queryClient.prefetchQuery(coachesQueries.query1()),
+	//   queryClient.prefetchQuery(coachesQueries.query2()),
+	// ]);
+
 	return (
 		<HydrationBoundary state={dehydrate(queryClient)}>
 			<MainLayout headers={[<CoachesHeader key="coaches-header" />]}>
-				<div className="space-y-6 p-6">
-					<div className="space-y-2">
-						<h1 className="text-3xl">Coaches</h1>
-						<p className="text-lg text-muted-foreground">
-							Manage coach profiles and connections.
-						</p>
-					</div>
-
-					<div className="space-y-4 rounded-lg border bg-card p-6">
-						<h2 className="text-xl">Coming Soon</h2>
-						<p className="text-muted-foreground">
-							Coach directory features will be available here.
-						</p>
-					</div>
-				</div>
+				<CoachesContent />
 			</MainLayout>
 		</HydrationBoundary>
 	);
