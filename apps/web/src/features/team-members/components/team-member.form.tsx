@@ -47,11 +47,6 @@ export function TeamMemberForm({
 				} else {
 					router.push("/dashboard/team-members");
 				}
-			} else if (result.data?.validationErrors) {
-				const errors = getAllValidationErrors(result.data.validationErrors);
-				for (const error of errors) {
-					toast.error(error);
-				}
 			} else if (result.data?.error) {
 				toast.error(result.data.error);
 			}
@@ -61,7 +56,7 @@ export function TeamMemberForm({
 		},
 	});
 
-	const form = useForm<TeamMemberFormInput>({
+	const form = useForm({
 		defaultValues: {
 			name: initialData?.name || "",
 			job_title: initialData?.job_title || "",

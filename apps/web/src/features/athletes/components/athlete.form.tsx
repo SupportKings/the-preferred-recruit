@@ -91,7 +91,7 @@ export function AthleteForm({
 		},
 	});
 
-	const form = useForm<AthleteFormInput>({
+	const form = useForm({
 		defaultValues: {
 			full_name: initialData?.full_name || "",
 			contact_email: initialData?.contact_email || "",

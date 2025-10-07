@@ -131,16 +131,17 @@ const athleteTableColumns = [
 			<div className="text-sm">{row.getValue("high_school") || "-"}</div>
 		),
 	}),
-	columnHelper.accessor("gpa", {
-		id: "gpa",
-		header: "GPA",
-		enableColumnFilter: true,
-		enableSorting: true,
-		cell: ({ row }) => {
-			const gpa = row.getValue<number>("gpa");
-			return <div className="text-sm">{gpa?.toFixed(2) || "-"}</div>;
-		},
-	}),
+	// TODO: Uncomment after adding gpa column to database and regenerating types
+	// columnHelper.accessor("gpa", {
+	// 	id: "gpa",
+	// 	header: "GPA",
+	// 	enableColumnFilter: true,
+	// 	enableSorting: true,
+	// 	cell: ({ row }) => {
+	// 		const gpa = row.getValue<number>("gpa");
+	// 		return <div className="text-sm">{gpa?.toFixed(2) || "-"}</div>;
+	// 	},
+	// }),
 	columnHelper.accessor("sat_score", {
 		id: "sat_score",
 		header: "SAT",
@@ -199,13 +200,14 @@ const athleteFilterConfig = [
 		.displayName("High School")
 		.icon(SchoolIcon)
 		.build(),
-	universalColumnHelper
-		.number("gpa")
-		.displayName("GPA")
-		.icon(GraduationCapIcon)
-		.min(0)
-		.max(5)
-		.build(),
+	// TODO: Uncomment after adding gpa column to database and regenerating types
+	// universalColumnHelper
+	// 	.number("gpa")
+	// 	.displayName("GPA")
+	// 	.icon(GraduationCapIcon)
+	// 	.min(0)
+	// 	.max(5)
+	// 	.build(),
 	universalColumnHelper
 		.number("sat_score")
 		.displayName("SAT")
