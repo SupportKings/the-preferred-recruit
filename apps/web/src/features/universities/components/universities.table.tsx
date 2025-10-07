@@ -129,7 +129,7 @@ const universityTableColumns = [
 		cell: ({ row }) => {
 			const blocked = row.getValue<boolean>("email_blocked");
 			return (
-				<StatusBadge variant={blocked ? "destructive" : "success"}>
+				<StatusBadge colorScheme={blocked ? "red" : "green"}>
 					{blocked ? "Blocked" : "Active"}
 				</StatusBadge>
 			);

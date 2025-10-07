@@ -54,7 +54,7 @@ export async function getCoachesWithFilters(
 	try {
 		const supabase = await createClient();
 
-		let query = supabase.from("coaches").select("*", { count: "exact" });
+		let query: any = supabase.from("coaches").select("*", { count: "exact" });
 
 		// Apply filters with proper operator support
 		filters.forEach((filter) => {
@@ -140,7 +140,7 @@ export async function getCoachesWithFaceted(
 		// Fetch faceted counts for each column in parallel
 		await Promise.all(
 			facetedColumns.map(async (columnId) => {
-				let facetQuery = supabase
+				let facetQuery: any = supabase
 					.from("coaches")
 					.select(columnId, { count: "exact" });
 
@@ -231,7 +231,7 @@ export async function getCoachesFaceted(columnId: string, filters: any[] = []) {
 	try {
 		const supabase = await createClient();
 
-		let query = supabase
+		let query: any = supabase
 			.from("coaches")
 			.select(columnId, { count: "exact" });
 

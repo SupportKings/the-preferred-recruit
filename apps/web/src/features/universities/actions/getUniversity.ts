@@ -54,7 +54,9 @@ export async function getUniversitiesWithFilters(
 	try {
 		const supabase = await createClient();
 
-		let query = supabase.from("universities").select("*", { count: "exact" });
+		let query: any = supabase
+			.from("universities")
+			.select("*", { count: "exact" });
 
 		// Apply filters with proper operator support
 		filters.forEach((filter) => {
@@ -155,7 +157,7 @@ export async function getUniversitiesWithFaceted(
 		// Fetch faceted counts for each column in parallel
 		await Promise.all(
 			facetedColumns.map(async (columnId) => {
-				let facetQuery = supabase
+				let facetQuery: any = supabase
 					.from("universities")
 					.select(columnId, { count: "exact" });
 
@@ -279,7 +281,7 @@ export async function getUniversitiesFaceted(
 	try {
 		const supabase = await createClient();
 
-		let query = supabase
+		let query: any = supabase
 			.from("universities")
 			.select(columnId, { count: "exact" });
 
