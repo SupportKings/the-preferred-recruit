@@ -1,13 +1,10 @@
 import { Suspense } from "react";
 
-import { redirect } from "next/navigation";
-
 import MainLayout from "@/components/layout/main-layout";
 
+import { prefetchUniversitiesWithFacetedServer } from "@/features/universities/actions/getUniversity";
 import UniversitiesContent from "@/features/universities/components/universities-content";
 import UniversitiesHeader from "@/features/universities/layout/universities-header";
-
-import { getUser } from "@/queries/getUser";
 
 import {
 	dehydrate,
@@ -27,17 +24,36 @@ export default function UniversitiesPage() {
 async function UniversitiesPageAsync() {
 	const queryClient = new QueryClient();
 
-	const session = await getUser();
+	// Default filters for initial load
+	const defaultFilters: any[] = [];
+	const defaultSorting: any[] = [];
 
-	if (!session) {
-		redirect("/");
-	}
+	// Create query keys directly (matching client-side keys)
+	const facetedColumns = ["state", "type_public_private", "email_blocked"];
+	const combinedDataKey = [
+		"universities",
+		"list",
+		"tableWithFaceted",
+		defaultFilters,
+		0,
+		25,
+		defaultSorting,
+		facetedColumns,
+	];
 
-	// TODO: Add data prefetching here when implementing actual queries
-	// await Promise.all([
-	//   queryClient.prefetchQuery(universitiesQueries.query1()),
-	//   queryClient.prefetchQuery(universitiesQueries.query2()),
-	// ]);
+	// Prefetch optimized combined data using server-side functions
+	await queryClient.prefetchQuery({
+		queryKey: combinedDataKey,
+		queryFn: () =>
+			prefetchUniversitiesWithFacetedServer(
+				defaultFilters,
+				0,
+				25,
+				defaultSorting,
+				facetedColumns,
+			),
+		staleTime: 2 * 60 * 1000,
+	});
 
 	return (
 		<HydrationBoundary state={dehydrate(queryClient)}>

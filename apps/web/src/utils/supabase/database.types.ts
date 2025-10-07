@@ -270,6 +270,7 @@ export type Database = {
           gender: Database["public"]["Enums"]["athlete_gender_enum"] | null
           go_live_date: string | null
           google_drive_folder_url: string | null
+          gpa: number | null
           graduation_year: number | null
           high_school: string | null
           id: string
@@ -313,9 +314,10 @@ export type Database = {
           gender?: Database["public"]["Enums"]["athlete_gender_enum"] | null
           go_live_date?: string | null
           google_drive_folder_url?: string | null
+          gpa?: number | null
           graduation_year?: number | null
           high_school?: string | null
-          id: string
+          id?: string
           initial_cash_collected_usd?: number | null
           initial_contract_amount_usd?: number | null
           initial_payment_type?:
@@ -356,6 +358,7 @@ export type Database = {
           gender?: Database["public"]["Enums"]["athlete_gender_enum"] | null
           go_live_date?: string | null
           google_drive_folder_url?: string | null
+          gpa?: number | null
           graduation_year?: number | null
           high_school?: string | null
           id?: string
@@ -2185,7 +2188,7 @@ export type Database = {
           deleted_by?: string | null
           email?: string | null
           first_name?: string | null
-          id: string
+          id?: string
           internal_notes?: string | null
           is_active?: boolean | null
           is_deleted?: boolean | null
