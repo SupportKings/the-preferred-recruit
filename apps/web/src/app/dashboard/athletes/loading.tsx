@@ -1,7 +1,7 @@
 import MainLayout from "@/components/layout/main-layout";
 import { Skeleton } from "@/components/ui/skeleton";
 
-import AthletesHeader from "@/features/athletes/layout/athletes-header";
+import AthletesHeader from "@/features/athletes/layout/athletes.header";
 
 export default function AthletesLoading() {
 	return (

@@ -1,13 +1,10 @@
 import { Suspense } from "react";
 
-import { redirect } from "next/navigation";
-
 import MainLayout from "@/components/layout/main-layout";
 
-import AthletesContent from "@/features/athletes/components/athletes-content";
-import AthletesHeader from "@/features/athletes/layout/athletes-header";
-
-import { getUser } from "@/queries/getUser";
+import { prefetchAthletesWithFacetedServer } from "@/features/athletes/actions/getAthletes";
+import AthletesContent from "@/features/athletes/components/athletes.content";
+import AthletesHeader from "@/features/athletes/layout/athletes.header";
 
 import {
 	dehydrate,
@@ -27,17 +24,39 @@ export default function AthletesPage() {
 async function AthletesPageAsync() {
 	const queryClient = new QueryClient();
 
-	const session = await getUser();
+	// Default filters for initial load
+	const defaultFilters: any[] = [];
+	const defaultSorting: any[] = [];
 
-	if (!session) {
-		redirect("/");
-	}
+	// Create query keys directly (matching client-side keys)
+	const facetedColumns: string[] = [];
+	const combinedDataKey = [
+		"athletes",
+		"list",
+		"tableWithFaceted",
+		defaultFilters,
+		0,
+		25,
+		defaultSorting,
+		facetedColumns,
+	];
 
-	// TODO: Add data prefetching here when implementing actual queries
-	// await Promise.all([
-	//   queryClient.prefetchQuery(athletesQueries.query1()),
-	//   queryClient.prefetchQuery(athletesQueries.query2()),
-	// ]);
+	// Prefetch optimized combined data
+	await Promise.all([
+		// Prefetch combined athletes + faceted data (single optimized call)
+		queryClient.prefetchQuery({
+			queryKey: combinedDataKey,
+			queryFn: () =>
+				prefetchAthletesWithFacetedServer(
+					defaultFilters,
+					0,
+					25,
+					defaultSorting,
+					facetedColumns,
+				),
+			staleTime: 2 * 60 * 1000,
+		}),
+	]);
 
 	return (
 		<HydrationBoundary state={dehydrate(queryClient)}>
