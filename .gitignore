@@ -1,2 +1,25 @@
 node_modules
 .turbo
+
+# Build outputs
+apps/server/server
+apps/server/server.exe
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# OS files
+.DS_Store
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea
