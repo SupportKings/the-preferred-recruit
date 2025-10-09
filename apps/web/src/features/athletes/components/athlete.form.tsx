@@ -14,6 +14,7 @@ import {
 	CommandItem,
 	CommandList,
 } from "@/components/ui/command";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -293,12 +294,11 @@ export function AthleteForm({
 						{(field) => (
 							<div className="space-y-2">
 								<Label htmlFor="date_of_birth">Date of Birth</Label>
-								<Input
+								<DatePicker
 									id="date_of_birth"
-									type="date"
 									value={field.state.value}
-									onChange={(e) => field.handleChange(e.target.value)}
-									onBlur={field.handleBlur}
+									onChange={(value) => field.handleChange(value)}
+									placeholder="Select date of birth"
 								/>
 							</div>
 						)}
@@ -502,12 +502,11 @@ export function AthleteForm({
 						{(field) => (
 							<div className="space-y-2">
 								<Label htmlFor="contract_date">Contract Date</Label>
-								<Input
+								<DatePicker
 									id="contract_date"
-									type="date"
 									value={field.state.value}
-									onChange={(e) => field.handleChange(e.target.value)}
-									onBlur={field.handleBlur}
+									onChange={(value) => field.handleChange(value)}
+									placeholder="Select contract date"
 								/>
 							</div>
 						)}
@@ -517,12 +516,11 @@ export function AthleteForm({
 						{(field) => (
 							<div className="space-y-2">
 								<Label htmlFor="go_live_date">Go Live Date</Label>
-								<Input
+								<DatePicker
 									id="go_live_date"
-									type="date"
 									value={field.state.value}
-									onChange={(e) => field.handleChange(e.target.value)}
-									onBlur={field.handleBlur}
+									onChange={(value) => field.handleChange(value)}
+									placeholder="Select go-live date"
 								/>
 							</div>
 						)}
@@ -673,12 +671,11 @@ export function AthleteForm({
 						{(field) => (
 							<div className="space-y-2">
 								<Label htmlFor="last_sales_call_at">Last Sales Call</Label>
-								<Input
+								<DatePicker
 									id="last_sales_call_at"
-									type="date"
 									value={field.state.value}
-									onChange={(e) => field.handleChange(e.target.value)}
-									onBlur={field.handleBlur}
+									onChange={(value) => field.handleChange(value)}
+									placeholder="Select last sales call date"
 								/>
 							</div>
 						)}

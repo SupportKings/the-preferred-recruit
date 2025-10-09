@@ -33,11 +33,67 @@ async function AthleteApplicationsPageAsync() {
 		redirect("/");
 	}
 
-	// TODO: Add data prefetching here when implementing actual queries
-	// await Promise.all([
-	//   queryClient.prefetchQuery(athleteApplicationsQueries.query1()),
-	//   queryClient.prefetchQuery(athleteApplicationsQueries.query2()),
-	// ]);
+	const {
+		getAthletes,
+		getPrograms,
+		getUniversities,
+		prefetchApplicationsWithFacetedServer,
+	} = await import("@/features/athlete-applications/actions/getApplications");
+
+	// Default filters for initial load
+	const defaultFilters: any[] = [];
+	const defaultSorting: any[] = [];
+
+	// Create query keys directly (matching client-side keys)
+	const facetedColumns = ["athlete_id", "university_id", "program_id", "stage"];
+	const combinedDataKey = [
+		"applications",
+		"list",
+		"tableWithFaceted",
+		defaultFilters,
+		0,
+		25,
+		defaultSorting,
+		facetedColumns,
+	];
+	const athletesKey = ["athletes"];
+	const universitiesKey = ["universities"];
+	const programsKey = ["programs"];
+
+	// Prefetch optimized combined data and reference data using server-side functions
+	await Promise.all([
+		// Prefetch combined applications + faceted data (single optimized call)
+		queryClient.prefetchQuery({
+			queryKey: combinedDataKey,
+			queryFn: () =>
+				prefetchApplicationsWithFacetedServer(
+					defaultFilters,
+					0,
+					25,
+					defaultSorting,
+					facetedColumns,
+				),
+			staleTime: 2 * 60 * 1000,
+		}),
+		// Prefetch athletes for filter options
+		queryClient.prefetchQuery({
+			queryKey: athletesKey,
+			queryFn: () => getAthletes(),
+			staleTime: 10 * 60 * 1000,
+		}),
+		// Prefetch universities for filter options
+		queryClient.prefetchQuery({
+			queryKey: universitiesKey,
+			queryFn: () => getUniversities(),
+			staleTime: 10 * 60 * 1000,
+		}),
+		// Prefetch programs for filter options
+		queryClient.prefetchQuery({
+			queryKey: programsKey,
+			queryFn: () => getPrograms(),
+			staleTime: 10 * 60 * 1000,
+		}),
+	]);
 
 	return (
 		<HydrationBoundary state={dehydrate(queryClient)}>

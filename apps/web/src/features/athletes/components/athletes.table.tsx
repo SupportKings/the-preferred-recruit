@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 
+import { useRouter } from "next/navigation";
+
 import type { Database } from "@/utils/supabase/database.types";
 
 import { DataTableFilter } from "@/components/data-table-filter";
@@ -68,7 +70,12 @@ const athleteTableColumns = [
 		enableColumnFilter: true,
 		enableSorting: true,
 		cell: ({ row }) => (
-			<div className="font-medium">{row.getValue("full_name")}</div>
+			<a
+				href={`/dashboard/athletes/${row.original.id}`}
+				className="font-medium text-primary hover:underline"
+			>
+				{row.getValue("full_name")}
+			</a>
 		),
 	}),
 	columnHelper.accessor("graduation_year", {
@@ -231,7 +238,7 @@ function AthletesTableContent({
 	filters: any;
 	setFilters: any;
 }) {
-	const queryClient = useQueryClient();
+	const router = useRouter();
 	const [currentPage, setCurrentPage] = useState(0);
 	const [sorting, setSorting] = useState<any[]>([]);
 
@@ -267,16 +274,14 @@ function AthletesTableContent({
 			label: "View Details",
 			icon: EyeIcon,
 			onClick: (athlete: AthleteRow) => {
-				// Placeholder for view details
-				console.log("View athlete:", athlete.id);
+				router.push(`/dashboard/athletes/${athlete.id}`);
 			},
 		},
 		{
 			label: "Edit",
 			icon: EditIcon,
 			onClick: (athlete: AthleteRow) => {
-				// Placeholder for edit
-				console.log("Edit athlete:", athlete.id);
+				router.push(`/dashboard/athletes/${athlete.id}`);
 			},
 		},
 		{
@@ -284,7 +289,7 @@ function AthletesTableContent({
 			icon: TrashIcon,
 			variant: "destructive" as const,
 			onClick: (athlete: AthleteRow) => {
-				// Placeholder for delete
+				// TODO: Implement delete confirmation modal
 				console.log("Delete athlete:", athlete.id);
 			},
 		},

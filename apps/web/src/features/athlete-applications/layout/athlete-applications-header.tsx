@@ -1,4 +1,9 @@
+import Link from "next/link";
+
+import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+
+import { FileTextIcon } from "lucide-react";
 
 export default function AthleteApplicationsHeader() {
 	return (
@@ -7,6 +12,15 @@ export default function AthleteApplicationsHeader() {
 				<SidebarTrigger />
 				<h1 className="font-medium text-[13px]">Athlete Applications</h1>
 			</div>
+			<Button asChild>
+				<Link
+					href="/dashboard/athlete-applications/applications/add"
+					className="flex items-center"
+				>
+					<FileTextIcon className="mr-[6px] h-4 w-4" />
+					Add Application
+				</Link>
+			</Button>
 		</div>
 	);
 }

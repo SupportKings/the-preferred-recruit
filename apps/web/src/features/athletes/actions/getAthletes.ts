@@ -8,8 +8,119 @@ export async function getAthlete(id: string) {
 
 		const { data: athlete, error } = await (supabase as any)
 			.from("athletes")
-			.select("*")
+			.select(
+				`
+				*,
+				sales_setter:team_members!athletes_sales_setter_id_fkey(id, first_name, last_name, job_title),
+				sales_closer:team_members!athletes_sales_closer_id_fkey(id, first_name, last_name, job_title),
+				sending_email:email_sending_accounts!athletes_sending_email_id_fkey(id, username, domain:domains(domain_url)),
+				checklists(
+					id,
+					checklist_definition_id,
+					internal_notes,
+					checklist_items(
+						id,
+						checklist_id,
+						template_item_id,
+						title,
+						description,
+						sort_order,
+						required,
+						is_applicable,
+						blocked_reason,
+						is_done,
+						done_at,
+						done_by_team_member_id,
+						internal_notes
+					)
+				),
+				contact_athletes(
+					id,
+					contact_id,
+					relationship,
+					is_primary,
+					start_date,
+					end_date,
+					internal_notes,
+					contact:contacts(id, full_name, email, phone, preferred_contact_method)
+				),
+				athlete_results(
+					id,
+					event_id,
+					performance_mark,
+					date_recorded,
+					location,
+					hand_timed,
+					wind,
+					altitude,
+					organized_event,
+					internal_notes,
+					event:events(id, code, name, event_group, units)
+				),
+				athlete_applications(
+					id,
+					university_id,
+					program_id,
+					stage,
+					start_date,
+					offer_date,
+					commitment_date,
+					origin_lead_list_id,
+					origin_lead_list_priority,
+					origin_campaign_id,
+					last_interaction_at,
+					scholarship_amount_per_year,
+					scholarship_percent,
+					offer_notes,
+					internal_notes,
+					university:universities(id, name, city, region, acceptance_rate_pct),
+					program:programs(id, gender, team_url, team_instagram),
+					origin_lead_list:school_lead_lists(id, name, priority, season_label),
+					origin_campaign:campaigns(id, name, type, status)
+				),
+				school_lead_lists(
+					id,
+					name,
+					priority,
+					type,
+					season_label,
+					internal_notes
+				),
+				campaigns(
+					id,
+					name,
+					type,
+					primary_lead_list_id,
+					seed_campaign_id,
+					status,
+					start_date,
+					end_date,
+					daily_send_cap,
+					leads_total,
+					leads_loaded,
+					leads_remaining,
+					sending_tool_campaign_url,
+					internal_notes,
+					primary_lead_list:school_lead_lists(id, name, priority),
+					seed_campaign:campaigns(id, name, type)
+				),
+				replies(
+					id,
+					type,
+					occurred_at,
+					summary,
+					application_id,
+					university_job_id,
+					campaign_id,
+					internal_notes,
+					application:athlete_applications(id, stage, last_interaction_at),
+					university_job:university_jobs(id, job_title, work_email, program_scope),
+					campaign:campaigns(id, name, status)
+				)
+			`,
+			)
 			.eq("id", id)
+			.eq("is_deleted", false)
 			.single();
 
 		if (error) {

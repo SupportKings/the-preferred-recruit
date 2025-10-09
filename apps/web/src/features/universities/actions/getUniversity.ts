@@ -8,7 +8,128 @@ export async function getUniversity(id: string) {
 
 		const { data: university, error } = await supabase
 			.from("universities")
-			.select("*")
+			.select(
+				`
+				*,
+				programs (
+					id,
+					gender,
+					team_url,
+					team_instagram,
+					team_twitter,
+					internal_notes
+				),
+				university_jobs (
+					id,
+					job_title,
+					work_email,
+					work_phone,
+					start_date,
+					end_date,
+					program_scope,
+					internal_notes,
+					coach_id,
+					program_id,
+					coaches (
+						id,
+						full_name,
+						email,
+						primary_specialty
+					),
+					programs (
+						id,
+						gender,
+						team_url
+					)
+				),
+				athlete_applications (
+					id,
+					start_date,
+					offer_date,
+					commitment_date,
+					scholarship_amount_per_year,
+					scholarship_percent,
+					stage,
+					internal_notes,
+					athlete_id,
+					program_id,
+					athletes (
+						id,
+						full_name,
+						contact_email
+					),
+					programs (
+						id,
+						gender,
+						team_url
+					)
+				),
+				school_lead_list_entries (
+					id,
+					status,
+					added_at,
+					internal_notes,
+					school_lead_list_id,
+					program_id,
+					school_lead_lists (
+						id,
+						name,
+						priority
+					),
+					programs (
+						id,
+						gender,
+						team_url
+					)
+				),
+				campaign_leads (
+					id,
+					status,
+					first_reply_at,
+					internal_notes,
+					campaign_id,
+					program_id,
+					university_job_id,
+					campaigns (
+						id,
+						name,
+						type
+					),
+					programs (
+						id,
+						gender,
+						team_url
+					),
+					university_jobs (
+						id,
+						job_title,
+						work_email
+					)
+				),
+				ball_knowledge (
+					id,
+					note,
+					source_type,
+					internal_notes,
+					about_coach_id,
+					about_program_id,
+					from_athlete_id,
+					coaches!ball_knowledge_about_coach_id_fkey (
+						id,
+						full_name,
+						primary_specialty
+					),
+					programs (
+						id,
+						gender
+					),
+					athletes (
+						id,
+						full_name
+					)
+				)
+			`,
+			)
 			.eq("id", id)
 			.single();
 

@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react";
 
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+
 import type { Database } from "@/utils/supabase/database.types";
 
 import { DataTableFilter } from "@/components/data-table-filter";
@@ -29,7 +32,6 @@ import {
 	PlusIcon,
 	TrashIcon,
 } from "lucide-react";
-import Link from "next/link";
 import { useUniversitiesWithFaceted } from "../queries/useUniversities";
 
 type UniversityRow = Database["public"]["Tables"]["universities"]["Row"];
@@ -66,7 +68,12 @@ const universityTableColumns = [
 		enableColumnFilter: true,
 		enableSorting: true,
 		cell: ({ row }) => (
-			<div className="font-medium">{row.getValue("name")}</div>
+			<Link
+				href={`/dashboard/universities/${row.original.id}`}
+				className="font-medium  "
+			>
+				{row.getValue("name")}
+			</Link>
 		),
 	}),
 	columnHelper.accessor("city", {
@@ -185,6 +192,7 @@ function UniversitiesTableContent({
 	filters: any;
 	setFilters: any;
 }) {
+	const router = useRouter();
 	const [currentPage, setCurrentPage] = useState(0);
 	const [sorting, setSorting] = useState<any[]>([]);
 
@@ -293,16 +301,14 @@ function UniversitiesTableContent({
 			label: "View Details",
 			icon: EyeIcon,
 			onClick: (university: UniversityRow) => {
-				// Placeholder - implement navigation
-				console.log("View university:", university.id);
+				router.push(`/dashboard/universities/${university.id}`);
 			},
 		},
 		{
 			label: "Edit",
 			icon: EditIcon,
 			onClick: (university: UniversityRow) => {
-				// Placeholder - implement navigation
-				console.log("Edit university:", university.id);
+				router.push(`/dashboard/universities/${university.id}`);
 			},
 		},
 		{
@@ -386,7 +392,10 @@ function UniversitiesTableContent({
 					emptyStateMessage="No universities found matching your filters"
 					emptyStateAction={
 						<Button asChild>
-							<Link href="/dashboard/universities/add" className="flex items-center">
+							<Link
+								href="/dashboard/universities/add"
+								className="flex items-center"
+							>
 								<PlusIcon className="h-4 w-4" />
 								Add University
 							</Link>

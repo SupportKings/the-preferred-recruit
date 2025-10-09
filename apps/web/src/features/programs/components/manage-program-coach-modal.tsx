@@ -1,0 +1,323 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+import { cn } from "@/lib/utils";
+
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+
+import { useCoaches } from "@/features/coaches/queries/useCoaches";
+
+import { format } from "date-fns";
+import { CalendarIcon, Plus } from "lucide-react";
+import { useAction } from "next-safe-action/hooks";
+import { toast } from "sonner";
+import { assignCoachToProgramAction } from "../actions/assignCoachToProgram";
+
+interface ManageProgramCoachModalProps {
+	programId: string;
+	universityId: string;
+	onSuccess?: () => void;
+	open?: boolean;
+	onOpenChange?: (open: boolean) => void;
+}
+
+export function ManageProgramCoachModal({
+	programId,
+	universityId,
+	onSuccess,
+	open: controlledOpen,
+	onOpenChange,
+}: ManageProgramCoachModalProps) {
+	const [internalOpen, setInternalOpen] = useState(false);
+	const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+	const setOpen = onOpenChange || setInternalOpen;
+
+	const [coachId, setCoachId] = useState("");
+	const [jobTitle, setJobTitle] = useState("");
+	const [programScope, setProgramScope] = useState<string>("");
+	const [workEmail, setWorkEmail] = useState("");
+	const [workPhone, setWorkPhone] = useState("");
+	const [startDate, setStartDate] = useState<Date | undefined>();
+	const [endDate, setEndDate] = useState<Date | undefined>();
+	const [internalNotes, setInternalNotes] = useState("");
+
+	const { data: coaches, isLoading: isLoadingCoaches } = useCoaches();
+
+	const {
+		execute: executeAssign,
+		isExecuting: isAssigning,
+		result: assignResult,
+	} = useAction(assignCoachToProgramAction, {
+		onSuccess: (result) => {
+			if (result?.data?.success) {
+				toast.success("Coach assigned to program successfully!");
+				setOpen(false);
+				onSuccess?.();
+			}
+		},
+		onError: (err) => {
+			console.error("Error assigning coach:", err);
+
+			const validationErrors = err.error?.validationErrors;
+			if (validationErrors) {
+				if (validationErrors.coach_id?._errors?.[0]) {
+					toast.error(validationErrors.coach_id._errors[0]);
+				} else if (validationErrors.work_email?._errors?.[0]) {
+					toast.error(`Work Email: ${validationErrors.work_email._errors[0]}`);
+				} else if (validationErrors._errors?.[0]) {
+					toast.error(validationErrors._errors[0]);
+				} else {
+					toast.error("Validation error. Please check your inputs.");
+				}
+			} else {
+				const errorMessage =
+					err.error?.serverError || "Failed to assign coach. Please try again.";
+				toast.error(errorMessage);
+			}
+		},
+	});
+
+	const handleSubmit = (e: React.FormEvent) => {
+		e.preventDefault();
+
+		if (!coachId) {
+			toast.error("Please select a coach");
+			return;
+		}
+
+		executeAssign({
+			program_id: programId,
+			university_id: universityId,
+			coach_id: coachId,
+			job_title: jobTitle || null,
+			program_scope: (programScope as "mens" | "womens" | "both") || null,
+			work_email: workEmail || null,
+			work_phone: workPhone || null,
+			start_date: startDate ? startDate.toISOString() : null,
+			end_date: endDate ? endDate.toISOString() : null,
+			internal_notes: internalNotes || null,
+		});
+	};
+
+	const resetForm = () => {
+		setCoachId("");
+		setJobTitle("");
+		setProgramScope("");
+		setWorkEmail("");
+		setWorkPhone("");
+		setStartDate(undefined);
+		setEndDate(undefined);
+		setInternalNotes("");
+	};
+
+	useEffect(() => {
+		if (!open) {
+			resetForm();
+		}
+	}, [open, resetForm]);
+
+	return (
+		<Dialog open={open} onOpenChange={setOpen}>
+			<DialogTrigger>
+				<Button size="sm">
+					<Plus className="mr-2 h-4 w-4" />
+					Add Coach
+				</Button>
+			</DialogTrigger>
+			<DialogContent className="max-w-2xl">
+				<DialogHeader>
+					<DialogTitle>Assign Coach to Program</DialogTitle>
+					<DialogDescription>
+						Assign a coach to this program and specify their role details
+					</DialogDescription>
+				</DialogHeader>
+
+				<form onSubmit={handleSubmit} className="space-y-4">
+					<div className="space-y-2">
+						<Label htmlFor="coach_id">
+							Coach <span className="text-red-500">*</span>
+						</Label>
+						<Select value={coachId} onValueChange={setCoachId}>
+							<SelectTrigger>
+								<SelectValue placeholder="Select a coach" />
+							</SelectTrigger>
+							<SelectContent>
+								{isLoadingCoaches ? (
+									<SelectItem value="loading" disabled>
+										Loading coaches...
+									</SelectItem>
+								) : coaches && coaches.length > 0 ? (
+									coaches.map((coach: any) => (
+										<SelectItem key={coach.id} value={coach.id}>
+											{coach.full_name}
+											{coach.primary_specialty
+												? ` - ${coach.primary_specialty}`
+												: ""}
+										</SelectItem>
+									))
+								) : (
+									<SelectItem value="no-coaches" disabled>
+										No coaches available
+									</SelectItem>
+								)}
+							</SelectContent>
+						</Select>
+					</div>
+
+					<div className="grid gap-4 md:grid-cols-2">
+						<div className="space-y-2">
+							<Label htmlFor="job_title">Job Title</Label>
+							<Input
+								id="job_title"
+								value={jobTitle}
+								onChange={(e) => setJobTitle(e.target.value)}
+								placeholder="e.g., Head Coach, Assistant Coach"
+							/>
+						</div>
+
+						<div className="space-y-2">
+							<Label htmlFor="program_scope">Program Scope</Label>
+							<Select value={programScope} onValueChange={setProgramScope}>
+								<SelectTrigger>
+									<SelectValue placeholder="Select scope" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="mens">Men's</SelectItem>
+									<SelectItem value="womens">Women's</SelectItem>
+									<SelectItem value="both">Both</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
+					</div>
+
+					<div className="grid gap-4 md:grid-cols-2">
+						<div className="space-y-2">
+							<Label htmlFor="work_email">Work Email</Label>
+							<Input
+								id="work_email"
+								type="email"
+								value={workEmail}
+								onChange={(e) => setWorkEmail(e.target.value)}
+								placeholder="coach@university.edu"
+							/>
+						</div>
+
+						<div className="space-y-2">
+							<Label htmlFor="work_phone">Work Phone</Label>
+							<Input
+								id="work_phone"
+								value={workPhone}
+								onChange={(e) => setWorkPhone(e.target.value)}
+								placeholder="(555) 123-4567"
+							/>
+						</div>
+					</div>
+
+					<div className="grid gap-4 md:grid-cols-2">
+						<div className="space-y-2">
+							<Label>Start Date</Label>
+							<Popover>
+								<PopoverTrigger asChild>
+									<Button
+										variant="outline"
+										className={cn(
+											"w-full justify-start text-left font-normal",
+											!startDate && "text-muted-foreground",
+										)}
+									>
+										<CalendarIcon className="mr-2 h-4 w-4" />
+										{startDate ? format(startDate, "PPP") : "Pick a date"}
+									</Button>
+								</PopoverTrigger>
+								<PopoverContent className="w-auto p-0">
+									<Calendar
+										mode="single"
+										selected={startDate}
+										onSelect={setStartDate}
+										initialFocus
+									/>
+								</PopoverContent>
+							</Popover>
+						</div>
+
+						<div className="space-y-2">
+							<Label>End Date</Label>
+							<Popover>
+								<PopoverTrigger asChild>
+									<Button
+										variant="outline"
+										className={cn(
+											"w-full justify-start text-left font-normal",
+											!endDate && "text-muted-foreground",
+										)}
+									>
+										<CalendarIcon className="mr-2 h-4 w-4" />
+										{endDate ? format(endDate, "PPP") : "Pick a date"}
+									</Button>
+								</PopoverTrigger>
+								<PopoverContent className="w-auto p-0">
+									<Calendar
+										mode="single"
+										selected={endDate}
+										onSelect={setEndDate}
+										initialFocus
+									/>
+								</PopoverContent>
+							</Popover>
+						</div>
+					</div>
+
+					<div className="space-y-2">
+						<Label htmlFor="internal_notes">Internal Notes</Label>
+						<Textarea
+							id="internal_notes"
+							value={internalNotes}
+							onChange={(e) => setInternalNotes(e.target.value)}
+							placeholder="Add any notes about this assignment..."
+							rows={3}
+						/>
+					</div>
+
+					<div className="flex justify-end gap-3">
+						<Button
+							type="button"
+							variant="outline"
+							onClick={() => setOpen(false)}
+							disabled={isAssigning}
+						>
+							Cancel
+						</Button>
+						<Button type="submit" disabled={isAssigning || !coachId}>
+							{isAssigning ? "Assigning..." : "Assign Coach"}
+						</Button>
+					</div>
+				</form>
+			</DialogContent>
+		</Dialog>
+	);
+}
