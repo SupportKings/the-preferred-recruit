@@ -8,8 +8,8 @@ import {
 	getUniversities,
 	prefetchApplicationsWithFacetedServer,
 } from "@/features/athlete-applications/actions/getApplications";
-import { ApplicationsContent } from "@/features/athlete-applications/components/applications.content";
-import ApplicationsHeader from "@/features/athlete-applications/layout/applications.header";
+import ApplicationsContent from "@/features/athlete-applications/components/athlete-applications-content";
+import ApplicationsHeader from "@/features/athlete-applications/layout/athlete-applications-header";
 
 import {
 	dehydrate,

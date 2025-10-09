@@ -131,7 +131,7 @@ export function ManageContactModal({
 					is_primary: formData.is_primary,
 					internal_notes: formData.internal_notes,
 					start_date: formData.start_date,
-					end_date: formData.end_date || null,
+					end_date: formData.end_date || undefined,
 				});
 				toast.success("Contact relationship updated successfully!");
 			} else {
@@ -144,7 +144,7 @@ export function ManageContactModal({
 					is_primary: formData.is_primary,
 					internal_notes: formData.internal_notes,
 					start_date: formData.start_date,
-					end_date: formData.end_date || null,
+					end_date: formData.end_date || undefined,
 				});
 				toast.success("Contact added successfully!");
 			}

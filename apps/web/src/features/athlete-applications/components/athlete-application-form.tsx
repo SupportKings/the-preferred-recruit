@@ -89,7 +89,11 @@ export function AthleteApplicationForm({
 					router.push("/dashboard/athlete-applications");
 				}
 			} else if (result.data?.validationErrors) {
-				const errors = getAllValidationErrors(result.data.validationErrors);
+				const validationErrors = result.data.validationErrors;
+				const errors = getAllValidationErrors({
+					program_id: validationErrors.program_id || { _errors: [] },
+					athlete_id: validationErrors.athlete_id || { _errors: [] },
+				});
 				for (const error of errors) {
 					toast.error(error);
 				}
@@ -127,7 +131,7 @@ export function AthleteApplicationForm({
 					athlete_id: value.athlete_id || undefined,
 					university_id: value.university_id || undefined,
 					program_id: value.program_id || undefined,
-					stage: value.stage || undefined,
+					stage: value.stage as "" | "intro" | "ongoing" | "visit" | "offer" | "committed" | "dropped" | undefined,
 					start_date: value.start_date || undefined,
 					offer_date: value.offer_date || undefined,
 					commitment_date: value.commitment_date || undefined,
@@ -185,7 +189,7 @@ export function AthleteApplicationForm({
 	}, [currentUniversityId, form]);
 
 	const selectedAthlete = athletes.find(
-		(a) => a.id === form.getFieldValue("athlete_id"),
+		(a: { id: string }) => a.id === form.getFieldValue("athlete_id"),
 	);
 	const selectedUniversity = universities.find(
 		(u) => u.id === form.getFieldValue("university_id"),
@@ -233,7 +237,7 @@ export function AthleteApplicationForm({
 										<CommandList>
 											<CommandEmpty>No athlete found.</CommandEmpty>
 											<CommandGroup>
-												{athletes.map((athlete) => (
+												{athletes.map((athlete: { id: string; full_name: string; graduation_year: number | null }) => (
 													<CommandItem
 														key={athlete.id}
 														value={`${athlete.full_name} ${athlete.graduation_year || ""}`}

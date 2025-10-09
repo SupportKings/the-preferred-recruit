@@ -87,9 +87,9 @@ export function AthleteApplicationsTab({
 											{app.stage || "-"}
 										</TableCell>
 										<TableCell>
-											{app.anticipated_start_date
+											{app.start_date
 												? format(
-														new Date(app.anticipated_start_date),
+														new Date(app.start_date),
 														"MMM dd, yyyy",
 													)
 												: "-"}
@@ -100,8 +100,8 @@ export function AthleteApplicationsTab({
 												: "-"}
 										</TableCell>
 										<TableCell>
-											{app.scholarship_amount
-												? `$${Number(app.scholarship_amount).toLocaleString()}`
+											{app.scholarship_amount_per_year
+												? `$${Number(app.scholarship_amount_per_year).toLocaleString()}`
 												: "-"}
 										</TableCell>
 									</TableRow>

@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
 import { Clock } from "lucide-react";
 
-const formatDate = (dateString: string | null) => {
+const formatDate = (dateString: string | null | undefined) => {
 	if (!dateString) return "Not set";
 	try {
 		return format(new Date(dateString), "MMM dd, yyyy");
