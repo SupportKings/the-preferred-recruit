@@ -12,7 +12,6 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
 	Select,
@@ -32,7 +31,7 @@ import { MessageCircle, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { ApplicationLookup } from "../lookups/application-lookup";
 import { CampaignLookup } from "../lookups/campaign-lookup";
-import { CoachLookup } from "../lookups/coach-lookup";
+import { UniversityJobLookup } from "../lookups/university-job-lookup";
 
 interface ManageReplyModalProps {
 	athleteId: string;
@@ -42,6 +41,7 @@ interface ManageReplyModalProps {
 	children?: ReactNode;
 	open?: boolean;
 	onOpenChange?: (open: boolean) => void;
+	allowCrossAthleteApplications?: boolean; // When true, search all athletes' applications
 }
 
 export function ManageReplyModal({
@@ -52,6 +52,7 @@ export function ManageReplyModal({
 	children,
 	open: externalOpen,
 	onOpenChange: externalOnOpenChange,
+	allowCrossAthleteApplications = false,
 }: ManageReplyModalProps) {
 	const isEdit = mode === "edit";
 	const [internalOpen, setInternalOpen] = useState(false);
@@ -65,6 +66,7 @@ export function ManageReplyModal({
 		type: "email",
 		occurred_at: format(new Date(), "yyyy-MM-dd"),
 		summary: "",
+		internal_notes: "",
 		application_id: "",
 		university_job_id: "",
 		campaign_id: campaignId || "",
@@ -78,6 +80,7 @@ export function ManageReplyModal({
 					? format(new Date(reply.occurred_at), "yyyy-MM-dd")
 					: format(new Date(), "yyyy-MM-dd"),
 				summary: reply.summary || "",
+				internal_notes: reply.internal_notes || "",
 				application_id: reply.application_id || "",
 				university_job_id: reply.university_job_id || "",
 				campaign_id: reply.campaign_id || "",
@@ -87,12 +90,13 @@ export function ManageReplyModal({
 				type: "email",
 				occurred_at: format(new Date(), "yyyy-MM-dd"),
 				summary: "",
+				internal_notes: "",
 				application_id: "",
 				university_job_id: "",
 				campaign_id: campaignId || "",
 			});
 		}
-	}, [isEdit, reply, open, campaignId]);
+	}, [isEdit, reply, campaignId]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -110,6 +114,7 @@ export function ManageReplyModal({
 					type: formData.type,
 					occurred_at: formData.occurred_at,
 					summary: formData.summary,
+					internal_notes: formData.internal_notes || undefined,
 					application_id: formData.application_id || undefined,
 					university_job_id: formData.university_job_id || undefined,
 					campaign_id: formData.campaign_id || undefined,
@@ -120,6 +125,7 @@ export function ManageReplyModal({
 					type: formData.type,
 					occurred_at: formData.occurred_at,
 					summary: formData.summary,
+					internal_notes: formData.internal_notes || undefined,
 					application_id: formData.application_id || undefined,
 					university_job_id: formData.university_job_id || undefined,
 					campaign_id: formData.campaign_id || undefined,
@@ -213,8 +219,21 @@ export function ManageReplyModal({
 						/>
 					</div>
 
+					<div>
+						<Label htmlFor="internal_notes">Internal Notes</Label>
+						<Textarea
+							id="internal_notes"
+							placeholder="Private notes about this reply (optional)"
+							value={formData.internal_notes}
+							onChange={(e) =>
+								setFormData({ ...formData, internal_notes: e.target.value })
+							}
+							rows={3}
+						/>
+					</div>
+
 					<ApplicationLookup
-						athleteId={athleteId}
+						athleteId={allowCrossAthleteApplications ? undefined : athleteId}
 						value={formData.application_id}
 						onChange={(value) =>
 							setFormData({ ...formData, application_id: value })
@@ -223,7 +242,7 @@ export function ManageReplyModal({
 						required={false}
 					/>
 
-					<CoachLookup
+					<UniversityJobLookup
 						value={formData.university_job_id}
 						onChange={(value) =>
 							setFormData({ ...formData, university_job_id: value })

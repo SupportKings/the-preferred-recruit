@@ -42,8 +42,12 @@ export async function createCampaignLead(data: {
 export async function updateCampaignLead(
 	leadId: string,
 	data: {
+		university_job_id?: string;
+		source_lead_list_id?: string;
+		include_reason?: string;
 		status?: string;
 		first_reply_date?: string;
+		first_reply_at?: string;
 		internal_notes?: string;
 	},
 ) {
@@ -54,13 +58,25 @@ export async function updateCampaignLead(
 		throw new Error("Authentication required");
 	}
 
+	// Build update object with only provided fields
+	const updateData: Record<string, string | null | undefined> = {};
+	if (data.university_job_id !== undefined)
+		updateData.university_job_id = data.university_job_id;
+	if (data.source_lead_list_id !== undefined)
+		updateData.source_lead_list_id = data.source_lead_list_id;
+	if (data.include_reason !== undefined)
+		updateData.include_reason = data.include_reason;
+	if (data.status !== undefined) updateData.status = data.status;
+	if (data.first_reply_date !== undefined)
+		updateData.first_reply_date = data.first_reply_date;
+	if (data.first_reply_at !== undefined)
+		updateData.first_reply_at = data.first_reply_at;
+	if (data.internal_notes !== undefined)
+		updateData.internal_notes = data.internal_notes;
+
 	const { data: lead, error } = await supabase
 		.from("campaign_leads")
-		.update({
-			status: data.status,
-			first_reply_date: data.first_reply_date,
-			internal_notes: data.internal_notes,
-		})
+		.update(updateData)
 		.eq("id", leadId)
 		.select()
 		.single();

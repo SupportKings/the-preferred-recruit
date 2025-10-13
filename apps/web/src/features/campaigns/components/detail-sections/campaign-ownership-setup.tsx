@@ -15,6 +15,7 @@ import {
 import { StatusBadge } from "@/components/ui/status-badge";
 
 import { Edit3, Save, Users, X } from "lucide-react";
+import { formatCampaignType } from "../../utils/format";
 
 type Campaign = Database["public"]["Tables"]["campaigns"]["Row"] & {
 	athlete?: {
@@ -156,7 +157,7 @@ export function CampaignOwnershipSetup({
 							</SelectContent>
 						</Select>
 					) : (
-						<p className="text-sm">{campaign.type || "Not set"}</p>
+						<p className="text-sm">{formatCampaignType(campaign.type)}</p>
 					)}
 				</div>
 				<div>
@@ -204,7 +205,7 @@ export function CampaignOwnershipSetup({
 					<p className="text-sm">
 						{campaign.seed_campaign?.name || "None"}
 						{campaign.seed_campaign?.type &&
-							` (${campaign.seed_campaign.type})`}
+							` (${formatCampaignType(campaign.seed_campaign.type)})`}
 					</p>
 				</div>
 			</CardContent>

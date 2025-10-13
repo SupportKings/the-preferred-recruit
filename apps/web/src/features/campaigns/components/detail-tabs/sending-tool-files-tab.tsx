@@ -39,7 +39,7 @@ export function SendingToolFilesTab({
 		data: null,
 	});
 
-	const fileColumns = createSendingToolLeadListColumns();
+	const fileColumns = createSendingToolLeadListColumns({ hideCampaign: true });
 	const fileRowActions = createSendingToolLeadListRowActions(
 		setDeleteModal,
 		setEditModal,

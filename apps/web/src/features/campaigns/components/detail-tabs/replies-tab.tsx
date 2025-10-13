@@ -83,6 +83,7 @@ export function RepliesTab({
 						athleteId={athleteId}
 						campaignId={campaignId}
 						mode="add"
+						allowCrossAthleteApplications={true}
 					/>
 				</div>
 			</CardHeader>
@@ -103,6 +104,7 @@ export function RepliesTab({
 				onOpenChange={(open: boolean) =>
 					setEditModal((prev) => ({ ...prev, isOpen: open }))
 				}
+				allowCrossAthleteApplications={true}
 			/>
 		</Card>
 	);

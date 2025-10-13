@@ -25,8 +25,8 @@ import {
 	createCampaignLead,
 	updateCampaignLead,
 } from "@/features/athletes/actions/campaignLeads";
-import { CoachLookup } from "@/features/athletes/components/lookups/coach-lookup";
 import { LeadListLookup } from "@/features/athletes/components/lookups/lead-list-lookup";
+import { UniversityJobLookup } from "@/features/athletes/components/lookups/university-job-lookup";
 import { campaignQueries } from "@/features/campaigns/queries/useCampaigns";
 
 import { useQueryClient } from "@tanstack/react-query";
@@ -86,7 +86,7 @@ export function ManageCampaignLeadModal({
 				internal_notes: "",
 			});
 		}
-	}, [isEdit, lead, open]);
+	}, [isEdit, lead]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -96,6 +96,9 @@ export function ManageCampaignLeadModal({
 		try {
 			if (isEdit && lead) {
 				await updateCampaignLead(lead.id, {
+					university_job_id: formData.university_job_id || undefined,
+					source_lead_list_id: formData.source_lead_list_id || undefined,
+					include_reason: formData.include_reason,
 					status: formData.status,
 					internal_notes: formData.internal_notes,
 				});
@@ -166,30 +169,27 @@ export function ManageCampaignLeadModal({
 						/>
 					)}
 
-					<CoachLookup
+					<UniversityJobLookup
 						value={formData.university_job_id}
 						onChange={(value) =>
 							setFormData({ ...formData, university_job_id: value })
 						}
 						label="Coach/Job (Optional)"
 						required={false}
-						disabled={isEdit}
 					/>
 
-					{!isEdit && (
-						<div>
-							<Label htmlFor="include_reason">Include Reason</Label>
-							<Textarea
-								id="include_reason"
-								placeholder="Why this lead is included"
-								value={formData.include_reason}
-								onChange={(e) =>
-									setFormData({ ...formData, include_reason: e.target.value })
-								}
-								rows={2}
-							/>
-						</div>
-					)}
+					<div>
+						<Label htmlFor="include_reason">Include Reason</Label>
+						<Textarea
+							id="include_reason"
+							placeholder="Why this lead is included"
+							value={formData.include_reason}
+							onChange={(e) =>
+								setFormData({ ...formData, include_reason: e.target.value })
+							}
+							rows={2}
+						/>
+					</div>
 
 					<div>
 						<Label htmlFor="status">Lead Status</Label>

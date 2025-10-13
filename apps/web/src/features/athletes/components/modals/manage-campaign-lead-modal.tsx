@@ -34,8 +34,8 @@ import { format } from "date-fns";
 import { Plus, Users } from "lucide-react";
 import { toast } from "sonner";
 import { CampaignLookup } from "../lookups/campaign-lookup";
-import { CoachLookup } from "../lookups/coach-lookup";
 import { ProgramLookup } from "../lookups/program-lookup";
+import { UniversityJobLookup } from "../lookups/university-job-lookup";
 import { UniversityLookup } from "../lookups/university-lookup";
 
 interface ManageCampaignLeadModalProps {

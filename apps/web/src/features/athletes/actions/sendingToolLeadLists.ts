@@ -26,6 +26,8 @@ export async function createSendingToolLeadList(data: {
 			row_count: data.row_count,
 			file_url: data.file_url,
 			internal_notes: data.internal_notes,
+			generated_by: user.user.id,
+			generated_at: new Date().toISOString(),
 		})
 		.select()
 		.single();
@@ -124,7 +126,7 @@ export async function getSendingToolLeadListsForAthlete(athleteId: string) {
 	const campaignIds = campaigns.map((c) => c.id);
 
 	// Then fetch all sending tool lead lists for these campaigns
-	const { data: lists, error: listsError } = await supabase
+	const { data: lists, error: listsError } = await (supabase as any)
 		.from("sending_tool_lead_lists")
 		.select(
 			`
@@ -135,7 +137,10 @@ export async function getSendingToolLeadListsForAthlete(athleteId: string) {
 			file_url,
 			internal_notes,
 			created_at,
-			campaign:campaigns(id, name, type, status)
+			generated_by,
+			generated_at,
+			campaign:campaigns(id, name, type, status),
+			generated_by_user:team_members!sending_tool_lead_lists_generated_by_fkey(id, first_name, last_name, email)
 		`,
 		)
 		.in("campaign_id", campaignIds)

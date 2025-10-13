@@ -12,6 +12,7 @@ import {
 } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { GitBranch } from "lucide-react";
+import { formatCampaignType } from "../../utils/format";
 
 const formatDate = (dateString: string | null) => {
 	if (!dateString) return "Not set";
@@ -37,7 +38,7 @@ const createDerivedCampaignColumns = () => {
 				return (
 					<Link
 						href={`/dashboard/campaigns/${campaignId}`}
-						className="text-blue-600 hover:underline"
+						className="text-primary hover:underline"
 					>
 						{name}
 					</Link>
@@ -46,7 +47,9 @@ const createDerivedCampaignColumns = () => {
 		}),
 		columnHelper.accessor("type", {
 			header: "Type",
-			cell: (info) => info.getValue() || "Unknown",
+			cell: (info) => (
+				<StatusBadge>{formatCampaignType(info.getValue())}</StatusBadge>
+			),
 		}),
 		columnHelper.accessor("status", {
 			header: "Status",
@@ -64,8 +67,37 @@ const createDerivedCampaignColumns = () => {
 			header: "Primary Lead List",
 			cell: (info) => {
 				const leadList = info.row.original.primary_lead_list;
-				if (!leadList) return "Not set";
-				return `${leadList.name} (Priority: ${leadList.priority})`;
+
+				if (!leadList) return "—";
+
+				const name = leadList.name || "Unnamed";
+				const priority = leadList.priority;
+				const leadListId = leadList.id;
+
+				const content = (
+					<div className="flex flex-col gap-1">
+						<div>{name}</div>
+						{priority != null && (
+							<div className="text-muted-foreground text-xs">
+								Priority: {priority}
+							</div>
+						)}
+					</div>
+				);
+
+				// Make clickable if we have an ID
+				if (leadListId) {
+					return (
+						<Link
+							href={`/dashboard/school-lead-lists/${leadListId}`}
+							className="text-primary hover:underline"
+						>
+							{content}
+						</Link>
+					);
+				}
+
+				return content;
 			},
 		}),
 	];

@@ -2,7 +2,17 @@
 
 import { type ReactNode, useEffect, useState } from "react";
 
+import { cn } from "@/lib/utils";
+
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+	Command,
+	CommandEmpty,
+	CommandGroup,
+	CommandItem,
+	CommandList,
+} from "@/components/ui/command";
 import {
 	Dialog,
 	DialogContent,
@@ -13,6 +23,11 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
 import {
 	Select,
 	SelectContent,
@@ -29,7 +44,7 @@ import {
 import { applicationQueries } from "@/features/athlete-applications/queries/useApplications";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { Edit, Plus, Target } from "lucide-react";
+import { Check, Edit, Plus, Search, Target, X } from "lucide-react";
 import { toast } from "sonner";
 
 interface ManageCampaignLeadModalProps {
@@ -75,6 +90,7 @@ export function ManageCampaignLeadModal({
 	const setOpen = externalOnOpenChange || setInternalOpen;
 	const [isLoading, setIsLoading] = useState(false);
 	const [coachSearch, setCoachSearch] = useState("");
+	const [coachPopoverOpen, setCoachPopoverOpen] = useState(false);
 	const queryClient = useQueryClient();
 
 	const [formData, setFormData] = useState({
@@ -111,7 +127,7 @@ export function ManageCampaignLeadModal({
 				internal_notes: "",
 			});
 		}
-	}, [isEdit, lead, open]);
+	}, [isEdit, lead]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -301,42 +317,113 @@ export function ManageCampaignLeadModal({
 
 							<div>
 								<Label htmlFor="coach_search">Coach/Job (Optional)</Label>
-								<Input
-									id="coach_search"
-									placeholder="Search coach name..."
-									value={coachSearch}
-									onChange={(e) => setCoachSearch(e.target.value)}
-									className="mb-2"
-								/>
-								{coachSearch && (
-									<Select
-										value={formData.university_job_id || "NONE"}
-										onValueChange={(value) =>
-											setFormData({
-												...formData,
-												university_job_id: value === "NONE" ? null : value,
-											})
-										}
-									>
-										<SelectTrigger>
-											<SelectValue placeholder="Select coach/job..." />
-										</SelectTrigger>
-										<SelectContent>
-											<SelectItem value="NONE">None</SelectItem>
-											{availableJobs.map((job) => (
-												<SelectItem key={job.id} value={job.id}>
-													{job.coach_full_name} - {job.job_title}
-													{job.work_email && ` (${job.work_email})`}
-												</SelectItem>
-											))}
-											{availableJobs.length === 0 && (
-												<SelectItem value="NO_RESULTS" disabled>
-													No coaches found
-												</SelectItem>
+								<Popover
+									open={coachPopoverOpen}
+									onOpenChange={setCoachPopoverOpen}
+								>
+									<PopoverTrigger asChild>
+										<div className="relative">
+											<div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+												<Search className="h-4 w-4 text-muted-foreground" />
+											</div>
+											<Input
+												type="text"
+												placeholder={
+													formData.university_job_id
+														? ""
+														: "Search for a coach or job..."
+												}
+												value={coachSearch}
+												onChange={(e) => {
+													setCoachSearch(e.target.value);
+													if (!coachPopoverOpen) setCoachPopoverOpen(true);
+												}}
+												onFocus={() => setCoachPopoverOpen(true)}
+												className="pr-8 pl-9"
+											/>
+											{formData.university_job_id && !coachSearch && (
+												<div className="absolute inset-y-0 right-8 left-9 flex items-center">
+													<Badge
+														variant="secondary"
+														className="max-w-full truncate"
+													>
+														{availableJobs.find(
+															(job) => job.id === formData.university_job_id,
+														)?.coach_full_name || "Selected coach"}
+													</Badge>
+												</div>
 											)}
-										</SelectContent>
-									</Select>
-								)}
+											{formData.university_job_id && (
+												<button
+													type="button"
+													onClick={(e) => {
+														e.stopPropagation();
+														setFormData({
+															...formData,
+															university_job_id: null,
+														});
+														setCoachSearch("");
+														setCoachPopoverOpen(false);
+													}}
+													className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
+												>
+													<X className="h-4 w-4" />
+												</button>
+											)}
+										</div>
+									</PopoverTrigger>
+									<PopoverContent
+										className="w-[var(--radix-popover-trigger-width)] p-0"
+										align="start"
+									>
+										<Command shouldFilter={false}>
+											<CommandList>
+												<CommandEmpty>
+													{coachSearch
+														? "No coaches found matching your search."
+														: "Start typing to search for coaches..."}
+												</CommandEmpty>
+												<CommandGroup>
+													{availableJobs.length > 0 &&
+														availableJobs.map((job) => (
+															<CommandItem
+																key={job.id}
+																value={job.id}
+																onSelect={() => {
+																	setFormData({
+																		...formData,
+																		university_job_id: job.id,
+																	});
+																	setCoachSearch("");
+																	setCoachPopoverOpen(false);
+																}}
+																className="cursor-pointer"
+															>
+																<Check
+																	className={cn(
+																		"mr-2 h-4 w-4",
+																		formData.university_job_id === job.id
+																			? "opacity-100"
+																			: "opacity-0",
+																	)}
+																/>
+																<div className="flex flex-col">
+																	<span className="font-medium">
+																		{job.coach_full_name} - {job.job_title}
+																	</span>
+																	{job.work_email && (
+																		<span className="text-muted-foreground text-xs">
+																			{job.work_email}
+																		</span>
+																	)}
+																</div>
+															</CommandItem>
+														))}
+												</CommandGroup>
+											</CommandList>
+										</Command>
+									</PopoverContent>
+								</Popover>
 							</div>
 						</>
 					)}

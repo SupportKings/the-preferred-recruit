@@ -100,3 +100,63 @@ export async function deleteAthleteApplication(applicationId: string) {
 
 	return { success: true };
 }
+
+export async function searchAthleteApplications(
+	searchQuery?: string,
+	athleteId?: string,
+) {
+	const supabase = await createClient();
+	const user = await getUser();
+
+	if (!user) {
+		throw new Error("Authentication required");
+	}
+
+	let query = (supabase as any)
+		.from("athlete_applications")
+		.select(
+			`
+			id,
+			stage,
+			university:universities(name),
+			program:programs(gender),
+			athlete:athletes(full_name, contact_email)
+		`,
+		)
+		.eq("is_deleted", false)
+		.order("created_at", { ascending: false })
+		.limit(100); // Fetch more since we'll filter client-side
+
+	// Filter by specific athlete if provided
+	if (athleteId) {
+		query = query.eq("athlete_id", athleteId);
+	}
+
+	const { data, error } = await query;
+
+	if (error) {
+		console.error("Error searching applications:", error);
+		throw new Error(`Failed to search applications: ${error.message}`);
+	}
+
+	// Client-side filtering for search query (because Supabase doesn't support nested field filtering in or())
+	let filteredData = data || [];
+
+	if (searchQuery?.trim()) {
+		const searchLower = searchQuery.toLowerCase().trim();
+		filteredData = filteredData.filter((app: any) => {
+			return (
+				app.athlete?.full_name?.toLowerCase().includes(searchLower) ||
+				app.athlete?.contact_email?.toLowerCase().includes(searchLower) ||
+				app.university?.name?.toLowerCase().includes(searchLower) ||
+				app.program?.gender?.toLowerCase().includes(searchLower) ||
+				app.stage?.toLowerCase().includes(searchLower)
+			);
+		});
+	}
+
+	// Limit results after filtering
+	const limitedData = filteredData.slice(0, 50);
+
+	return { success: true, data: limitedData };
+}

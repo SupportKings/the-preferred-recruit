@@ -10,6 +10,7 @@ export async function createReply(
 		type: string;
 		occurred_at?: string;
 		summary: string;
+		internal_notes?: string;
 		application_id?: string;
 		university_job_id?: string;
 		campaign_id?: string;
@@ -29,6 +30,7 @@ export async function createReply(
 			type: replyData.type,
 			occurred_at: replyData.occurred_at || new Date().toISOString(),
 			summary: replyData.summary,
+			internal_notes: replyData.internal_notes || null,
 			application_id: replyData.application_id || null,
 			university_job_id: replyData.university_job_id || null,
 			campaign_id: replyData.campaign_id || null,

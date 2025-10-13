@@ -62,7 +62,7 @@ const detectColorScheme = (
 
 	// Success/positive states
 	if (
-		/(active|completed?|success|granted|approved|done|finished|enabled|online|published|verified)/i.test(
+		/(active|completed?|success|granted|approved|done|finished|enabled|online|published|verified|replied)/i.test(
 			normalizedStatus,
 		)
 	) {
@@ -71,7 +71,7 @@ const detectColorScheme = (
 
 	// Error/negative states
 	if (
-		/(error|failed?|rejected|denied|revoked|expired|churned|cancelled?|deleted|disabled|offline|blocked)/i.test(
+		/(error|failed?|rejected|denied|revoked|expired|churned|cancelled?|deleted|disabled|offline|blocked|bounced|suppressed)/i.test(
 			normalizedStatus,
 		)
 	) {
@@ -89,7 +89,7 @@ const detectColorScheme = (
 
 	// Info/process states
 	if (
-		/(processing|onboard|progress|running|loading|syncing)/i.test(
+		/(processing|onboard|progress|running|loading|syncing|sent)/i.test(
 			normalizedStatus,
 		)
 	) {

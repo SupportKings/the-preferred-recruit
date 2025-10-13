@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 import { StatusBadge } from "@/components/ui/status-badge";
 
 import { createColumnHelper } from "@tanstack/react-table";
@@ -40,7 +42,7 @@ export const createReplyColumns = () => {
 
 		// Occurred At
 		replyColumnHelper.accessor("occurred_at", {
-			header: "When",
+			header: "Occurred at",
 			cell: (info) => formatDate(info.getValue()),
 		}),
 
@@ -54,20 +56,112 @@ export const createReplyColumns = () => {
 			},
 		}),
 
-		// Coach/Job
-		replyColumnHelper.accessor("university_job.job_title", {
+		// Coach/Job (university_job_id lookup: coach name and job title)
+		replyColumnHelper.accessor("university_job.coach.full_name", {
 			header: "Coach",
 			cell: (info) => {
-				const jobTitle = info.getValue();
-				const email = info.row.original.university_job?.work_email;
-				return jobTitle || email || "N/A";
+				const universityJob = info.row.original.university_job;
+
+				if (!universityJob) return "—";
+
+				const coachName = info.getValue();
+				const jobTitle = universityJob.job_title;
+				const coachId = universityJob.coach?.id;
+				const universityJobId = universityJob.id;
+
+				// Build display text: "Coach Name – Job Title"
+				const parts = [];
+				if (coachName) {
+					parts.push(coachName);
+				}
+				if (jobTitle) {
+					parts.push(jobTitle);
+				}
+
+				if (parts.length === 0) return "—";
+
+				const displayText = parts.join(" – ");
+
+				// Make the whole coach info clickable (navigate to university job or coach)
+				const href = universityJobId
+					? `/dashboard/university-jobs/${universityJobId}`
+					: coachId
+						? `/dashboard/coaches/${coachId}`
+						: null;
+
+				if (href) {
+					return (
+						<Link href={href} className="text-primary hover:underline">
+							{displayText}
+						</Link>
+					);
+				}
+
+				return displayText;
 			},
 		}),
 
-		// Campaign
-		replyColumnHelper.accessor("campaign.name", {
-			header: "Campaign",
-			cell: (info) => info.getValue() || "N/A",
+		// Application (application_id lookup: stage, last_interaction_at)
+		replyColumnHelper.accessor("application.stage", {
+			header: "Application",
+			cell: (info) => {
+				const application = info.row.original.application;
+
+				if (!application) return "—";
+
+				const stage = info.getValue();
+				const lastInteraction = application.last_interaction_at;
+				const applicationId = application.id;
+
+				const content = (
+					<div className="flex flex-col gap-1">
+						{stage && (
+							<div>
+								<StatusBadge>{stage}</StatusBadge>
+							</div>
+						)}
+						{lastInteraction && (
+							<div className="text-muted-foreground text-xs">
+								Last: {formatDate(lastInteraction)}
+							</div>
+						)}
+					</div>
+				);
+
+				// Make the entire application info clickable
+				if (applicationId) {
+					return (
+						<Link
+							href={`/dashboard/athlete-applications/${applicationId}`}
+							className="text-primary hover:underline"
+						>
+							{content}
+						</Link>
+					);
+				}
+
+				return content;
+			},
+		}),
+
+		// Athlete
+		replyColumnHelper.accessor("athlete.full_name", {
+			header: "Athlete",
+			cell: (info) => {
+				const fullName = info.getValue();
+				const email = info.row.original.athlete?.contact_email;
+				return fullName || email || "N/A";
+			},
+		}),
+
+		// Internal Notes
+		replyColumnHelper.accessor("internal_notes", {
+			header: "Internal Notes",
+			cell: (info) => {
+				const notes = info.getValue();
+				if (!notes) return "—";
+				return notes.length > 50 ? `${notes.substring(0, 50)}...` : notes;
+			},
 		}),
 	];
 };

@@ -1,20 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
 import { createClient } from "@/utils/supabase/client";
 
-import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
 	Command,
 	CommandEmpty,
 	CommandGroup,
-	CommandInput,
 	CommandItem,
 	CommandList,
 } from "@/components/ui/command";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
 	Popover,
@@ -22,7 +22,7 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, Loader2, Search, X } from "lucide-react";
 
 interface CoachLookupProps {
 	universityId?: string;
@@ -51,6 +51,7 @@ export function CoachLookup({
 	const [coaches, setCoaches] = useState<Coach[]>([]);
 	const [loading, setLoading] = useState(true);
 	const [searchQuery, setSearchQuery] = useState("");
+	const inputRef = useRef<HTMLInputElement>(null);
 
 	useEffect(() => {
 		const fetchCoaches = async () => {
@@ -101,8 +102,17 @@ export function CoachLookup({
 		);
 	});
 
-	const getCoachDisplayName = (coach: Coach) => {
-		return coach.full_name;
+	const handleClear = (e: React.MouseEvent) => {
+		e.stopPropagation();
+		onChange("");
+		setSearchQuery("");
+		setOpen(false);
+	};
+
+	const handleSelect = (coachId: string) => {
+		onChange(coachId);
+		setSearchQuery("");
+		setOpen(false);
 	};
 
 	return (
@@ -115,56 +125,95 @@ export function CoachLookup({
 			)}
 			<Popover open={open} onOpenChange={setOpen}>
 				<PopoverTrigger asChild>
-					<Button
-						variant="outline"
-						role="combobox"
-						aria-expanded={open}
-						className="w-full justify-between"
-						disabled={disabled || loading}
-					>
-						{loading
-							? "Loading coaches..."
-							: selectedCoach
-								? getCoachDisplayName(selectedCoach)
-								: "Select coach..."}
-						<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-					</Button>
-				</PopoverTrigger>
-				<PopoverContent className="w-full p-0" align="start">
-					<Command>
-						<CommandInput
-							placeholder="Search coaches..."
+					<div className="relative">
+						<div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+							{loading ? (
+								<Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+							) : (
+								<Search className="h-4 w-4 text-muted-foreground" />
+							)}
+						</div>
+						<Input
+							ref={inputRef}
+							type="text"
+							placeholder={
+								loading
+									? "Loading coaches..."
+									: selectedCoach
+										? ""
+										: "Search for a coach or job..."
+							}
 							value={searchQuery}
-							onValueChange={setSearchQuery}
+							onChange={(e) => {
+								setSearchQuery(e.target.value);
+								if (!open) setOpen(true);
+							}}
+							onFocus={() => setOpen(true)}
+							disabled={disabled || loading}
+							className={cn(
+								"pr-8 pl-9",
+								selectedCoach && !searchQuery && "cursor-pointer",
+							)}
 						/>
+						{selectedCoach && !searchQuery && (
+							<div className="absolute inset-y-0 right-8 left-9 flex items-center">
+								<Badge variant="secondary" className="max-w-full truncate">
+									{selectedCoach.full_name}
+								</Badge>
+							</div>
+						)}
+						{value && (
+							<button
+								type="button"
+								onClick={handleClear}
+								className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
+								disabled={disabled}
+							>
+								<X className="h-4 w-4" />
+							</button>
+						)}
+					</div>
+				</PopoverTrigger>
+				<PopoverContent
+					className="w-[var(--radix-popover-trigger-width)] p-0"
+					align="start"
+					onOpenAutoFocus={(e) => {
+						e.preventDefault();
+						inputRef.current?.focus();
+					}}
+				>
+					<Command shouldFilter={false}>
 						<CommandList>
-							<CommandEmpty>No coach found.</CommandEmpty>
+							<CommandEmpty>
+								{searchQuery
+									? "No coaches found matching your search."
+									: "Start typing to search for coaches..."}
+							</CommandEmpty>
 							<CommandGroup>
-								{filteredCoaches.map((coach) => (
-									<CommandItem
-										key={coach.id}
-										value={`${coach.full_name} ${coach.email || ""}`}
-										onSelect={() => {
-											onChange(coach.id);
-											setOpen(false);
-										}}
-									>
-										<Check
-											className={cn(
-												"mr-2 h-4 w-4",
-												value === coach.id ? "opacity-100" : "opacity-0",
-											)}
-										/>
-										<div className="flex flex-col">
-											<span>{getCoachDisplayName(coach)}</span>
-											{coach.email && (
-												<span className="text-muted-foreground text-xs">
-													{coach.email}
-												</span>
-											)}
-										</div>
-									</CommandItem>
-								))}
+								{filteredCoaches.length > 0 &&
+									filteredCoaches.map((coach) => (
+										<CommandItem
+											key={coach.id}
+											value={coach.id}
+											onSelect={() => handleSelect(coach.id)}
+											className="cursor-pointer"
+										>
+											<Check
+												className={cn(
+													"mr-2 h-4 w-4",
+													value === coach.id ? "opacity-100" : "opacity-0",
+												)}
+											/>
+											<div className="flex flex-col">
+												<span className="font-medium">{coach.full_name}</span>
+												{coach.email && (
+													<span className="text-muted-foreground text-xs">
+														{coach.email}
+													</span>
+												)}
+											</div>
+										</CommandItem>
+									))}
 							</CommandGroup>
 						</CommandList>
 					</Command>

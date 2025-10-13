@@ -33,7 +33,7 @@ export async function getCampaign(id: string) {
 						program_scope,
 						coach:coaches(id, full_name, email),
 						university:universities(id, name, city, state),
-						program:programs(id, gender, sport_id)
+						program:programs(id, gender)
 					),
 					source_lead_list:school_lead_lists(id, name, priority),
 					application:athlete_applications(id, stage, last_interaction_at, scholarship_percent)
