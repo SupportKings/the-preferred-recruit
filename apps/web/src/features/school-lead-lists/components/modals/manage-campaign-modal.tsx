@@ -53,12 +53,22 @@ export function ManageCampaignModal({
 	const open = externalOpen !== undefined ? externalOpen : internalOpen;
 	const setOpen = externalOnOpenChange || setInternalOpen;
 
-	const [formData, setFormData] = useState({
+	const [formData, setFormData] = useState<{
+		athlete_id: string;
+		primary_lead_list_id: string;
+		name: string;
+		type: "top" | "second_pass" | "third_pass" | "personal_best";
+		status: "draft" | "active" | "paused" | "completed" | "exhausted";
+		daily_send_cap: string;
+		start_date: string;
+		end_date: string;
+		internal_notes: string;
+	}>({
 		athlete_id: athleteId || "",
 		primary_lead_list_id: leadListId || "",
 		name: "",
-		type: "top" as const,
-		status: "draft" as const,
+		type: "top",
+		status: "draft",
 		daily_send_cap: "",
 		start_date: "",
 		end_date: "",
@@ -128,7 +138,7 @@ export function ManageCampaignModal({
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			{externalOpen === undefined && (
-				<DialogTrigger asChild>
+				<DialogTrigger>
 					{children || (
 						<Button variant="outline" size="sm" className="gap-2">
 							<Plus className="h-4 w-4" />
