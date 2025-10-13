@@ -134,7 +134,7 @@ export function ManageCampaignLeadModal({
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			{externalOpen === undefined && (
-				<DialogTrigger asChild>
+				<DialogTrigger>
 					{children || (
 						<Button variant="outline" size="sm" className="gap-2">
 							<Plus className="h-4 w-4" />

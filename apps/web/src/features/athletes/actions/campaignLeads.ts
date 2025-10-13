@@ -5,11 +5,16 @@ import { createClient } from "@/utils/supabase/server";
 import { getUser } from "@/queries/getUser";
 
 export async function createCampaignLead(data: {
+	athlete_id?: string;
 	campaign_id: string;
+	university_id?: string;
+	program_id?: string;
+	coach_id?: string;
 	source_lead_list_id?: string;
 	university_job_id?: string;
 	include_reason?: string;
 	status?: string;
+	first_reply_date?: string;
 	internal_notes?: string;
 }) {
 	const supabase = await createClient();
@@ -22,11 +27,16 @@ export async function createCampaignLead(data: {
 	const { data: lead, error } = await supabase
 		.from("campaign_leads")
 		.insert({
+			athlete_id: data.athlete_id,
 			campaign_id: data.campaign_id,
+			university_id: data.university_id,
+			program_id: data.program_id,
+			coach_id: data.coach_id,
 			source_lead_list_id: data.source_lead_list_id,
 			university_job_id: data.university_job_id,
 			include_reason: data.include_reason,
 			status: data.status || "pending",
+			first_reply_date: data.first_reply_date,
 			internal_notes: data.internal_notes,
 		})
 		.select()
