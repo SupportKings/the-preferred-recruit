@@ -228,7 +228,6 @@ export default function AthleteApplicationDetailView({
 						applicationId={applicationId}
 						replies={application.replies || []}
 						campaigns={campaigns}
-						coaches={coaches}
 						setDeleteModal={setDeleteModal}
 					/>
 				</TabsContent>

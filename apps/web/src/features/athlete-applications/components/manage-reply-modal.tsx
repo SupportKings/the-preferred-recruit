@@ -3,6 +3,7 @@
 import { type ReactNode, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
 	Dialog,
 	DialogContent,
@@ -11,7 +12,6 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
 	Select,
@@ -27,6 +27,7 @@ import {
 	updateReply,
 } from "@/features/athlete-applications/actions/relations/replies";
 import { applicationQueries } from "@/features/athlete-applications/queries/useApplications";
+import { UniversityJobLookup } from "@/features/athletes/components/lookups/university-job-lookup";
 
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -38,11 +39,6 @@ interface ManageReplyModalProps {
 	mode: "add" | "edit";
 	reply?: any;
 	campaigns?: Array<{ id: string; name: string; type: string }>;
-	coaches?: Array<{
-		id: string;
-		full_name: string;
-		university_jobs: Array<{ id: string; job_title: string }>;
-	}>;
 	children?: ReactNode;
 	open?: boolean;
 	onOpenChange?: (open: boolean) => void;
@@ -55,7 +51,6 @@ export function ManageReplyModal({
 	mode,
 	reply,
 	campaigns = [],
-	coaches = [],
 	children,
 	open: externalOpen,
 	onOpenChange: externalOnOpenChange,
@@ -67,7 +62,6 @@ export function ManageReplyModal({
 	const open = externalOpen !== undefined ? externalOpen : internalOpen;
 	const setOpen = externalOnOpenChange || setInternalOpen;
 	const [isLoading, setIsLoading] = useState(false);
-	const [coachSearch, setCoachSearch] = useState("");
 	const queryClient = useQueryClient();
 
 	const [formData, setFormData] = useState({
@@ -78,11 +72,6 @@ export function ManageReplyModal({
 		university_job_id: null as string | null,
 		internal_notes: "",
 	});
-
-	// Filter coaches based on search
-	const filteredCoaches = coaches.filter((coach) =>
-		coach.full_name.toLowerCase().includes(coachSearch.toLowerCase()),
-	);
 
 	// Populate form data when editing
 	useEffect(() => {
@@ -108,7 +97,7 @@ export function ManageReplyModal({
 				internal_notes: "",
 			});
 		}
-	}, [isEdit, reply, open]);
+	}, [isEdit, reply]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -215,14 +204,13 @@ export function ManageReplyModal({
 
 					<div>
 						<Label htmlFor="occurred_at">Occurred At *</Label>
-						<Input
+						<DatePicker
 							id="occurred_at"
-							type="date"
 							value={formData.occurred_at}
-							onChange={(e) =>
-								setFormData({ ...formData, occurred_at: e.target.value })
+							onChange={(value) =>
+								setFormData({ ...formData, occurred_at: value })
 							}
-							required
+							placeholder="Select date"
 						/>
 					</div>
 
@@ -267,46 +255,16 @@ export function ManageReplyModal({
 								</Select>
 							</div>
 
-							<div>
-								<Label htmlFor="coach_search">Coach/Job (Optional)</Label>
-								<Input
-									id="coach_search"
-									placeholder="Search coach name..."
-									value={coachSearch}
-									onChange={(e) => setCoachSearch(e.target.value)}
-									className="mb-2"
-								/>
-								{coachSearch && (
-									<Select
-										value={formData.university_job_id || "NONE"}
-										onValueChange={(value) =>
-											setFormData({
-												...formData,
-												university_job_id: value === "NONE" ? null : value,
-											})
-										}
-									>
-										<SelectTrigger>
-											<SelectValue placeholder="Select coach/job..." />
-										</SelectTrigger>
-										<SelectContent>
-											<SelectItem value="NONE">None</SelectItem>
-											{filteredCoaches.flatMap((coach) =>
-												coach.university_jobs.map((job) => (
-													<SelectItem key={job.id} value={job.id}>
-														{coach.full_name} - {job.job_title}
-													</SelectItem>
-												)),
-											)}
-											{filteredCoaches.length === 0 && (
-												<SelectItem value="NO_RESULTS" disabled>
-													No coaches found
-												</SelectItem>
-											)}
-										</SelectContent>
-									</Select>
-								)}
-							</div>
+							<UniversityJobLookup
+								label="Coach/Job (Optional)"
+								value={formData.university_job_id || ""}
+								onChange={(value) =>
+									setFormData({
+										...formData,
+										university_job_id: value || null,
+									})
+								}
+							/>
 						</>
 					)}
 

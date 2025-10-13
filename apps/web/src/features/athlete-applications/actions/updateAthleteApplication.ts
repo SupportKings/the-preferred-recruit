@@ -22,7 +22,7 @@ const updateAthleteApplicationSchema = z.object({
 	last_interaction_at: z.string().nullable().optional(),
 	// Origin & Attribution
 	origin_lead_list_id: z.string().uuid().nullable().optional(),
-	origin_lead_list_priority: z.string().nullable().optional(),
+	origin_lead_list_priority: z.number().nullable().optional(),
 	origin_campaign_id: z.string().uuid().nullable().optional(),
 	// Scholarship & Notes
 	scholarship_amount_per_year: z.number().nullable().optional(),

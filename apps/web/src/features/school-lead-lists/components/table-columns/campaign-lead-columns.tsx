@@ -52,10 +52,29 @@ export const createCampaignLeadColumns = (leadListId?: string) => {
 		campaignLeadColumnHelper.accessor("university.name", {
 			header: "Target University",
 			cell: (info) => {
-				const city = info.row.original.university?.city;
+				const university = info.row.original.university;
+				const city = university?.city;
+
+				if (!university?.id) {
+					return (
+						<div className="flex flex-col">
+							<span>{info.getValue() || "Unknown"}</span>
+							{city && (
+								<span className="text-muted-foreground text-xs">{city}</span>
+							)}
+						</div>
+					);
+				}
+
 				return (
 					<div className="flex flex-col">
-						<span>{info.getValue() || "Unknown"}</span>
+						<Link
+							href={`/dashboard/universities/${university.id}`}
+							className="flex items-center gap-1 text-primary hover:underline"
+						>
+							{info.getValue() || "Unknown"}
+							<ExternalLink className="h-3 w-3" />
+						</Link>
 						{city && (
 							<span className="text-muted-foreground text-xs">{city}</span>
 						)}
@@ -68,9 +87,25 @@ export const createCampaignLeadColumns = (leadListId?: string) => {
 		campaignLeadColumnHelper.accessor("program.gender", {
 			header: "Target Program",
 			cell: (info) => {
+				const program = info.row.original.program;
 				const gender = info.getValue();
+
 				if (!gender) return "Not specified";
-				return gender === "mens" ? "Men's" : "Women's";
+				const displayGender = gender === "mens" ? "Men's" : "Women's";
+
+				if (!program?.id) {
+					return displayGender;
+				}
+
+				return (
+					<Link
+						href={`/dashboard/programs/${program.id}`}
+						className="flex items-center gap-1 text-primary hover:underline"
+					>
+						{displayGender}
+						<ExternalLink className="h-3 w-3" />
+					</Link>
+				);
 			},
 		}),
 
@@ -78,11 +113,35 @@ export const createCampaignLeadColumns = (leadListId?: string) => {
 		campaignLeadColumnHelper.accessor("university_job.job_title", {
 			header: "Coach",
 			cell: (info) => {
+				const job = info.row.original.university_job;
 				const jobTitle = info.getValue();
-				const email = info.row.original.university_job?.work_email;
+				const email = job?.work_email;
+				const coachId = job?.coach?.id || job?.coach_id;
+
+				if (!jobTitle) {
+					return "Not specified";
+				}
+
+				if (!coachId) {
+					return (
+						<div className="flex flex-col">
+							<span>{jobTitle}</span>
+							{email && (
+								<span className="text-muted-foreground text-xs">{email}</span>
+							)}
+						</div>
+					);
+				}
+
 				return (
 					<div className="flex flex-col">
-						<span>{jobTitle || "Not specified"}</span>
+						<Link
+							href={`/dashboard/coaches/${coachId}`}
+							className="flex items-center gap-1 text-primary hover:underline"
+						>
+							{jobTitle}
+							<ExternalLink className="h-3 w-3" />
+						</Link>
 						{email && (
 							<span className="text-muted-foreground text-xs">{email}</span>
 						)}

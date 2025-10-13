@@ -20,11 +20,6 @@ interface RepliesTabProps {
 	applicationId: string;
 	replies: any[];
 	campaigns?: Array<{ id: string; name: string; type: string }>;
-	coaches?: Array<{
-		id: string;
-		full_name: string;
-		university_jobs: Array<{ id: string; job_title: string }>;
-	}>;
 	setDeleteModal: (modal: any) => void;
 }
 
@@ -32,7 +27,6 @@ export function RepliesTab({
 	applicationId,
 	replies,
 	campaigns,
-	coaches,
 	setDeleteModal,
 }: RepliesTabProps) {
 	const [editModal, setEditModal] = useState<{
@@ -59,13 +53,7 @@ export function RepliesTab({
 	});
 
 	if (!replies || replies.length === 0) {
-		return (
-			<NoReplies
-				applicationId={applicationId}
-				campaigns={campaigns}
-				coaches={coaches}
-			/>
-		);
+		return <NoReplies applicationId={applicationId} campaigns={campaigns} />;
 	}
 
 	return (
@@ -80,7 +68,6 @@ export function RepliesTab({
 						applicationId={applicationId}
 						mode="add"
 						campaigns={campaigns}
-						coaches={coaches}
 					/>
 				</div>
 			</CardHeader>

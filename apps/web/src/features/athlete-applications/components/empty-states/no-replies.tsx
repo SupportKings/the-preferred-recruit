@@ -1,22 +1,14 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import { MessageSquare } from "lucide-react";
 import { ManageReplyModal } from "../manage-reply-modal";
 
 interface NoRepliesProps {
 	applicationId: string;
 	campaigns?: Array<{ id: string; name: string; type: string }>;
-	coaches?: Array<{
-		id: string;
-		full_name: string;
-		university_jobs: Array<{ id: string; job_title: string }>;
-	}>;
 }
 
-export function NoReplies({
-	applicationId,
-	campaigns,
-	coaches,
-}: NoRepliesProps) {
+export function NoReplies({ applicationId, campaigns }: NoRepliesProps) {
 	return (
 		<Card>
 			<CardHeader>
@@ -29,7 +21,6 @@ export function NoReplies({
 						applicationId={applicationId}
 						mode="add"
 						campaigns={campaigns}
-						coaches={coaches}
 					/>
 				</div>
 			</CardHeader>

@@ -1,10 +1,12 @@
+"use client";
+
 import { useState } from "react";
 
 import { Constants } from "@/utils/supabase/database.types";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
 	Select,
 	SelectContent,
@@ -12,7 +14,10 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "@/components/ui/select";
-import { StatusBadge } from "@/components/ui/status-badge";
+import {
+	StatusBadge,
+	type StatusColorScheme,
+} from "@/components/ui/status-badge";
 
 import { format } from "date-fns";
 import { Calendar, Edit3, Save, X } from "lucide-react";
@@ -56,6 +61,19 @@ const stageOptions = Constants.public.Enums.application_stage_enum.map(
 		label: stage.charAt(0).toUpperCase() + stage.slice(1),
 	}),
 );
+
+// Map application stages to appropriate colors
+const getStageColor = (stage: string): StatusColorScheme => {
+	const stageMap: Record<string, StatusColorScheme> = {
+		intro: "blue", // New/starting - info state
+		ongoing: "yellow", // In progress - warning/pending state
+		visit: "purple", // Special/important stage
+		offer: "orange", // Awaiting decision
+		committed: "green", // Success/completed
+		dropped: "red", // Failed/ended
+	};
+	return stageMap[stage] || "gray";
+};
 
 export function ApplicationStageTiming({
 	application,
@@ -152,7 +170,7 @@ export function ApplicationStageTiming({
 						</Select>
 					) : (
 						<p className="text-sm">
-							<StatusBadge>
+							<StatusBadge colorScheme={getStageColor(application.stage)}>
 								{application.stage
 									? application.stage.charAt(0).toUpperCase() +
 										application.stage.slice(1)
@@ -166,12 +184,12 @@ export function ApplicationStageTiming({
 						Start Date
 					</label>
 					{isEditing ? (
-						<Input
-							type="date"
+						<DatePicker
 							value={formData.start_date}
-							onChange={(e) =>
-								setFormData((prev) => ({ ...prev, start_date: e.target.value }))
+							onChange={(value) =>
+								setFormData((prev) => ({ ...prev, start_date: value }))
 							}
+							placeholder="Select start date"
 							className="mt-1"
 						/>
 					) : (
@@ -183,12 +201,12 @@ export function ApplicationStageTiming({
 						Offer Date
 					</label>
 					{isEditing ? (
-						<Input
-							type="date"
+						<DatePicker
 							value={formData.offer_date}
-							onChange={(e) =>
-								setFormData((prev) => ({ ...prev, offer_date: e.target.value }))
+							onChange={(value) =>
+								setFormData((prev) => ({ ...prev, offer_date: value }))
 							}
+							placeholder="Select offer date"
 							className="mt-1"
 						/>
 					) : (
@@ -200,15 +218,12 @@ export function ApplicationStageTiming({
 						Commitment Date
 					</label>
 					{isEditing ? (
-						<Input
-							type="date"
+						<DatePicker
 							value={formData.commitment_date}
-							onChange={(e) =>
-								setFormData((prev) => ({
-									...prev,
-									commitment_date: e.target.value,
-								}))
+							onChange={(value) =>
+								setFormData((prev) => ({ ...prev, commitment_date: value }))
 							}
+							placeholder="Select commitment date"
 							className="mt-1"
 						/>
 					) : (
@@ -220,15 +235,12 @@ export function ApplicationStageTiming({
 						Last Interaction
 					</label>
 					{isEditing ? (
-						<Input
-							type="date"
+						<DatePicker
 							value={formData.last_interaction_at}
-							onChange={(e) =>
-								setFormData((prev) => ({
-									...prev,
-									last_interaction_at: e.target.value,
-								}))
+							onChange={(value) =>
+								setFormData((prev) => ({ ...prev, last_interaction_at: value }))
 							}
+							placeholder="Select last interaction date"
 							className="mt-1"
 						/>
 					) : (
