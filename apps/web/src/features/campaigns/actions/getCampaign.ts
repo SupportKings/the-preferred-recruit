@@ -14,7 +14,6 @@ export async function getCampaign(id: string) {
 				*,
 				athlete:athletes!campaigns_athlete_id_fkey(id, full_name, graduation_year, contact_email),
 				primary_lead_list:school_lead_lists!campaigns_primary_lead_list_id_fkey(id, name, priority, season_label),
-				seed_campaign:campaigns!campaigns_seed_campaign_id_fkey(id, name, type, status),
 				campaign_leads(
 					id,
 					campaign_id,
@@ -77,6 +76,18 @@ export async function getCampaign(id: string) {
 			return null;
 		}
 
+		// Separately fetch seed campaign if it exists
+		let seedCampaign = null;
+		if (campaign.seed_campaign_id) {
+			const { data: seedData } = await (supabase as any)
+				.from("campaigns")
+				.select("id, name, type, status")
+				.eq("id", campaign.seed_campaign_id)
+				.eq("is_deleted", false)
+				.single();
+			seedCampaign = seedData;
+		}
+
 		// Separately fetch derived campaigns (campaigns that have this campaign as their seed)
 		const { data: derivedCampaigns } = await (supabase as any)
 			.from("campaigns")
@@ -95,9 +106,10 @@ export async function getCampaign(id: string) {
 			.eq("seed_campaign_id", id)
 			.eq("is_deleted", false);
 
-		// Add derived campaigns to the campaign object
+		// Add seed campaign and derived campaigns to the campaign object
 		return {
 			...campaign,
+			seed_campaign: seedCampaign,
 			derived_campaigns: derivedCampaigns || [],
 		};
 	} catch (error) {
