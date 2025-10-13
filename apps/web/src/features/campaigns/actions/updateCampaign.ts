@@ -33,6 +33,13 @@ export const updateCampaignAction = actionClient
 		try {
 			const supabase = await createClient();
 
+			// First, get the campaign to find related paths to revalidate
+			const { data: campaign } = await supabase
+				.from("campaigns")
+				.select("primary_lead_list_id, athlete_id")
+				.eq("id", id)
+				.single();
+
 			const { error } = await supabase
 				.from("campaigns")
 				.update(updateData)
@@ -49,6 +56,18 @@ export const updateCampaignAction = actionClient
 			// Revalidate relevant paths
 			revalidatePath(`/dashboard/campaigns/${id}`);
 			revalidatePath("/dashboard/campaigns");
+
+			// Revalidate athlete page if we have athlete_id
+			if (campaign?.athlete_id) {
+				revalidatePath(`/dashboard/athletes/${campaign.athlete_id}`);
+			}
+
+			// Revalidate lead list page if we have primary_lead_list_id
+			if (campaign?.primary_lead_list_id) {
+				revalidatePath(
+					`/dashboard/school-lead-lists/${campaign.primary_lead_list_id}`,
+				);
+			}
 
 			return {
 				success: true,

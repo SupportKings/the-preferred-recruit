@@ -37,7 +37,7 @@ export function LeadListEntriesSection({
 		data: null,
 	});
 
-	const entryColumns = createEntryColumns();
+	const entryColumns = createEntryColumns(leadListId);
 	const entryRowActions = createEntryRowActions(setDeleteModal, setEditModal);
 
 	const entryTable = useReactTable({

@@ -11,12 +11,14 @@ import { createCampaignLeadColumns } from "../table-columns/campaign-lead-column
 
 interface LeadListCampaignLeadsSectionProps {
 	campaignLeads: any[];
+	leadListId: string;
 }
 
 export function LeadListCampaignLeadsSection({
 	campaignLeads,
+	leadListId,
 }: LeadListCampaignLeadsSectionProps) {
-	const campaignLeadColumns = createCampaignLeadColumns();
+	const campaignLeadColumns = createCampaignLeadColumns(leadListId);
 
 	const campaignLeadTable = useReactTable({
 		data: campaignLeads || [],

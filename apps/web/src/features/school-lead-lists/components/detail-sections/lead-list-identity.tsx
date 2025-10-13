@@ -3,38 +3,13 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
-import { StatusBadge } from "@/components/ui/status-badge";
 
 import { Edit3, ListTree, Save, X } from "lucide-react";
-
-// Helper function to format lead list type for display
-const formatLeadListType = (type?: string): string => {
-	if (!type) return "";
-	const typeMap: Record<string, string> = {
-		d1: "Division I",
-		d2: "Division II",
-		d3: "Division III",
-		naia: "NAIA",
-		juco: "Junior College",
-		reach: "Reach Schools",
-		target: "Target Schools",
-		safety: "Safety Schools",
-	};
-	return typeMap[type] || type;
-};
 
 interface LeadListIdentityProps {
 	leadList: {
 		name: string;
 		priority: number | null;
-		type: string | null;
 		athlete: {
 			full_name: string;
 			contact_email: string;
@@ -57,7 +32,6 @@ export function LeadListIdentity({
 	const [formData, setFormData] = useState({
 		name: leadList.name,
 		priority: leadList.priority ?? "",
-		type: leadList.type || "",
 	});
 
 	const handleSave = () => {
@@ -69,7 +43,6 @@ export function LeadListIdentity({
 		setFormData({
 			name: leadList.name,
 			priority: leadList.priority ?? "",
-			type: leadList.type || "",
 		});
 		onCancel?.();
 	};
@@ -165,41 +138,6 @@ export function LeadListIdentity({
 						/>
 					) : (
 						<p className="text-sm">{leadList.priority ?? "Not set"}</p>
-					)}
-				</div>
-				<div>
-					<label className="font-medium text-muted-foreground text-sm">
-						List Type
-					</label>
-					{isEditing ? (
-						<Select
-							value={formData.type}
-							onValueChange={(value) =>
-								setFormData((prev) => ({ ...prev, type: value }))
-							}
-						>
-							<SelectTrigger className="mt-1">
-								<SelectValue placeholder="Select type..." />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="d1">Division I</SelectItem>
-								<SelectItem value="d2">Division II</SelectItem>
-								<SelectItem value="d3">Division III</SelectItem>
-								<SelectItem value="naia">NAIA</SelectItem>
-								<SelectItem value="juco">Junior College</SelectItem>
-								<SelectItem value="reach">Reach Schools</SelectItem>
-								<SelectItem value="target">Target Schools</SelectItem>
-								<SelectItem value="safety">Safety Schools</SelectItem>
-							</SelectContent>
-						</Select>
-					) : (
-						<p className="text-sm">
-							{leadList.type ? (
-								<StatusBadge>{formatLeadListType(leadList.type)}</StatusBadge>
-							) : (
-								"Not specified"
-							)}
-						</p>
 					)}
 				</div>
 			</CardContent>

@@ -73,10 +73,10 @@ export default function SchoolLeadListDetailView({
 				updateData.name = data.name;
 				updateData.priority =
 					data.priority === "" ? null : Number(data.priority);
-				updateData.type = data.type || null;
 			} else if (editState.section === "tagging") {
 				// Tagging fields
 				updateData.internal_notes = data.internal_notes || null;
+				updateData.type = data.type || null;
 			}
 
 			// Call the update action
@@ -197,7 +197,6 @@ export default function SchoolLeadListDetailView({
 					leadList={{
 						name: leadList.name,
 						priority: leadList.priority,
-						type: leadList.type,
 						athlete: leadList.athlete,
 					}}
 					isEditing={editState.isEditing && editState.section === "identity"}
@@ -208,6 +207,7 @@ export default function SchoolLeadListDetailView({
 				<LeadListTagging
 					leadList={{
 						internal_notes: leadList.internal_notes,
+						type: leadList.type,
 					}}
 					isEditing={editState.isEditing && editState.section === "tagging"}
 					onEditToggle={() => handleEditToggle("tagging")}
@@ -236,12 +236,15 @@ export default function SchoolLeadListDetailView({
 				<TabsContent value="campaigns">
 					<LeadListCampaignsSection
 						campaigns={leadList.campaigns_primary_lead_list}
+						leadListId={leadListId}
+						athleteId={leadList.athlete_id || undefined}
 					/>
 				</TabsContent>
 
 				<TabsContent value="campaign-leads">
 					<LeadListCampaignLeadsSection
 						campaignLeads={leadList.campaign_leads}
+						leadListId={leadListId}
 					/>
 				</TabsContent>
 

@@ -1,8 +1,8 @@
-import { StatusBadge } from "@/components/ui/status-badge";
-
 import { createColumnHelper } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { Edit, Trash2 } from "lucide-react";
+import { InlineStatusCell } from "./inline-status-cell";
+import { InternalNotesCell } from "./internal-notes-cell";
 
 const formatDate = (dateString: string | null) => {
 	if (!dateString) return "Not set";
@@ -13,7 +13,7 @@ const formatDate = (dateString: string | null) => {
 	}
 };
 
-export const createEntryColumns = () => {
+export const createEntryColumns = (leadListId: string) => {
 	const entryColumnHelper = createColumnHelper<any>();
 	return [
 		// University
@@ -39,10 +39,27 @@ export const createEntryColumns = () => {
 			},
 		}),
 
-		// Status
+		// Status (inline editable)
 		entryColumnHelper.accessor("status", {
 			header: "Status",
-			cell: (info) => <StatusBadge>{info.getValue()}</StatusBadge>,
+			cell: (info) => (
+				<InlineStatusCell
+					entryId={info.row.original.id}
+					currentStatus={info.getValue()}
+					leadListId={leadListId}
+				/>
+			),
+		}),
+
+		// Internal Notes (clickable with popup)
+		entryColumnHelper.accessor("internal_notes", {
+			header: "Internal Notes",
+			cell: (info) => (
+				<InternalNotesCell
+					notes={info.getValue()}
+					universityName={info.row.original.university?.name}
+				/>
+			),
 		}),
 
 		// Added At

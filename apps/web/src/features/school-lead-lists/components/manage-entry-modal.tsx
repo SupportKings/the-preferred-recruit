@@ -27,6 +27,7 @@ import {
 	createSchoolLeadListEntry,
 	updateSchoolLeadListEntry,
 } from "@/features/school-lead-lists/actions/relations/entries";
+import { ENTRY_STATUS_OPTIONS } from "@/features/school-lead-lists/constants/entry-status-options";
 import { schoolLeadListQueries } from "@/features/school-lead-lists/queries/useSchoolLeadLists";
 
 import { useQueryClient } from "@tanstack/react-query";
@@ -199,9 +200,11 @@ export function ManageEntryModal({
 								<SelectValue />
 							</SelectTrigger>
 							<SelectContent>
-								<SelectItem value="included">Included</SelectItem>
-								<SelectItem value="excluded">Excluded</SelectItem>
-								<SelectItem value="pending">Pending</SelectItem>
+								{ENTRY_STATUS_OPTIONS.map((option) => (
+									<SelectItem key={option.value} value={option.value}>
+										{option.label}
+									</SelectItem>
+								))}
 							</SelectContent>
 						</Select>
 					</div>
