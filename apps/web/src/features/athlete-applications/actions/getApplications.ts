@@ -27,24 +27,94 @@ export async function getApplication(id: string) {
 
 		const { data: application, error } = await (supabase as any)
 			.from("athlete_applications")
-			.select(`
+			.select(
+				`
 				*,
-				athlete:athletes (
+				athletes (
 					id,
 					full_name,
-					graduation_year
+					graduation_year,
+					contact_email
 				),
-				university:universities (
+				universities (
 					id,
 					name,
+					city,
 					state
 				),
-				program:programs (
+				programs (
 					id,
 					gender,
 					team_url
+				),
+				origin_lead_lists:school_lead_lists!athlete_applications_origin_lead_list_id_fkey (
+					id,
+					name,
+					priority
+				),
+				origin_campaigns:campaigns!athlete_applications_origin_campaign_id_fkey (
+					id,
+					name,
+					type,
+					status
+				),
+				replies (
+					id,
+					type,
+					occurred_at,
+					summary,
+					internal_notes,
+					campaign_id,
+					university_job_id,
+					campaigns (
+						id,
+						name,
+						type
+					),
+					university_jobs (
+						id,
+						job_title,
+						work_email,
+						coach_id,
+						coaches (
+							id,
+							full_name
+						)
+					)
+				),
+				campaign_leads (
+					id,
+					status,
+					first_reply_at,
+					include_reason,
+					internal_notes,
+					campaign_id,
+					university_id,
+					program_id,
+					university_job_id,
+					campaigns (
+						id,
+						name,
+						type
+					),
+					universities (
+						id,
+						name,
+						city
+					),
+					programs (
+						id,
+						gender,
+						team_url
+					),
+					university_jobs (
+						id,
+						job_title,
+						work_email
+					)
 				)
-			`)
+			`,
+			)
 			.eq("id", id)
 			.eq("is_deleted", false)
 			.single();

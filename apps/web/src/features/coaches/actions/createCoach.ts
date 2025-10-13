@@ -46,10 +46,13 @@ export const createCoachAction = actionClient
 				}
 			}
 
+			// Separate university_job from coach data
+			const { university_job, ...coachData } = parsedInput;
+
 			// Insert coach - Postgres should auto-generate the id via gen_random_uuid()
 			const { data: coach, error: insertError } = await (supabase as any)
 				.from("coaches")
-				.insert([parsedInput])
+				.insert([coachData])
 				.select()
 				.single();
 
@@ -59,6 +62,34 @@ export const createCoachAction = actionClient
 					success: false,
 					error: `Failed to create coach: ${insertError.message}`,
 				};
+			}
+
+			// Create university_jobs record if data provided
+			if (university_job) {
+				const universityJobData = {
+					coach_id: coach.id,
+					university_id: university_job.university_id,
+					program_id: university_job.program_id,
+					job_title: university_job.job_title,
+					work_email: university_job.work_email,
+					work_phone: university_job.work_phone,
+					start_date: university_job.start_date,
+					internal_notes: university_job.internal_notes,
+				};
+
+				const { error: jobError } = await (supabase as any)
+					.from("university_jobs")
+					.insert([universityJobData]);
+
+				if (jobError) {
+					console.error("Error creating university job:", jobError);
+					// Note: Coach was created successfully, but job creation failed
+					return {
+						success: true,
+						data: coach,
+						warning: `Coach created but failed to create university job: ${jobError.message}`,
+					};
+				}
 			}
 
 			// Revalidate paths

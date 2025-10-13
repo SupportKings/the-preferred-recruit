@@ -5,33 +5,40 @@ import { useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-import { updateAthleteAction } from "../actions/updateAthlete";
-import { athleteQueries, useAthlete } from "../queries/useAthletes";
 import { deleteContactAthlete } from "@/features/contacts/actions/relations/contactAthletes";
 
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-
-// Import detail section components (to be created)
-import { AthleteIdentityContact } from "./detail-sections/athlete-identity-contact";
-import { AthleteLocationEducation } from "./detail-sections/athlete-location-education";
-import { AthleteProfileResources } from "./detail-sections/athlete-profile-resources";
-import { AthleteCommsDiscord } from "./detail-sections/athlete-comms-discord";
-import { AthleteSalesEngagement } from "./detail-sections/athlete-sales-engagement";
-import { AthleteContractBilling } from "./detail-sections/athlete-contract-billing";
-import { AthleteSystemInfo } from "./detail-sections/athlete-system-info";
-
+import { deleteAthleteApplication } from "../actions/athleteApplications";
+import { deleteAthleteResult } from "../actions/athleteResults";
+import { deleteCampaignLead } from "../actions/campaignLeads";
+import { deleteCampaign } from "../actions/campaigns";
+import { deleteChecklistItem } from "../actions/checklistItems";
+import { deleteLeadListEntry } from "../actions/leadListEntries";
+import { deleteReply } from "../actions/replies";
+import { deleteSchoolLeadList } from "../actions/schoolLeadLists";
+import { deleteSendingToolLeadList } from "../actions/sendingToolLeadLists";
+import { updateAthleteAction } from "../actions/updateAthlete";
+import { athleteQueries, useAthlete } from "../queries/useAthletes";
+import { AthleteApplicationsSection } from "./detail-sections/athlete-applications-section";
+import { AthleteCampaignLeadsSection } from "./detail-sections/athlete-campaign-leads-section";
+import { AthleteCampaignsSection } from "./detail-sections/athlete-campaigns-section";
 // Import tabs sections (to be created)
 import { AthleteChecklistSection } from "./detail-sections/athlete-checklist-section";
+import { AthleteCommsDiscord } from "./detail-sections/athlete-comms-discord";
 import { AthleteContactsSection } from "./detail-sections/athlete-contacts-section";
-import { AthleteResultsSection } from "./detail-sections/athlete-results-section";
-import { AthleteApplicationsSection } from "./detail-sections/athlete-applications-section";
-import { AthleteLeadListsSection } from "./detail-sections/athlete-lead-lists-section";
-import { AthleteCampaignsSection } from "./detail-sections/athlete-campaigns-section";
-import { AthleteRepliesSection } from "./detail-sections/athlete-replies-section";
+import { AthleteContractBilling } from "./detail-sections/athlete-contract-billing";
+// Import detail section components (to be created)
+import { AthleteIdentityContact } from "./detail-sections/athlete-identity-contact";
 import { AthleteLeadListEntriesSection } from "./detail-sections/athlete-lead-list-entries-section";
-import { AthleteCampaignLeadsSection } from "./detail-sections/athlete-campaign-leads-section";
+import { AthleteLeadListsSection } from "./detail-sections/athlete-lead-lists-section";
+import { AthleteLocationEducation } from "./detail-sections/athlete-location-education";
+import { AthleteProfileResources } from "./detail-sections/athlete-profile-resources";
+import { AthleteRepliesSection } from "./detail-sections/athlete-replies-section";
+import { AthleteResultsSection } from "./detail-sections/athlete-results-section";
+import { AthleteSalesEngagement } from "./detail-sections/athlete-sales-engagement";
 import { AthleteSendingToolSection } from "./detail-sections/athlete-sending-tool-section";
+import { AthleteSystemInfo } from "./detail-sections/athlete-system-info";
 import { DeleteConfirmModal } from "./shared/delete-confirm-modal";
 
 interface AthleteDetailViewProps {
@@ -154,6 +161,42 @@ export default function AthleteDetailView({
 					await deleteContactAthlete(deleteModal.id);
 					toast.success("Contact deleted successfully");
 					break;
+				case "checklist":
+					await deleteChecklistItem(deleteModal.id);
+					toast.success("Checklist item deleted successfully");
+					break;
+				case "result":
+					await deleteAthleteResult(deleteModal.id);
+					toast.success("Result deleted successfully");
+					break;
+				case "application":
+					await deleteAthleteApplication(deleteModal.id);
+					toast.success("Application deleted successfully");
+					break;
+				case "leadList":
+					await deleteSchoolLeadList(deleteModal.id);
+					toast.success("Lead list deleted successfully");
+					break;
+				case "campaign":
+					await deleteCampaign(deleteModal.id);
+					toast.success("Campaign deleted successfully");
+					break;
+				case "reply":
+					await deleteReply(deleteModal.id);
+					toast.success("Reply deleted successfully");
+					break;
+				case "leadListEntry":
+					await deleteLeadListEntry(deleteModal.id);
+					toast.success("Lead list entry deleted successfully");
+					break;
+				case "campaignLead":
+					await deleteCampaignLead(deleteModal.id);
+					toast.success("Campaign lead deleted successfully");
+					break;
+				case "sendingToolList":
+					await deleteSendingToolLeadList(deleteModal.id);
+					toast.success("Sending tool list deleted successfully");
+					break;
 				default:
 					throw new Error("Unknown delete type");
 			}
@@ -259,18 +302,21 @@ export default function AthleteDetailView({
 					<TabsTrigger value="applications">Applications</TabsTrigger>
 					<TabsTrigger value="lead-lists">Lead Lists</TabsTrigger>
 				</TabsList>
-				<TabsList className="grid w-full grid-cols-5 mt-2">
+				<TabsList className="mt-2 grid w-full grid-cols-5">
 					<TabsTrigger value="campaigns">Campaigns</TabsTrigger>
 					<TabsTrigger value="replies">Replies</TabsTrigger>
 					<TabsTrigger value="entries">Entries</TabsTrigger>
 					<TabsTrigger value="campaign-leads">Campaign Leads</TabsTrigger>
-					<TabsTrigger value="sending-tool">Sending Tool</TabsTrigger>
+					<TabsTrigger value="sending-tool">
+						Sending Tool Lead Lists (CSV Exports)
+					</TabsTrigger>
 				</TabsList>
 
 				<TabsContent value="checklist">
 					<AthleteChecklistSection
 						athleteId={athleteId}
 						checklists={athlete.checklists || []}
+						setDeleteModal={setDeleteModal}
 					/>
 				</TabsContent>
 
@@ -286,6 +332,7 @@ export default function AthleteDetailView({
 					<AthleteResultsSection
 						athleteId={athleteId}
 						results={athlete.athlete_results || []}
+						setDeleteModal={setDeleteModal}
 					/>
 				</TabsContent>
 
@@ -293,6 +340,7 @@ export default function AthleteDetailView({
 					<AthleteApplicationsSection
 						athleteId={athleteId}
 						applications={athlete.athlete_applications || []}
+						setDeleteModal={setDeleteModal}
 					/>
 				</TabsContent>
 
@@ -300,6 +348,7 @@ export default function AthleteDetailView({
 					<AthleteLeadListsSection
 						athleteId={athleteId}
 						leadLists={athlete.school_lead_lists || []}
+						setDeleteModal={setDeleteModal}
 					/>
 				</TabsContent>
 
@@ -307,6 +356,7 @@ export default function AthleteDetailView({
 					<AthleteCampaignsSection
 						athleteId={athleteId}
 						campaigns={athlete.campaigns || []}
+						setDeleteModal={setDeleteModal}
 					/>
 				</TabsContent>
 
@@ -314,19 +364,31 @@ export default function AthleteDetailView({
 					<AthleteRepliesSection
 						athleteId={athleteId}
 						replies={athlete.replies || []}
+						setDeleteModal={setDeleteModal}
 					/>
 				</TabsContent>
 
 				<TabsContent value="entries">
-					<AthleteLeadListEntriesSection athleteId={athleteId} />
+					<AthleteLeadListEntriesSection
+						athleteId={athleteId}
+						leadListEntries={[]}
+						setDeleteModal={setDeleteModal}
+					/>
 				</TabsContent>
 
 				<TabsContent value="campaign-leads">
-					<AthleteCampaignLeadsSection athleteId={athleteId} />
+					<AthleteCampaignLeadsSection
+						athleteId={athleteId}
+						campaignLeads={[]}
+						setDeleteModal={setDeleteModal}
+					/>
 				</TabsContent>
 
 				<TabsContent value="sending-tool">
-					<AthleteSendingToolSection athleteId={athleteId} />
+					<AthleteSendingToolSection
+						athleteId={athleteId}
+						setDeleteModal={setDeleteModal}
+					/>
 				</TabsContent>
 			</Tabs>
 

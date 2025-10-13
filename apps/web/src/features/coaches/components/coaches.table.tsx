@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from "react";
 
-import type { CoachRow } from "@/features/coaches/types/coach";
-
 import { DataTableFilter } from "@/components/data-table-filter";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -17,13 +15,19 @@ import { UniversalDataTable } from "@/components/universal-data-table/universal-
 import { UniversalDataTableWrapper } from "@/components/universal-data-table/universal-data-table-wrapper";
 import { createUniversalColumnHelper } from "@/components/universal-data-table/utils/column-helpers";
 
+import type { CoachRow } from "@/features/coaches/types/coach";
+
 import { createColumnHelper } from "@tanstack/react-table";
 import {
 	AwardIcon,
+	BriefcaseIcon,
+	BuildingIcon,
 	EditIcon,
 	EyeIcon,
 	InstagramIcon,
 	MailIcon,
+	MapPinIcon,
+	PhoneIcon,
 	PlusIcon,
 	TrashIcon,
 	UserIcon,
@@ -83,14 +87,31 @@ const coachTableColumns = [
 			);
 		},
 	}),
-	columnHelper.accessor("email", {
-		id: "email",
-		header: "Email",
+	columnHelper.display({
+		id: "work_email",
+		header: "Work Email",
 		enableColumnFilter: true,
-		enableSorting: true,
-		cell: ({ row }) => (
-			<div className="text-sm">{row.getValue("email") || "N/A"}</div>
-		),
+		enableSorting: false,
+		cell: ({ row }) => {
+			const job = row.original.university_jobs?.[0];
+			const workEmail = job?.work_email;
+			const personalEmail = row.original.email;
+			const displayEmail = workEmail || personalEmail;
+
+			return (
+				<div className="text-sm">
+					{displayEmail || "N/A"}
+					{workEmail && (
+						<span className="text-muted-foreground text-xs ml-1">(Work)</span>
+					)}
+					{!workEmail && personalEmail && (
+						<span className="text-muted-foreground text-xs ml-1">
+							(Personal)
+						</span>
+					)}
+				</div>
+			);
+		},
 	}),
 	columnHelper.accessor("instagram_profile", {
 		id: "instagram_profile",
@@ -121,6 +142,45 @@ const coachTableColumns = [
 			);
 		},
 	}),
+	columnHelper.accessor("phone", {
+		id: "phone",
+		header: "Phone",
+		enableColumnFilter: true,
+		enableSorting: true,
+		cell: ({ row }) => (
+			<div className="text-sm">{row.getValue("phone") || "N/A"}</div>
+		),
+	}),
+	columnHelper.display({
+		id: "job_title",
+		header: "Job Title",
+		enableColumnFilter: true,
+		enableSorting: false,
+		cell: ({ row }) => {
+			const job = row.original.university_jobs?.[0];
+			return <div className="text-sm">{job?.job_title || "N/A"}</div>;
+		},
+	}),
+	columnHelper.display({
+		id: "university_name",
+		header: "University",
+		enableColumnFilter: true,
+		enableSorting: false,
+		cell: ({ row }) => {
+			const job = row.original.university_jobs?.[0];
+			return <div className="text-sm">{job?.universities?.name || "N/A"}</div>;
+		},
+	}),
+	columnHelper.display({
+		id: "university_state",
+		header: "State",
+		enableColumnFilter: true,
+		enableSorting: false,
+		cell: ({ row }) => {
+			const job = row.original.university_jobs?.[0];
+			return <StatusBadge>{job?.universities?.state || "N/A"}</StatusBadge>;
+		},
+	}),
 ];
 
 // Filter configuration using universal column helper
@@ -138,14 +198,34 @@ const coachFilterConfig = [
 		.icon(AwardIcon)
 		.build(),
 	universalColumnHelper
-		.text("email")
-		.displayName("Email")
+		.text("work_email" as any)
+		.displayName("Work Email")
 		.icon(MailIcon)
 		.build(),
 	universalColumnHelper
 		.text("instagram_profile")
 		.displayName("Instagram")
 		.icon(InstagramIcon)
+		.build(),
+	universalColumnHelper
+		.text("phone")
+		.displayName("Phone")
+		.icon(PhoneIcon)
+		.build(),
+	universalColumnHelper
+		.text("job_title" as any)
+		.displayName("Job Title")
+		.icon(BriefcaseIcon)
+		.build(),
+	universalColumnHelper
+		.text("university_name" as any)
+		.displayName("University")
+		.icon(BuildingIcon)
+		.build(),
+	universalColumnHelper
+		.text("university_state" as any)
+		.displayName("State")
+		.icon(MapPinIcon)
 		.build(),
 ];
 
@@ -212,14 +292,34 @@ function CoachesTableContent({
 			options: specialtyOptions,
 		},
 		universalColumnHelper
-			.text("email")
-			.displayName("Email")
+			.text("work_email" as any)
+			.displayName("Work Email")
 			.icon(MailIcon)
 			.build(),
 		universalColumnHelper
 			.text("instagram_profile")
 			.displayName("Instagram")
 			.icon(InstagramIcon)
+			.build(),
+		universalColumnHelper
+			.text("phone")
+			.displayName("Phone")
+			.icon(PhoneIcon)
+			.build(),
+		universalColumnHelper
+			.text("job_title" as any)
+			.displayName("Job Title")
+			.icon(BriefcaseIcon)
+			.build(),
+		universalColumnHelper
+			.text("university_name" as any)
+			.displayName("University")
+			.icon(BuildingIcon)
+			.build(),
+		universalColumnHelper
+			.text("university_state" as any)
+			.displayName("State")
+			.icon(MapPinIcon)
 			.build(),
 	];
 

@@ -30,7 +30,20 @@ export async function getAllCoaches() {
 
 		const { data: coaches, error } = await supabase
 			.from("coaches")
-			.select("*")
+			.select(
+				`
+				*,
+				university_jobs (
+					job_title,
+					university_id,
+					work_email,
+					universities (
+						name,
+						state
+					)
+				)
+			`,
+			)
 			.order("full_name", { ascending: true });
 
 		if (error) {
@@ -54,7 +67,44 @@ export async function getCoachesWithFilters(
 	try {
 		const supabase = await createClient();
 
-		let query: any = supabase.from("coaches").select("*", { count: "exact" });
+		// Check if any filters require university_jobs with inner join
+		const hasUniversityJobsFilter = filters.some((filter) =>
+			[
+				"job_title",
+				"university_name",
+				"university_state",
+				"work_email",
+			].includes(filter.columnId),
+		);
+
+		// Check if filtering on universities table (nested)
+		const hasUniversitiesFilter = filters.some((filter) =>
+			["university_name", "university_state"].includes(filter.columnId),
+		);
+
+		// Use !inner when filtering on university_jobs to ensure filters work correctly
+		const universityJobsJoin = hasUniversityJobsFilter
+			? "university_jobs!inner"
+			: "university_jobs";
+		const universitiesJoin = hasUniversitiesFilter
+			? "universities!inner"
+			: "universities";
+
+		let query: any = supabase.from("coaches").select(
+			`
+				*,
+				${universityJobsJoin} (
+					job_title,
+					university_id,
+					work_email,
+					${universitiesJoin} (
+						name,
+						state
+					)
+				)
+			`,
+			{ count: "exact" },
+		);
 
 		// Apply filters with proper operator support
 		filters.forEach((filter) => {
@@ -68,6 +118,7 @@ export async function getCoachesWithFilters(
 					case "full_name":
 					case "email":
 					case "instagram_profile":
+					case "phone":
 						// Text fields - support contains/does not contain
 						if (operator === "contains") {
 							query = query.ilike(columnId, `%${values[0]}%`);
@@ -82,6 +133,70 @@ export async function getCoachesWithFilters(
 							query = query.eq(columnId, values[0]);
 						} else if (operator === "is not") {
 							query = query.not(columnId, "eq", values[0]);
+						}
+						break;
+
+					case "job_title":
+						// Filter by university_jobs.job_title
+						if (operator === "contains") {
+							query = query.ilike(
+								"university_jobs.job_title",
+								`%${values[0]}%`,
+							);
+						} else if (operator === "does not contain") {
+							query = query.not(
+								"university_jobs.job_title",
+								"ilike",
+								`%${values[0]}%`,
+							);
+						}
+						break;
+
+					case "university_name":
+						// Filter by university_jobs.universities.name
+						if (operator === "contains") {
+							query = query.ilike(
+								"university_jobs.universities.name",
+								`%${values[0]}%`,
+							);
+						} else if (operator === "does not contain") {
+							query = query.not(
+								"university_jobs.universities.name",
+								"ilike",
+								`%${values[0]}%`,
+							);
+						}
+						break;
+
+					case "university_state":
+						// Filter by university_jobs.universities.state
+						if (operator === "contains") {
+							query = query.ilike(
+								"university_jobs.universities.state",
+								`%${values[0]}%`,
+							);
+						} else if (operator === "does not contain") {
+							query = query.not(
+								"university_jobs.universities.state",
+								"ilike",
+								`%${values[0]}%`,
+							);
+						}
+						break;
+
+					case "work_email":
+						// Filter by university_jobs.work_email
+						if (operator === "contains") {
+							query = query.ilike(
+								"university_jobs.work_email",
+								`%${values[0]}%`,
+							);
+						} else if (operator === "does not contain") {
+							query = query.not(
+								"university_jobs.work_email",
+								"ilike",
+								`%${values[0]}%`,
+							);
 						}
 						break;
 				}
@@ -140,9 +255,43 @@ export async function getCoachesWithFaceted(
 		// Fetch faceted counts for each column in parallel
 		await Promise.all(
 			facetedColumns.map(async (columnId) => {
+				// Check if any filters require university_jobs
+				const hasUniversityJobsFilter = filters.some((filter) =>
+					[
+						"job_title",
+						"university_name",
+						"university_state",
+						"work_email",
+					].includes(filter.columnId),
+				);
+
+				// Check if filtering on universities table (nested)
+				const hasUniversitiesFilter = filters.some((filter) =>
+					["university_name", "university_state"].includes(filter.columnId),
+				);
+
+				// Determine select query based on column type
+				// Use !inner when filtering to ensure filters work correctly
+				const universityJobsJoin = hasUniversityJobsFilter
+					? "university_jobs!inner"
+					: "university_jobs";
+				const universitiesJoin = hasUniversitiesFilter
+					? "universities!inner"
+					: "universities";
+
+				let selectString = columnId;
+				if (columnId === "university_state") {
+					selectString = `${universityJobsJoin}(${universitiesJoin}(state)),${universityJobsJoin}.${universitiesJoin}.state`;
+				} else if (columnId === "job_title") {
+					selectString = `${universityJobsJoin}(job_title)`;
+				} else if (hasUniversityJobsFilter) {
+					// If any filter needs university_jobs, include it in select
+					selectString = `${columnId},${universityJobsJoin}(job_title,work_email,${universitiesJoin}(name,state))`;
+				}
+
 				let facetQuery: any = supabase
 					.from("coaches")
-					.select(columnId, { count: "exact" });
+					.select(selectString, { count: "exact" });
 
 				// Apply existing filters (excluding the column we're faceting)
 				filters
@@ -158,6 +307,7 @@ export async function getCoachesWithFaceted(
 								case "full_name":
 								case "email":
 								case "instagram_profile":
+								case "phone":
 									if (operator === "contains") {
 										facetQuery = facetQuery.ilike(
 											filterColumnId,
@@ -183,6 +333,66 @@ export async function getCoachesWithFaceted(
 										);
 									}
 									break;
+
+								case "job_title":
+									if (operator === "contains") {
+										facetQuery = facetQuery.ilike(
+											"university_jobs.job_title",
+											`%${values[0]}%`,
+										);
+									} else if (operator === "does not contain") {
+										facetQuery = facetQuery.not(
+											"university_jobs.job_title",
+											"ilike",
+											`%${values[0]}%`,
+										);
+									}
+									break;
+
+								case "university_name":
+									if (operator === "contains") {
+										facetQuery = facetQuery.ilike(
+											"university_jobs.universities.name",
+											`%${values[0]}%`,
+										);
+									} else if (operator === "does not contain") {
+										facetQuery = facetQuery.not(
+											"university_jobs.universities.name",
+											"ilike",
+											`%${values[0]}%`,
+										);
+									}
+									break;
+
+								case "university_state":
+									if (operator === "contains") {
+										facetQuery = facetQuery.ilike(
+											"university_jobs.universities.state",
+											`%${values[0]}%`,
+										);
+									} else if (operator === "does not contain") {
+										facetQuery = facetQuery.not(
+											"university_jobs.universities.state",
+											"ilike",
+											`%${values[0]}%`,
+										);
+									}
+									break;
+
+								case "work_email":
+									if (operator === "contains") {
+										facetQuery = facetQuery.ilike(
+											"university_jobs.work_email",
+											`%${values[0]}%`,
+										);
+									} else if (operator === "does not contain") {
+										facetQuery = facetQuery.not(
+											"university_jobs.work_email",
+											"ilike",
+											`%${values[0]}%`,
+										);
+									}
+									break;
 							}
 						}
 					});
@@ -201,7 +411,15 @@ export async function getCoachesWithFaceted(
 				// Convert to Map format
 				const facetMap = new Map<string, number>();
 				facetData?.forEach((item: any) => {
-					const value = item[columnId];
+					let value;
+					if (columnId === "university_state") {
+						value = item?.university_jobs?.[0]?.universities?.state;
+					} else if (columnId === "job_title") {
+						value = item?.university_jobs?.[0]?.job_title;
+					} else {
+						value = item[columnId];
+					}
+
 					if (value !== null && value !== undefined) {
 						const key = String(value);
 						facetMap.set(key, (facetMap.get(key) || 0) + 1);
@@ -231,9 +449,43 @@ export async function getCoachesFaceted(columnId: string, filters: any[] = []) {
 	try {
 		const supabase = await createClient();
 
+		// Check if any filters require university_jobs
+		const hasUniversityJobsFilter = filters.some((filter) =>
+			[
+				"job_title",
+				"university_name",
+				"university_state",
+				"work_email",
+			].includes(filter.columnId),
+		);
+
+		// Check if filtering on universities table (nested)
+		const hasUniversitiesFilter = filters.some((filter) =>
+			["university_name", "university_state"].includes(filter.columnId),
+		);
+
+		// Determine select query based on column type
+		// Use !inner when filtering to ensure filters work correctly
+		const universityJobsJoin = hasUniversityJobsFilter
+			? "university_jobs!inner"
+			: "university_jobs";
+		const universitiesJoin = hasUniversitiesFilter
+			? "universities!inner"
+			: "universities";
+
+		let selectString = columnId;
+		if (columnId === "university_state") {
+			selectString = `${universityJobsJoin}(${universitiesJoin}(state)),${universityJobsJoin}.${universitiesJoin}.state`;
+		} else if (columnId === "job_title") {
+			selectString = `${universityJobsJoin}(job_title)`;
+		} else if (hasUniversityJobsFilter) {
+			// If any filter needs university_jobs, include it in select
+			selectString = `${columnId},${universityJobsJoin}(job_title,work_email,${universitiesJoin}(name,state))`;
+		}
+
 		let query: any = supabase
 			.from("coaches")
-			.select(columnId, { count: "exact" });
+			.select(selectString, { count: "exact" });
 
 		// Apply existing filters (excluding the column we're faceting)
 		filters
@@ -249,6 +501,7 @@ export async function getCoachesFaceted(columnId: string, filters: any[] = []) {
 						case "full_name":
 						case "email":
 						case "instagram_profile":
+						case "phone":
 							if (operator === "contains") {
 								query = query.ilike(filterColumnId, `%${values[0]}%`);
 							} else if (operator === "does not contain") {
@@ -261,6 +514,66 @@ export async function getCoachesFaceted(columnId: string, filters: any[] = []) {
 								query = query.eq(filterColumnId, values[0]);
 							} else if (operator === "is not") {
 								query = query.not(filterColumnId, "eq", values[0]);
+							}
+							break;
+
+						case "job_title":
+							if (operator === "contains") {
+								query = query.ilike(
+									"university_jobs.job_title",
+									`%${values[0]}%`,
+								);
+							} else if (operator === "does not contain") {
+								query = query.not(
+									"university_jobs.job_title",
+									"ilike",
+									`%${values[0]}%`,
+								);
+							}
+							break;
+
+						case "university_name":
+							if (operator === "contains") {
+								query = query.ilike(
+									"university_jobs.universities.name",
+									`%${values[0]}%`,
+								);
+							} else if (operator === "does not contain") {
+								query = query.not(
+									"university_jobs.universities.name",
+									"ilike",
+									`%${values[0]}%`,
+								);
+							}
+							break;
+
+						case "university_state":
+							if (operator === "contains") {
+								query = query.ilike(
+									"university_jobs.universities.state",
+									`%${values[0]}%`,
+								);
+							} else if (operator === "does not contain") {
+								query = query.not(
+									"university_jobs.universities.state",
+									"ilike",
+									`%${values[0]}%`,
+								);
+							}
+							break;
+
+						case "work_email":
+							if (operator === "contains") {
+								query = query.ilike(
+									"university_jobs.work_email",
+									`%${values[0]}%`,
+								);
+							} else if (operator === "does not contain") {
+								query = query.not(
+									"university_jobs.work_email",
+									"ilike",
+									`%${values[0]}%`,
+								);
 							}
 							break;
 					}
@@ -277,7 +590,15 @@ export async function getCoachesFaceted(columnId: string, filters: any[] = []) {
 		// Convert to Map format
 		const facetedMap = new Map<string, number>();
 		data?.forEach((item: any) => {
-			const value = item[columnId];
+			let value;
+			if (columnId === "university_state") {
+				value = item?.university_jobs?.[0]?.universities?.state;
+			} else if (columnId === "job_title") {
+				value = item?.university_jobs?.[0]?.job_title;
+			} else {
+				value = item[columnId];
+			}
+
 			if (value !== null && value !== undefined) {
 				const key = String(value);
 				facetedMap.set(key, (facetedMap.get(key) || 0) + 1);

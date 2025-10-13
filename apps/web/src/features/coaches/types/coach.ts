@@ -2,8 +2,20 @@ import type { Database, Enums, Tables } from "@/utils/supabase/database.types";
 
 import { z } from "zod";
 
-// Database types
-export type CoachRow = Tables<"coaches">;
+// Database types - Extended with university job info
+export type CoachRow = Tables<"coaches"> & {
+	university_jobs?:
+		| {
+				job_title: string | null;
+				university_id: string | null;
+				work_email: string | null;
+				universities?: {
+					name: string | null;
+					state: string | null;
+				} | null;
+		  }[]
+		| null;
+};
 
 // Enums from database
 export type EventGroup = Enums<"event_group_enum">;
@@ -75,7 +87,15 @@ export const validationUtils = {
 	// Event group enum validation
 	eventGroup: z
 		.enum(
-			["sprints", "hurdles", "distance", "jumps", "throws", "relays", "combined"],
+			[
+				"sprints",
+				"hurdles",
+				"distance",
+				"jumps",
+				"throws",
+				"relays",
+				"combined",
+			],
 			{
 				errorMap: () => ({ message: "Please select a valid specialty" }),
 			},
@@ -90,6 +110,19 @@ export const validationUtils = {
 			.max(maxLength, `Must be less than ${maxLength} characters`)
 			.optional()
 			.or(z.literal("").transform(() => undefined)),
+
+	// UUID validation
+	uuid: z
+		.string()
+		.uuid({ message: "Invalid ID format" })
+		.optional()
+		.or(z.literal("").transform(() => undefined)),
+
+	// Date validation
+	date: z
+		.string()
+		.optional()
+		.or(z.literal("").transform(() => undefined)),
 };
 
 // Base coach schema for creation (matches database schema)
@@ -109,6 +142,23 @@ export const coachCreateSchema = z.object({
 
 	// Internal
 	internal_notes: validationUtils.textarea(5000),
+
+	// University Job (optional nested object)
+	university_job: z
+		.object({
+			university_id: validationUtils.uuid,
+			program_id: validationUtils.uuid,
+			job_title: z
+				.string()
+				.max(200, "Job title must be less than 200 characters")
+				.optional()
+				.or(z.literal("").transform(() => undefined)),
+			work_email: validationUtils.email,
+			work_phone: validationUtils.phone,
+			start_date: validationUtils.date,
+			internal_notes: validationUtils.textarea(5000),
+		})
+		.optional(),
 });
 
 // Schema for coach updates (all fields optional except id)
@@ -133,6 +183,15 @@ export const coachFormSchema = z.object({
 
 	// Internal
 	internal_notes: z.string().optional().default(""),
+
+	// University Job fields (optional)
+	university_id: z.string().optional().default(""),
+	program_id: z.string().optional().default(""),
+	job_title: z.string().optional().default(""),
+	work_email: z.string().optional().default(""),
+	work_phone: z.string().optional().default(""),
+	start_date: z.string().optional().default(""),
+	job_internal_notes: z.string().optional().default(""),
 });
 
 // Form schema for coach updates

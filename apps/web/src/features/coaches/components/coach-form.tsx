@@ -4,6 +4,8 @@ import { useState } from "react";
 
 import { useRouter } from "next/navigation";
 
+import { cn } from "@/lib/utils";
+
 import { Button } from "@/components/ui/button";
 import {
 	Command,
@@ -13,6 +15,7 @@ import {
 	CommandItem,
 	CommandList,
 } from "@/components/ui/command";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -22,7 +25,8 @@ import {
 } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 
-import { cn } from "@/lib/utils";
+import { usePrograms } from "@/features/programs/queries/usePrograms";
+import { useUniversities } from "@/features/universities/queries/useUniversities";
 
 import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
@@ -31,10 +35,10 @@ import { useAction } from "next-safe-action/hooks";
 import { toast } from "sonner";
 import { createCoachAction } from "../actions/createCoach";
 import {
+	type CoachFormInput,
 	EVENT_GROUP_LABELS,
 	EVENT_GROUPS,
 	getAllValidationErrors,
-	type CoachFormInput,
 } from "../types/coach";
 
 interface CoachFormProps {
@@ -52,11 +56,25 @@ export function CoachForm({
 	const queryClient = useQueryClient();
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [specialtyOpen, setSpecialtyOpen] = useState(false);
+	const [universityOpen, setUniversityOpen] = useState(false);
+	const [programOpen, setProgramOpen] = useState(false);
+
+	// Fetch universities and programs for dropdowns
+	const { data: universities = [], isLoading: isLoadingUniversities } =
+		useUniversities();
+	const { data: allPrograms = [], isLoading: isLoadingPrograms } =
+		usePrograms();
 
 	const { execute } = useAction(createCoachAction, {
 		onSuccess: (result) => {
 			if (result.data?.success) {
 				toast.success("Coach created successfully");
+
+				// Show warning if university job creation failed
+				if (result.data?.warning) {
+					toast.warning(result.data.warning);
+				}
+
 				queryClient.invalidateQueries({ queryKey: ["coaches"] });
 
 				if (onSuccess) {
@@ -88,11 +106,29 @@ export function CoachForm({
 			linkedin_profile: initialData?.linkedin_profile || "",
 			instagram_profile: initialData?.instagram_profile || "",
 			internal_notes: initialData?.internal_notes || "",
+			// University job fields
+			university_id: initialData?.university_id || "",
+			program_id: initialData?.program_id || "",
+			job_title: initialData?.job_title || "",
+			work_email: initialData?.work_email || "",
+			work_phone: initialData?.work_phone || "",
+			start_date: initialData?.start_date || "",
+			job_internal_notes: initialData?.job_internal_notes || "",
 		},
 		onSubmit: async ({ value }) => {
 			setIsSubmitting(true);
 
 			try {
+				// Check if any university job fields are filled
+				const hasUniversityJob =
+					value.university_id ||
+					value.program_id ||
+					value.job_title ||
+					value.work_email ||
+					value.work_phone ||
+					value.start_date ||
+					value.job_internal_notes;
+
 				// Transform string values to proper types for server validation
 				const transformedData = {
 					full_name: value.full_name,
@@ -103,6 +139,17 @@ export function CoachForm({
 					linkedin_profile: value.linkedin_profile || undefined,
 					instagram_profile: value.instagram_profile || undefined,
 					internal_notes: value.internal_notes || undefined,
+					university_job: hasUniversityJob
+						? {
+								university_id: value.university_id || undefined,
+								program_id: value.program_id || undefined,
+								job_title: value.job_title || undefined,
+								work_email: value.work_email || undefined,
+								work_phone: value.work_phone || undefined,
+								start_date: value.start_date || undefined,
+								internal_notes: value.job_internal_notes || undefined,
+							}
+						: undefined,
 				};
 
 				await execute(transformedData as any);
@@ -318,6 +365,295 @@ export function CoachForm({
 									onChange={(e) => field.handleChange(e.target.value)}
 									onBlur={field.handleBlur}
 									placeholder="https://instagram.com/username"
+								/>
+								{field.state.meta.errors.length > 0 && (
+									<p className="text-destructive text-sm">
+										{field.state.meta.errors[0]}
+									</p>
+								)}
+							</div>
+						)}
+					</form.Field>
+				</div>
+			</div>
+
+			{/* University Job Section */}
+			<div className="space-y-4">
+				<h2 className="font-semibold text-lg">University Job (Optional)</h2>
+				<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+					<form.Field name="university_id">
+						{(field) => (
+							<div className="space-y-2">
+								<Label htmlFor="university_id">University</Label>
+								<Popover open={universityOpen} onOpenChange={setUniversityOpen}>
+									<PopoverTrigger asChild>
+										<Button
+											id="university_id"
+											variant="outline"
+											className={cn(
+												"w-full justify-between",
+												!field.state.value && "text-muted-foreground",
+											)}
+											type="button"
+											disabled={isLoadingUniversities}
+										>
+											{isLoadingUniversities
+												? "Loading..."
+												: field.state.value
+													? universities.find(
+															(u: any) => u.id === field.state.value,
+														)?.name || "Select university"
+													: "Select university"}
+											<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+										</Button>
+									</PopoverTrigger>
+									<PopoverContent className="w-full p-0">
+										<Command>
+											<CommandInput placeholder="Search university..." />
+											<CommandList>
+												<CommandEmpty>No university found.</CommandEmpty>
+												<CommandGroup>
+													{universities.map((university: any) => (
+														<CommandItem
+															key={university.id}
+															value={`${university.name}-${university.id}`}
+															onSelect={() => {
+																const newValue =
+																	field.state.value === university.id
+																		? ""
+																		: university.id;
+																field.handleChange(newValue);
+
+																// Reset program_id when university changes
+																if (newValue !== field.state.value) {
+																	form.setFieldValue("program_id", "");
+																}
+
+																setUniversityOpen(false);
+															}}
+														>
+															<Check
+																className={cn(
+																	"mr-2 h-4 w-4",
+																	field.state.value === university.id
+																		? "opacity-100"
+																		: "opacity-0",
+																)}
+															/>
+															{university.name}
+															{university.state && ` (${university.state})`}
+														</CommandItem>
+													))}
+												</CommandGroup>
+											</CommandList>
+										</Command>
+									</PopoverContent>
+								</Popover>
+								{field.state.meta.errors.length > 0 && (
+									<p className="text-destructive text-sm">
+										{field.state.meta.errors[0]}
+									</p>
+								)}
+							</div>
+						)}
+					</form.Field>
+
+					<form.Subscribe
+						selector={(state) => state.values.university_id}
+						children={(universityIdField) => (
+							<form.Field name="program_id">
+								{(field) => {
+									// Filter programs based on selected university
+									const filteredPrograms = universityIdField
+										? allPrograms.filter(
+												(p: any) => p.university_id === universityIdField,
+											)
+										: [];
+
+									const selectedUniversity = universities.find(
+										(u: any) => u.id === universityIdField,
+									);
+
+									return (
+										<div className="space-y-2">
+											<Label htmlFor="program_id">Program</Label>
+											<Popover open={programOpen} onOpenChange={setProgramOpen}>
+												<PopoverTrigger asChild>
+													<Button
+														id="program_id"
+														variant="outline"
+														className={cn(
+															"w-full justify-between",
+															!field.state.value && "text-muted-foreground",
+														)}
+														type="button"
+														disabled={isLoadingPrograms || !universityIdField}
+													>
+														{!universityIdField
+															? "Select university first"
+															: isLoadingPrograms
+																? "Loading..."
+																: field.state.value
+																	? (() => {
+																			const program = filteredPrograms.find(
+																				(p: any) => p.id === field.state.value,
+																			);
+																			return program
+																				? `${selectedUniversity?.name || "Unknown"} - ${program.gender || "Unknown"}`
+																				: "Select program";
+																		})()
+																	: filteredPrograms.length === 0
+																		? "No programs available"
+																		: "Select program"}
+														<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+													</Button>
+												</PopoverTrigger>
+												<PopoverContent className="w-full p-0">
+													<Command>
+														<CommandInput placeholder="Search program..." />
+														<CommandList>
+															<CommandEmpty>
+																{filteredPrograms.length === 0
+																	? "No programs available for this university."
+																	: "No program found."}
+															</CommandEmpty>
+															<CommandGroup>
+																{filteredPrograms.map((program: any) => (
+																	<CommandItem
+																		key={program.id}
+																		value={`${selectedUniversity?.name}-${program.gender}-${program.id}`}
+																		onSelect={() => {
+																			field.handleChange(
+																				field.state.value === program.id
+																					? ""
+																					: program.id,
+																			);
+																			setProgramOpen(false);
+																		}}
+																	>
+																		<Check
+																			className={cn(
+																				"mr-2 h-4 w-4",
+																				field.state.value === program.id
+																					? "opacity-100"
+																					: "opacity-0",
+																			)}
+																		/>
+																		{selectedUniversity?.name || "Unknown"} -{" "}
+																		{program.gender || "Unknown"}
+																	</CommandItem>
+																))}
+															</CommandGroup>
+														</CommandList>
+													</Command>
+												</PopoverContent>
+											</Popover>
+											{field.state.meta.errors.length > 0 && (
+												<p className="text-destructive text-sm">
+													{field.state.meta.errors[0]}
+												</p>
+											)}
+										</div>
+									);
+								}}
+							</form.Field>
+						)}
+					/>
+
+					<form.Field name="job_title">
+						{(field) => (
+							<div className="space-y-2">
+								<Label htmlFor="job_title">Job Title</Label>
+								<Input
+									id="job_title"
+									value={field.state.value}
+									onChange={(e) => field.handleChange(e.target.value)}
+									onBlur={field.handleBlur}
+									placeholder="Head Coach, Assistant Coach, etc."
+								/>
+								{field.state.meta.errors.length > 0 && (
+									<p className="text-destructive text-sm">
+										{field.state.meta.errors[0]}
+									</p>
+								)}
+							</div>
+						)}
+					</form.Field>
+
+					<form.Field name="work_email">
+						{(field) => (
+							<div className="space-y-2">
+								<Label htmlFor="work_email">Work Email</Label>
+								<Input
+									id="work_email"
+									type="email"
+									value={field.state.value}
+									onChange={(e) => field.handleChange(e.target.value)}
+									onBlur={field.handleBlur}
+									placeholder="coach@university.edu"
+								/>
+								{field.state.meta.errors.length > 0 && (
+									<p className="text-destructive text-sm">
+										{field.state.meta.errors[0]}
+									</p>
+								)}
+							</div>
+						)}
+					</form.Field>
+
+					<form.Field name="work_phone">
+						{(field) => (
+							<div className="space-y-2">
+								<Label htmlFor="work_phone">Work Phone</Label>
+								<Input
+									id="work_phone"
+									type="tel"
+									value={field.state.value}
+									onChange={(e) => field.handleChange(e.target.value)}
+									onBlur={field.handleBlur}
+									placeholder="+1 (555) 123-4567"
+								/>
+								{field.state.meta.errors.length > 0 && (
+									<p className="text-destructive text-sm">
+										{field.state.meta.errors[0]}
+									</p>
+								)}
+							</div>
+						)}
+					</form.Field>
+
+					<form.Field name="start_date">
+						{(field) => (
+							<div className="space-y-2">
+								<Label htmlFor="start_date">Start Date</Label>
+								<DatePicker
+									id="start_date"
+									value={field.state.value}
+									onChange={(value) => field.handleChange(value)}
+									placeholder="Select start date"
+								/>
+								{field.state.meta.errors.length > 0 && (
+									<p className="text-destructive text-sm">
+										{field.state.meta.errors[0]}
+									</p>
+								)}
+							</div>
+						)}
+					</form.Field>
+				</div>
+
+				<div className="grid grid-cols-1 gap-4">
+					<form.Field name="job_internal_notes">
+						{(field) => (
+							<div className="space-y-2">
+								<Label htmlFor="job_internal_notes">Job Internal Notes</Label>
+								<Textarea
+									id="job_internal_notes"
+									value={field.state.value}
+									onChange={(e) => field.handleChange(e.target.value)}
+									onBlur={field.handleBlur}
+									placeholder="Add any internal notes about this position..."
+									rows={3}
 								/>
 								{field.state.meta.errors.length > 0 && (
 									<p className="text-destructive text-sm">

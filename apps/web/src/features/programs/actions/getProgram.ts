@@ -2,6 +2,40 @@
 
 import { createClient } from "@/utils/supabase/server";
 
+export async function getAllPrograms() {
+	const supabase = await createClient();
+
+	const { data: programs, error } = await (supabase as any)
+		.from("programs")
+		.select(
+			`
+			id,
+			gender,
+			university_id,
+			universities!programs_university_id_fkey (
+				id,
+				name,
+				state
+			)
+		`,
+		)
+		.eq("is_deleted", false);
+
+	if (error) {
+		console.error("Error fetching programs:", error);
+		return [];
+	}
+
+	// Sort by university name in JavaScript since Supabase doesn't support ordering by joined columns
+	const sortedPrograms = (programs || []).sort((a: any, b: any) => {
+		const nameA = a.universities?.name || "";
+		const nameB = b.universities?.name || "";
+		return nameA.localeCompare(nameB);
+	});
+
+	return sortedPrograms;
+}
+
 export async function getProgram(programId: string) {
 	const supabase = await createClient();
 
