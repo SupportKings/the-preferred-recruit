@@ -25,13 +25,15 @@ export async function getCampaign(id: string) {
 					application_id,
 					included_at,
 					internal_notes,
+					campaign:campaigns(id, name, type, status),
 					university_job:university_jobs(
 						id,
 						job_title,
 						work_email,
 						program_scope,
 						coach:coaches(id, full_name, email),
-						university:universities(id, name, city, state)
+						university:universities(id, name, city, state),
+						program:programs(id, gender, sport_id)
 					),
 					source_lead_list:school_lead_lists(id, name, priority),
 					application:athlete_applications(id, stage, last_interaction_at, scholarship_percent)
@@ -44,7 +46,8 @@ export async function getCampaign(id: string) {
 					file_url,
 					generated_by,
 					generated_at,
-					internal_notes
+					internal_notes,
+					campaign:campaigns(id, name, type, status)
 				),
 				replies(
 					id,

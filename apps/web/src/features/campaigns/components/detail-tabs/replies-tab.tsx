@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UniversalDataTable } from "@/components/universal-data-table/universal-data-table";
 
-// import { ManageReplyModal } from "@/features/athlete-applications/components/manage-reply-modal";
+import { ManageReplyModal } from "@/features/athletes/components/modals/manage-reply-modal";
 import {
 	createReplyColumns,
 	createReplyRowActions,
@@ -18,12 +18,14 @@ import { MessageSquare } from "lucide-react";
 
 interface RepliesTabProps {
 	campaignId: string;
+	athleteId: string;
 	replies: any[];
 	setDeleteModal: (modal: any) => void;
 }
 
 export function RepliesTab({
 	campaignId,
+	athleteId,
 	replies,
 	setDeleteModal,
 }: RepliesTabProps) {
@@ -72,10 +74,17 @@ export function RepliesTab({
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle className="flex items-center gap-2">
-					<MessageSquare className="h-5 w-5" />
-					Replies
-				</CardTitle>
+				<div className="flex items-center justify-between">
+					<CardTitle className="flex items-center gap-2">
+						<MessageSquare className="h-5 w-5" />
+						Replies
+					</CardTitle>
+					<ManageReplyModal
+						athleteId={athleteId}
+						campaignId={campaignId}
+						mode="add"
+					/>
+				</div>
 			</CardHeader>
 			<CardContent>
 				<UniversalDataTable
@@ -85,16 +94,16 @@ export function RepliesTab({
 				/>
 			</CardContent>
 
-			{/* TODO: Create campaign-specific modal for managing replies */}
-			{/* <ManageReplyModal
+			<ManageReplyModal
+				athleteId={athleteId}
 				campaignId={campaignId}
-				reply={editModal.data}
 				mode="edit"
+				reply={editModal.data}
 				open={editModal.isOpen && editModal.type === "reply"}
 				onOpenChange={(open: boolean) =>
 					setEditModal((prev) => ({ ...prev, isOpen: open }))
 				}
-			/> */}
+			/>
 		</Card>
 	);
 }

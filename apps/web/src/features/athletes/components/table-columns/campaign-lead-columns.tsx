@@ -40,10 +40,10 @@ export const createCampaignLeadColumns = () => {
 		}),
 
 		// University Name
-		leadColumnHelper.accessor("university.name", {
+		leadColumnHelper.accessor("university_job.university.name", {
 			header: "University",
 			cell: (info) => {
-				const universityId = info.row.original.university?.id;
+				const universityId = info.row.original.university_job?.university?.id;
 				const name = info.getValue() || "Unknown";
 
 				if (!universityId) return name;
@@ -60,12 +60,16 @@ export const createCampaignLeadColumns = () => {
 		}),
 
 		// Program Gender
-		leadColumnHelper.accessor("program.gender", {
+		leadColumnHelper.accessor("university_job.program.gender", {
 			header: "Program",
 			cell: (info) => {
 				const gender = info.getValue();
 				if (!gender) return "N/A";
-				return gender === "men" ? "Men's" : gender === "women" ? "Women's" : gender;
+				return gender === "men"
+					? "Men's"
+					: gender === "women"
+						? "Women's"
+						: gender;
 			},
 		}),
 
@@ -101,7 +105,7 @@ export const createCampaignLeadRowActions = (
 		onClick: (lead: any) => {
 			setEditModal({
 				isOpen: true,
-				type: "campaignLead",
+				type: "campaign_lead",
 				data: lead,
 			});
 		},
@@ -113,9 +117,9 @@ export const createCampaignLeadRowActions = (
 		onClick: (lead: any) => {
 			setDeleteModal({
 				isOpen: true,
-				type: "campaignLead",
+				type: "campaign_lead",
 				id: lead.id,
-				title: `Delete lead for ${lead.university?.name || "Unknown"}`,
+				title: `Delete lead for ${lead.university_job?.university?.name || "Unknown"}`,
 			});
 		},
 	},

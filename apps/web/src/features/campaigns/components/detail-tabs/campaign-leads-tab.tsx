@@ -3,11 +3,11 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UniversalDataTable } from "@/components/universal-data-table/universal-data-table";
 
-// import { ManageCampaignLeadModal } from "@/features/athlete-applications/components/manage-campaign-lead-modal";
 import {
 	createCampaignLeadColumns,
 	createCampaignLeadRowActions,
 } from "@/features/athletes/components/table-columns/campaign-lead-columns";
+import { ManageCampaignLeadModal } from "@/features/campaigns/components/modals/manage-campaign-lead-modal";
 
 import {
 	getCoreRowModel,
@@ -18,12 +18,14 @@ import { Users } from "lucide-react";
 
 interface CampaignLeadsTabProps {
 	campaignId: string;
+	athleteId: string;
 	campaignLeads: any[];
 	setDeleteModal: (modal: any) => void;
 }
 
 export function CampaignLeadsTab({
 	campaignId,
+	athleteId,
 	campaignLeads,
 	setDeleteModal,
 }: CampaignLeadsTabProps) {
@@ -75,10 +77,17 @@ export function CampaignLeadsTab({
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle className="flex items-center gap-2">
-					<Users className="h-5 w-5" />
-					Campaign Leads
-				</CardTitle>
+				<div className="flex items-center justify-between">
+					<CardTitle className="flex items-center gap-2">
+						<Users className="h-5 w-5" />
+						Campaign Leads
+					</CardTitle>
+					<ManageCampaignLeadModal
+						campaignId={campaignId}
+						athleteId={athleteId}
+						mode="add"
+					/>
+				</div>
 			</CardHeader>
 			<CardContent>
 				<UniversalDataTable
@@ -88,16 +97,16 @@ export function CampaignLeadsTab({
 				/>
 			</CardContent>
 
-			{/* TODO: Create campaign-specific modal for managing campaign leads */}
-			{/* <ManageCampaignLeadModal
+			<ManageCampaignLeadModal
 				campaignId={campaignId}
-				campaignLead={editModal.data}
+				athleteId={athleteId}
 				mode="edit"
+				lead={editModal.data}
 				open={editModal.isOpen && editModal.type === "campaign_lead"}
 				onOpenChange={(open: boolean) =>
 					setEditModal((prev) => ({ ...prev, isOpen: open }))
 				}
-			/> */}
+			/>
 		</Card>
 	);
 }

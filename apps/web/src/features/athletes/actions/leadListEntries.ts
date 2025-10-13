@@ -1,10 +1,10 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+
 import { getUser } from "@/queries/getUser";
 
 export async function createLeadListEntry(data: {
-	athlete_id: string;
 	lead_list_id: string;
 	university_id: string;
 	program_id?: string;
@@ -22,8 +22,7 @@ export async function createLeadListEntry(data: {
 	const { data: entry, error } = await supabase
 		.from("school_lead_list_entries")
 		.insert({
-			athlete_id: data.athlete_id,
-			lead_list_id: data.lead_list_id,
+			school_lead_list_id: data.lead_list_id,
 			university_id: data.university_id,
 			program_id: data.program_id,
 			status: data.status,

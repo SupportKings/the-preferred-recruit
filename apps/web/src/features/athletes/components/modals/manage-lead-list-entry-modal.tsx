@@ -116,7 +116,6 @@ export function ManageLeadListEntryModal({
 				toast.success("Lead list entry updated successfully!");
 			} else {
 				await createLeadListEntry({
-					athlete_id: athleteId,
 					lead_list_id: formData.lead_list_id,
 					university_id: formData.university_id,
 					program_id: formData.program_id || undefined,

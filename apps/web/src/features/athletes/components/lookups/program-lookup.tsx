@@ -35,9 +35,9 @@ interface ProgramLookupProps {
 
 interface Program {
 	id: string;
-	name: string;
-	gender?: string;
-	sport?: string;
+	gender: string;
+	university_id: string;
+	team_url?: string;
 }
 
 export function ProgramLookup({
@@ -55,18 +55,24 @@ export function ProgramLookup({
 
 	useEffect(() => {
 		const fetchPrograms = async () => {
+			// Clear programs first when universityId changes
+			setPrograms([]);
 			setLoading(true);
 			const supabase = createClient();
 
-			let query = supabase
-				.from("programs")
-				.select("id, name, gender, sport")
-				.order("name");
-
-			// Filter by university if provided
-			if (universityId) {
-				query = query.eq("university_id", universityId);
+			// Don't fetch if no university is selected
+			if (!universityId) {
+				console.log("No university selected, skipping program fetch");
+				setLoading(false);
+				return;
 			}
+
+			const query = supabase
+				.from("programs")
+				.select("id, gender, team_url, university_id")
+				.eq("university_id", universityId)
+				.eq("is_deleted", false)
+				.order("gender");
 
 			const { data, error } = await query;
 
@@ -77,11 +83,11 @@ export function ProgramLookup({
 			}
 			if (data) {
 				console.log(
-					`Fetched ${data.length} programs from database${universityId ? ` for university ${universityId}` : ""}`,
+					`Fetched ${data.length} programs from database for university ${universityId}`,
 				);
 				if (data.length === 0) {
 					console.warn(
-						`No programs found${universityId ? ` for university ${universityId}` : ""}. Table may be empty.`,
+						`No programs found for university ${universityId}. Check if this university has programs in the database.`,
 					);
 				}
 				setPrograms(data as Program[]);
@@ -96,11 +102,7 @@ export function ProgramLookup({
 
 	const filteredPrograms = programs.filter((program) => {
 		const searchLower = searchQuery.toLowerCase();
-		return (
-			program.name.toLowerCase().includes(searchLower) ||
-			program.gender?.toLowerCase().includes(searchLower) ||
-			program.sport?.toLowerCase().includes(searchLower)
-		);
+		return program.gender.toLowerCase().includes(searchLower);
 	});
 
 	return (
@@ -120,11 +122,13 @@ export function ProgramLookup({
 						className="w-full justify-between"
 						disabled={disabled || loading}
 					>
-						{loading
-							? "Loading programs..."
-							: selectedProgram
-								? selectedProgram.name
-								: "Select program..."}
+						{loading ? (
+							"Loading programs..."
+						) : selectedProgram ? (
+							<span className="capitalize">{selectedProgram.gender}</span>
+						) : (
+							"Select program..."
+						)}
 						<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 					</Button>
 				</PopoverTrigger>
@@ -141,7 +145,7 @@ export function ProgramLookup({
 								{filteredPrograms.map((program) => (
 									<CommandItem
 										key={program.id}
-										value={`${program.name} ${program.sport || ""} ${program.gender || ""}`}
+										value={program.gender}
 										onSelect={() => {
 											onChange(program.id);
 											setOpen(false);
@@ -153,16 +157,7 @@ export function ProgramLookup({
 												value === program.id ? "opacity-100" : "opacity-0",
 											)}
 										/>
-										<div className="flex flex-col">
-											<span>{program.name}</span>
-											{(program.sport || program.gender) && (
-												<span className="text-muted-foreground text-xs">
-													{[program.sport, program.gender]
-														.filter(Boolean)
-														.join(" • ")}
-												</span>
-											)}
-										</div>
+										<span className="capitalize">{program.gender}</span>
 									</CommandItem>
 								))}
 							</CommandGroup>

@@ -77,7 +77,7 @@ export const createSendingToolLeadListRowActions = (
 		onClick: (list: any) => {
 			setEditModal({
 				isOpen: true,
-				type: "sendingToolList",
+				type: "sending_tool_lead_list",
 				data: list,
 			});
 		},
@@ -89,7 +89,7 @@ export const createSendingToolLeadListRowActions = (
 		onClick: (list: any) => {
 			setDeleteModal({
 				isOpen: true,
-				type: "sendingToolList",
+				type: "sending_tool_lead_list",
 				id: list.id,
 				title: `Delete sending tool list for ${list.campaign?.name || "Unknown"}`,
 			});

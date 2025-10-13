@@ -35,6 +35,7 @@ import { CampaignLookup } from "../lookups/campaign-lookup";
 
 interface ManageSendingToolLeadListModalProps {
 	athleteId: string;
+	campaignId?: string;
 	mode: "add" | "edit";
 	list?: any;
 	children?: ReactNode;
@@ -44,6 +45,7 @@ interface ManageSendingToolLeadListModalProps {
 
 export function ManageSendingToolLeadListModal({
 	athleteId,
+	campaignId,
 	mode,
 	list,
 	children,
@@ -59,7 +61,7 @@ export function ManageSendingToolLeadListModal({
 	const queryClient = useQueryClient();
 
 	const [formData, setFormData] = useState({
-		campaign_id: "",
+		campaign_id: campaignId || "",
 		format: "csv",
 		row_count: "",
 		file_url: "",
@@ -77,14 +79,14 @@ export function ManageSendingToolLeadListModal({
 			});
 		} else if (!isEdit) {
 			setFormData({
-				campaign_id: "",
+				campaign_id: campaignId || "",
 				format: "csv",
 				row_count: "",
 				file_url: "",
 				internal_notes: "",
 			});
 		}
-	}, [isEdit, list]);
+	}, [isEdit, list, campaignId]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -170,7 +172,7 @@ export function ManageSendingToolLeadListModal({
 						}
 						label="Campaign"
 						required
-						disabled={isEdit}
+						disabled={isEdit || !!campaignId}
 					/>
 
 					<div>

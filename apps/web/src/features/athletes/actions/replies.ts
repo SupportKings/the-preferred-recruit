@@ -62,9 +62,24 @@ export async function updateReply(
 		throw new Error("Authentication required");
 	}
 
+	// Filter out empty strings and undefined values to avoid foreign key constraint violations
+	const cleanedData: Record<string, unknown> = {};
+	for (const [key, value] of Object.entries(replyData)) {
+		if (value !== undefined && value !== "") {
+			cleanedData[key] = value;
+		} else if (value === "") {
+			// Explicitly set to null for foreign key fields
+			if (
+				["application_id", "university_job_id", "campaign_id"].includes(key)
+			) {
+				cleanedData[key] = null;
+			}
+		}
+	}
+
 	const { error } = await supabase
 		.from("replies")
-		.update(replyData)
+		.update(cleanedData)
 		.eq("id", replyId);
 
 	if (error) {

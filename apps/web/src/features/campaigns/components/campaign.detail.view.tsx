@@ -110,7 +110,9 @@ export default function CampaignDetailView({
 				});
 
 				if (errorMessages.length > 0) {
-					errorMessages.forEach((error) => toast.error(error));
+					for (const error of errorMessages) {
+						toast.error(error);
+					}
 				} else {
 					toast.error("Failed to update campaign");
 				}
@@ -239,6 +241,7 @@ export default function CampaignDetailView({
 				<TabsContent value="leads">
 					<CampaignLeadsTab
 						campaignId={campaignId}
+						athleteId={campaign.athlete?.id || ""}
 						campaignLeads={campaign.campaign_leads || []}
 						setDeleteModal={setDeleteModal}
 					/>
@@ -247,6 +250,7 @@ export default function CampaignDetailView({
 				<TabsContent value="files">
 					<SendingToolFilesTab
 						campaignId={campaignId}
+						athleteId={campaign.athlete?.id || ""}
 						sendingToolLeadLists={campaign.sending_tool_lead_lists || []}
 						setDeleteModal={setDeleteModal}
 					/>
@@ -255,6 +259,7 @@ export default function CampaignDetailView({
 				<TabsContent value="replies">
 					<RepliesTab
 						campaignId={campaignId}
+						athleteId={campaign.athlete?.id || ""}
 						replies={campaign.replies || []}
 						setDeleteModal={setDeleteModal}
 					/>

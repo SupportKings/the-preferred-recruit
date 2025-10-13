@@ -23,23 +23,20 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
-import { ApplicationLookup } from "../lookups/application-lookup";
-import { CampaignLookup } from "../lookups/campaign-lookup";
-import { CoachLookup } from "../lookups/coach-lookup";
-
-import {
-	createReply,
-	updateReply,
-} from "@/features/athletes/actions/replies";
+import { createReply, updateReply } from "@/features/athletes/actions/replies";
 import { athleteQueries } from "@/features/athletes/queries/useAthletes";
 
 import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { MessageCircle, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { ApplicationLookup } from "../lookups/application-lookup";
+import { CampaignLookup } from "../lookups/campaign-lookup";
+import { CoachLookup } from "../lookups/coach-lookup";
 
 interface ManageReplyModalProps {
 	athleteId: string;
+	campaignId?: string;
 	mode: "add" | "edit";
 	reply?: any;
 	children?: ReactNode;
@@ -49,6 +46,7 @@ interface ManageReplyModalProps {
 
 export function ManageReplyModal({
 	athleteId,
+	campaignId,
 	mode,
 	reply,
 	children,
@@ -69,7 +67,7 @@ export function ManageReplyModal({
 		summary: "",
 		application_id: "",
 		university_job_id: "",
-		campaign_id: "",
+		campaign_id: campaignId || "",
 	});
 
 	useEffect(() => {
@@ -91,10 +89,10 @@ export function ManageReplyModal({
 				summary: "",
 				application_id: "",
 				university_job_id: "",
-				campaign_id: "",
+				campaign_id: campaignId || "",
 			});
 		}
-	}, [isEdit, reply, open]);
+	}, [isEdit, reply, open, campaignId]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -237,9 +235,12 @@ export function ManageReplyModal({
 					<CampaignLookup
 						athleteId={athleteId}
 						value={formData.campaign_id}
-						onChange={(value) => setFormData({ ...formData, campaign_id: value })}
+						onChange={(value) =>
+							setFormData({ ...formData, campaign_id: value })
+						}
 						label="Campaign (Optional)"
 						required={false}
+						disabled={!!campaignId}
 					/>
 
 					<div className="flex justify-end gap-2 pt-4">

@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UniversalDataTable } from "@/components/universal-data-table/universal-data-table";
 
-// import { ManageSendingToolLeadListModal } from "@/features/athletes/components/modals/manage-sending-tool-lead-list-modal";
+import { ManageSendingToolLeadListModal } from "@/features/athletes/components/modals/manage-sending-tool-lead-list-modal";
 import {
 	createSendingToolLeadListColumns,
 	createSendingToolLeadListRowActions,
@@ -18,12 +18,14 @@ import { FileText } from "lucide-react";
 
 interface SendingToolFilesTabProps {
 	campaignId: string;
+	athleteId: string;
 	sendingToolLeadLists: any[];
 	setDeleteModal: (modal: any) => void;
 }
 
 export function SendingToolFilesTab({
 	campaignId,
+	athleteId,
 	sendingToolLeadLists,
 	setDeleteModal,
 }: SendingToolFilesTabProps) {
@@ -58,8 +60,6 @@ export function SendingToolFilesTab({
 						<FileText className="h-5 w-5" />
 						Sending Tool Files
 					</CardTitle>
-					{/* TODO: Create campaign-specific modal for managing sending tool files */}
-					{/* <ManageSendingToolLeadListModal campaignId={campaignId} mode="add" /> */}
 				</CardHeader>
 				<CardContent>
 					<div className="py-8 text-center text-muted-foreground">
@@ -78,12 +78,17 @@ export function SendingToolFilesTab({
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle className="flex items-center gap-2">
-					<FileText className="h-5 w-5" />
-					Sending Tool Files
-				</CardTitle>
-				{/* TODO: Create campaign-specific modal for managing sending tool files */}
-				{/* <ManageSendingToolLeadListModal campaignId={campaignId} mode="add" /> */}
+				<div className="flex items-center justify-between">
+					<CardTitle className="flex items-center gap-2">
+						<FileText className="h-5 w-5" />
+						Sending Tool Files
+					</CardTitle>
+					<ManageSendingToolLeadListModal
+						athleteId={athleteId}
+						campaignId={campaignId}
+						mode="add"
+					/>
+				</div>
 			</CardHeader>
 			<CardContent>
 				<UniversalDataTable
@@ -93,15 +98,16 @@ export function SendingToolFilesTab({
 				/>
 			</CardContent>
 
-			{/* <ManageSendingToolLeadListModal
+			<ManageSendingToolLeadListModal
+				athleteId={athleteId}
 				campaignId={campaignId}
-				sendingToolLeadList={editModal.data}
 				mode="edit"
+				list={editModal.data}
 				open={editModal.isOpen && editModal.type === "sending_tool_lead_list"}
 				onOpenChange={(open: boolean) =>
 					setEditModal((prev) => ({ ...prev, isOpen: open }))
 				}
-			/> */}
+			/>
 		</Card>
 	);
 }
