@@ -1,8 +1,21 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+	Command,
+	CommandEmpty,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+	CommandList,
+} from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
 import {
 	Select,
 	SelectContent,
@@ -11,7 +24,8 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 
-import { Edit3, MapPin, Save, X } from "lucide-react";
+import { City, State } from "country-state-city";
+import { Check, ChevronsUpDown, Edit3, MapPin, Save, X } from "lucide-react";
 
 interface AthleteLocationEducationProps {
 	athlete: any;
@@ -28,11 +42,23 @@ export function AthleteLocationEducation({
 	onSave,
 	onCancel,
 }: AthleteLocationEducationProps) {
+	// Get US states
+	const usStates = useMemo(() => {
+		return State.getStatesOfCountry("US").sort((a, b) =>
+			a.name.localeCompare(b.name),
+		);
+	}, []);
+
+	// Convert state name to ISO code for initial form data
+	const initialStateCode = athlete.state
+		? usStates.find((s) => s.name === athlete.state)?.isoCode || ""
+		: "";
+
 	const [formData, setFormData] = useState({
 		high_school: athlete.high_school || "",
 		city: athlete.city || "",
-		state: athlete.state || "",
-		country: athlete.country || "",
+		state: initialStateCode,
+		country: athlete.country || "United States",
 		graduation_year: athlete.graduation_year || "",
 		year_entering_university: athlete.year_entering_university || "",
 		student_type: athlete.student_type || "",
@@ -40,16 +66,41 @@ export function AthleteLocationEducation({
 		act_score: athlete.act_score || "",
 	});
 
+	const [stateComboOpen, setStateComboOpen] = useState(false);
+	const [cityComboOpen, setCityComboOpen] = useState(false);
+
+	// Get cities for selected state
+	const cities = useMemo(() => {
+		if (!formData.state) return [];
+		return City.getCitiesOfState("US", formData.state).sort((a, b) =>
+			a.name.localeCompare(b.name),
+		);
+	}, [formData.state]);
+
 	const handleSave = () => {
-		onSave?.(formData);
+		// Convert state ISO code back to state name before saving
+		const stateName = formData.state
+			? usStates.find((s) => s.isoCode === formData.state)?.name ||
+				formData.state
+			: "";
+
+		onSave?.({
+			...formData,
+			state: stateName,
+		});
 	};
 
 	const handleCancel = () => {
+		// Reset to initial state with state name converted to ISO code
+		const resetStateCode = athlete.state
+			? usStates.find((s) => s.name === athlete.state)?.isoCode || ""
+			: "";
+
 		setFormData({
 			high_school: athlete.high_school || "",
 			city: athlete.city || "",
-			state: athlete.state || "",
-			country: athlete.country || "",
+			state: resetStateCode,
+			country: athlete.country || "United States",
 			graduation_year: athlete.graduation_year || "",
 			year_entering_university: athlete.year_entering_university || "",
 			student_type: athlete.student_type || "",
@@ -107,7 +158,10 @@ export function AthleteLocationEducation({
 						<Input
 							value={formData.high_school}
 							onChange={(e) =>
-								setFormData((prev) => ({ ...prev, high_school: e.target.value }))
+								setFormData((prev) => ({
+									...prev,
+									high_school: e.target.value,
+								}))
 							}
 							className="mt-1"
 						/>
@@ -117,34 +171,120 @@ export function AthleteLocationEducation({
 				</div>
 				<div>
 					<label className="font-medium text-muted-foreground text-sm">
-						City
+						State
 					</label>
 					{isEditing ? (
-						<Input
-							value={formData.city}
-							onChange={(e) =>
-								setFormData((prev) => ({ ...prev, city: e.target.value }))
-							}
-							className="mt-1"
-						/>
+						<Popover open={stateComboOpen} onOpenChange={setStateComboOpen}>
+							<PopoverTrigger asChild>
+								<Button
+									variant="outline"
+									role="combobox"
+									aria-expanded={stateComboOpen}
+									className="mt-1 w-full justify-between"
+									type="button"
+								>
+									{formData.state
+										? usStates.find((s) => s.isoCode === formData.state)?.name
+										: "Select state..."}
+									<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+								</Button>
+							</PopoverTrigger>
+							<PopoverContent className="w-full p-0" align="start">
+								<Command>
+									<CommandInput placeholder="Search states..." />
+									<CommandList>
+										<CommandEmpty>No state found.</CommandEmpty>
+										<CommandGroup>
+											{usStates.map((state) => (
+												<CommandItem
+													key={state.isoCode}
+													value={state.name}
+													onSelect={() => {
+														setFormData((prev) => ({
+															...prev,
+															state: state.isoCode,
+															city: "", // Clear city when state changes
+														}));
+														setStateComboOpen(false);
+													}}
+												>
+													<Check
+														className={`mr-2 h-4 w-4 ${
+															formData.state === state.isoCode
+																? "opacity-100"
+																: "opacity-0"
+														}`}
+													/>
+													{state.name}
+												</CommandItem>
+											))}
+										</CommandGroup>
+									</CommandList>
+								</Command>
+							</PopoverContent>
+						</Popover>
 					) : (
-						<p className="text-sm">{athlete.city || "Not provided"}</p>
+						<p className="text-sm">{athlete.state || "Not provided"}</p>
 					)}
 				</div>
 				<div>
 					<label className="font-medium text-muted-foreground text-sm">
-						State/Province
+						City
 					</label>
 					{isEditing ? (
-						<Input
-							value={formData.state}
-							onChange={(e) =>
-								setFormData((prev) => ({ ...prev, state: e.target.value }))
-							}
-							className="mt-1"
-						/>
+						<Popover open={cityComboOpen} onOpenChange={setCityComboOpen}>
+							<PopoverTrigger asChild>
+								<Button
+									variant="outline"
+									role="combobox"
+									aria-expanded={cityComboOpen}
+									className="mt-1 w-full justify-between"
+									type="button"
+									disabled={!formData.state}
+								>
+									{formData.city
+										? formData.city
+										: formData.state
+											? "Select city..."
+											: "Select state first..."}
+									<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+								</Button>
+							</PopoverTrigger>
+							<PopoverContent className="w-full p-0" align="start">
+								<Command>
+									<CommandInput placeholder="Search cities..." />
+									<CommandList>
+										<CommandEmpty>No city found.</CommandEmpty>
+										<CommandGroup>
+											{cities.map((city) => (
+												<CommandItem
+													key={city.name}
+													value={city.name}
+													onSelect={() => {
+														setFormData((prev) => ({
+															...prev,
+															city: city.name,
+														}));
+														setCityComboOpen(false);
+													}}
+												>
+													<Check
+														className={`mr-2 h-4 w-4 ${
+															formData.city === city.name
+																? "opacity-100"
+																: "opacity-0"
+														}`}
+													/>
+													{city.name}
+												</CommandItem>
+											))}
+										</CommandGroup>
+									</CommandList>
+								</Command>
+							</PopoverContent>
+						</Popover>
 					) : (
-						<p className="text-sm">{athlete.state || "Not provided"}</p>
+						<p className="text-sm">{athlete.city || "Not provided"}</p>
 					)}
 				</div>
 				<div>
@@ -158,9 +298,10 @@ export function AthleteLocationEducation({
 								setFormData((prev) => ({ ...prev, country: e.target.value }))
 							}
 							className="mt-1"
+							disabled
 						/>
 					) : (
-						<p className="text-sm">{athlete.country || "Not provided"}</p>
+						<p className="text-sm">{athlete.country || "United States"}</p>
 					)}
 				</div>
 				<div>
@@ -182,7 +323,9 @@ export function AthleteLocationEducation({
 							className="mt-1"
 						/>
 					) : (
-						<p className="text-sm">{athlete.graduation_year || "Not provided"}</p>
+						<p className="text-sm">
+							{athlete.graduation_year || "Not provided"}
+						</p>
 					)}
 				</div>
 				<div>

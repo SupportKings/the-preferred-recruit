@@ -7,6 +7,13 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
 import { useForm } from "@tanstack/react-form";
@@ -19,6 +26,7 @@ import {
 	getAllValidationErrors,
 	type TeamMemberFormInput,
 	teamMemberFormSchema,
+	US_TIMEZONES,
 } from "../types/team-member";
 
 interface TeamMemberFormProps {
@@ -178,14 +186,21 @@ export function TeamMemberForm({
 						{(field) => (
 							<div className="space-y-2">
 								<Label htmlFor={field.name}>Timezone</Label>
-								<Input
-									id={field.name}
-									name={field.name}
+								<Select
 									value={field.state.value}
-									onBlur={field.handleBlur}
-									onChange={(e) => field.handleChange(e.target.value)}
-									placeholder="America/New_York"
-								/>
+									onValueChange={field.handleChange}
+								>
+									<SelectTrigger id={field.name}>
+										<SelectValue placeholder="Select timezone" />
+									</SelectTrigger>
+									<SelectContent>
+										{US_TIMEZONES.map((tz) => (
+											<SelectItem key={tz.value} value={tz.value}>
+												{tz.label}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
 								{field.state.meta.errors.length > 0 && (
 									<p className="text-destructive text-sm">
 										{field.state.meta.errors[0]}

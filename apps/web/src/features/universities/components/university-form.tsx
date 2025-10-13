@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { useRouter } from "next/navigation";
 
@@ -25,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
+import { City, State } from "country-state-city";
 import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "sonner";
@@ -33,7 +34,6 @@ import {
 	citySizeOptions,
 	getAllValidationErrors,
 	publicPrivateOptions,
-	stateOptions,
 	type UniversityFormData,
 } from "../types/university";
 
@@ -52,8 +52,24 @@ export function UniversityForm({
 	const queryClient = useQueryClient();
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [stateOpen, setStateOpen] = useState(false);
+	const [cityOpen, setCityOpen] = useState(false);
 	const [citySizeOpen, setCitySizeOpen] = useState(false);
 	const [typeOpen, setTypeOpen] = useState(false);
+
+	// Get US states
+	const usStates = useMemo(() => {
+		return State.getStatesOfCountry("US").sort((a, b) =>
+			a.name.localeCompare(b.name),
+		);
+	}, []);
+
+	// Get cities for selected state
+	const getCitiesForState = (stateCode: string) => {
+		if (!stateCode) return [];
+		return City.getCitiesOfState("US", stateCode).sort((a, b) =>
+			a.name.localeCompare(b.name),
+		);
+	};
 
 	const { execute } = useAction(createUniversityAction, {
 		onSuccess: (result) => {
@@ -88,7 +104,10 @@ export function UniversityForm({
 			religious_affiliation: initialData?.religious_affiliation || "",
 			city: initialData?.city || "",
 			size_of_city: initialData?.size_of_city || "",
-			state: initialData?.state || "",
+			state: initialData?.state
+				? usStates.find((s) => s.isoCode === initialData.state)?.isoCode ||
+					initialData.state
+				: "",
 			region: initialData?.region || "",
 			average_gpa: initialData?.average_gpa || "",
 			sat_ebrw_25th: initialData?.sat_ebrw_25th || "",
@@ -305,19 +324,127 @@ export function UniversityForm({
 			<div className="space-y-4">
 				<h2 className="font-semibold text-lg">Location</h2>
 				<div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+					<form.Field name="state">
+						{(field) => {
+							const selectedState = usStates.find(
+								(s) => s.isoCode === field.state.value,
+							);
+
+							return (
+								<div className="space-y-2">
+									<Label htmlFor="state">State</Label>
+									<Popover open={stateOpen} onOpenChange={setStateOpen}>
+										<PopoverTrigger asChild>
+											<Button
+												variant="outline"
+												role="combobox"
+												aria-expanded={stateOpen}
+												className="w-full justify-between"
+												type="button"
+											>
+												{selectedState ? selectedState.name : "Select state..."}
+												<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+											</Button>
+										</PopoverTrigger>
+										<PopoverContent className="w-full p-0" align="start">
+											<Command>
+												<CommandInput placeholder="Search states..." />
+												<CommandList>
+													<CommandEmpty>No state found.</CommandEmpty>
+													<CommandGroup>
+														{usStates.map((state) => (
+															<CommandItem
+																key={state.isoCode}
+																value={state.name}
+																onSelect={() => {
+																	field.handleChange(state.isoCode);
+																	// Clear city when state changes
+																	form.setFieldValue("city", "");
+																	setStateOpen(false);
+																}}
+															>
+																<Check
+																	className={`mr-2 h-4 w-4 ${
+																		field.state.value === state.isoCode
+																			? "opacity-100"
+																			: "opacity-0"
+																	}`}
+																/>
+																{state.name}
+															</CommandItem>
+														))}
+													</CommandGroup>
+												</CommandList>
+											</Command>
+										</PopoverContent>
+									</Popover>
+								</div>
+							);
+						}}
+					</form.Field>
+
 					<form.Field name="city">
-						{(field) => (
-							<div className="space-y-2">
-								<Label htmlFor="city">City</Label>
-								<Input
-									id="city"
-									value={field.state.value}
-									onChange={(e) => field.handleChange(e.target.value)}
-									onBlur={field.handleBlur}
-									placeholder="Palo Alto"
-								/>
-							</div>
-						)}
+						{(field) => {
+							const stateValue = form.getFieldValue("state");
+							const cities = stateValue ? getCitiesForState(stateValue) : [];
+							const selectedCity = cities.find(
+								(c) => c.name === field.state.value,
+							);
+
+							return (
+								<div className="space-y-2">
+									<Label htmlFor="city">City</Label>
+									<Popover open={cityOpen} onOpenChange={setCityOpen}>
+										<PopoverTrigger asChild>
+											<Button
+												variant="outline"
+												role="combobox"
+												aria-expanded={cityOpen}
+												className="w-full justify-between"
+												type="button"
+												disabled={!stateValue}
+											>
+												{selectedCity
+													? selectedCity.name
+													: stateValue
+														? "Select city..."
+														: "Select state first..."}
+												<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+											</Button>
+										</PopoverTrigger>
+										<PopoverContent className="w-full p-0" align="start">
+											<Command>
+												<CommandInput placeholder="Search cities..." />
+												<CommandList>
+													<CommandEmpty>No city found.</CommandEmpty>
+													<CommandGroup>
+														{cities.map((city) => (
+															<CommandItem
+																key={city.name}
+																value={city.name}
+																onSelect={() => {
+																	field.handleChange(city.name);
+																	setCityOpen(false);
+																}}
+															>
+																<Check
+																	className={`mr-2 h-4 w-4 ${
+																		field.state.value === city.name
+																			? "opacity-100"
+																			: "opacity-0"
+																	}`}
+																/>
+																{city.name}
+															</CommandItem>
+														))}
+													</CommandGroup>
+												</CommandList>
+											</Command>
+										</PopoverContent>
+									</Popover>
+								</div>
+							);
+						}}
 					</form.Field>
 
 					<form.Field name="size_of_city">
@@ -355,65 +482,6 @@ export function UniversityForm({
 																onSelect={() => {
 																	field.handleChange(option.value);
 																	setCitySizeOpen(false);
-																}}
-															>
-																<Check
-																	className={`mr-2 h-4 w-4 ${
-																		field.state.value === option.value
-																			? "opacity-100"
-																			: "opacity-0"
-																	}`}
-																/>
-																{option.label}
-															</CommandItem>
-														))}
-													</CommandGroup>
-												</CommandList>
-											</Command>
-										</PopoverContent>
-									</Popover>
-								</div>
-							);
-						}}
-					</form.Field>
-
-					<form.Field name="state">
-						{(field) => {
-							const selectedState = stateOptions.find(
-								(opt) => opt.value === field.state.value,
-							);
-
-							return (
-								<div className="space-y-2">
-									<Label htmlFor="state">State</Label>
-									<Popover open={stateOpen} onOpenChange={setStateOpen}>
-										<PopoverTrigger asChild>
-											<Button
-												variant="outline"
-												role="combobox"
-												aria-expanded={stateOpen}
-												className="w-full justify-between"
-												type="button"
-											>
-												{selectedState
-													? selectedState.label
-													: "Select state..."}
-												<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-											</Button>
-										</PopoverTrigger>
-										<PopoverContent className="w-full p-0">
-											<Command>
-												<CommandInput placeholder="Search state..." />
-												<CommandList>
-													<CommandEmpty>No state found.</CommandEmpty>
-													<CommandGroup>
-														{stateOptions.map((option) => (
-															<CommandItem
-																key={option.value}
-																value={option.label}
-																onSelect={() => {
-																	field.handleChange(option.value);
-																	setStateOpen(false);
 																}}
 															>
 																<Check

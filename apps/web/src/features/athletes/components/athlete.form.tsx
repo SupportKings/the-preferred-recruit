@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
 import {
 	Command,
 	CommandEmpty,
@@ -33,8 +32,8 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { useForm } from "@tanstack/react-form";
 import { useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
-import { CalendarIcon, Check, ChevronsUpDown, Loader2 } from "lucide-react";
+import { City, State } from "country-state-city";
+import { Check, ChevronsUpDown, Loader2 } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "sonner";
 import { createAthleteAction } from "../actions/createAthlete";
@@ -42,7 +41,6 @@ import { useTeamMembers } from "../queries/useAthletes";
 import {
 	ATHLETE_GENDERS,
 	type AthleteFormInput,
-	athleteFormSchema,
 	getAllValidationErrors,
 	PAYMENT_TYPES,
 	STUDENT_TYPES,
@@ -64,10 +62,27 @@ export function AthleteForm({
 	const [isSubmitting, setIsSubmitting] = useState(false);
 	const [salesSetterOpen, setSalesSetterOpen] = useState(false);
 	const [salesCloserOpen, setSalesCloserOpen] = useState(false);
+	const [stateComboOpen, setStateComboOpen] = useState(false);
+	const [cityComboOpen, setCityComboOpen] = useState(false);
 
 	// Fetch team members for lookup fields
 	const { data: teamMembers = [], isPending: isTeamMembersPending } =
 		useTeamMembers();
+
+	// Get US states
+	const usStates = useMemo(() => {
+		return State.getStatesOfCountry("US").sort((a, b) =>
+			a.name.localeCompare(b.name),
+		);
+	}, []);
+
+	// Get cities for selected state
+	const getCitiesForState = (stateCode: string) => {
+		if (!stateCode) return [];
+		return City.getCitiesOfState("US", stateCode).sort((a, b) =>
+			a.name.localeCompare(b.name),
+		);
+	};
 
 	const { execute } = useAction(createAthleteAction, {
 		onSuccess: (result) => {
@@ -102,8 +117,11 @@ export function AthleteForm({
 			date_of_birth: initialData?.date_of_birth || "",
 			high_school: initialData?.high_school || "",
 			city: initialData?.city || "",
-			state: initialData?.state || "",
-			country: initialData?.country || "",
+			state: initialData?.state
+				? usStates.find((s) => s.name === initialData.state)?.isoCode ||
+					initialData.state
+				: "",
+			country: initialData?.country || "United States",
 			graduation_year: initialData?.graduation_year || "",
 			year_entering_university: initialData?.year_entering_university || "",
 			athlete_net_url: initialData?.athlete_net_url || "",
@@ -133,6 +151,11 @@ export function AthleteForm({
 			setIsSubmitting(true);
 
 			try {
+				// Get the state name from the state code
+				const stateName = value.state
+					? usStates.find((s) => s.isoCode === value.state)?.name || value.state
+					: undefined;
+
 				// Transform string values to proper types for server validation
 				const transformedData = {
 					full_name: value.full_name,
@@ -143,7 +166,7 @@ export function AthleteForm({
 					date_of_birth: value.date_of_birth || undefined,
 					high_school: value.high_school || undefined,
 					city: value.city || undefined,
-					state: value.state || undefined,
+					state: stateName,
 					country: value.country || undefined,
 					graduation_year: value.graduation_year
 						? Number(value.graduation_year)
@@ -326,33 +349,129 @@ export function AthleteForm({
 					</form.Field>
 
 					<form.Field name="city">
-						{(field) => (
-							<div className="space-y-2">
-								<Label htmlFor="city">City</Label>
-								<Input
-									id="city"
-									value={field.state.value}
-									onChange={(e) => field.handleChange(e.target.value)}
-									onBlur={field.handleBlur}
-									placeholder="Springfield"
-								/>
-							</div>
-						)}
+						{(field) => {
+							const stateValue = form.getFieldValue("state");
+							const cities = stateValue ? getCitiesForState(stateValue) : [];
+							const selectedCity = cities.find(
+								(c) => c.name === field.state.value,
+							);
+
+							return (
+								<div className="space-y-2">
+									<Label htmlFor="city">City</Label>
+									<Popover open={cityComboOpen} onOpenChange={setCityComboOpen}>
+										<PopoverTrigger asChild>
+											<Button
+												variant="outline"
+												role="combobox"
+												aria-expanded={cityComboOpen}
+												className="w-full justify-between"
+												type="button"
+												disabled={!stateValue}
+											>
+												{selectedCity
+													? selectedCity.name
+													: stateValue
+														? "Select city..."
+														: "Select state first..."}
+												<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+											</Button>
+										</PopoverTrigger>
+										<PopoverContent className="w-full p-0" align="start">
+											<Command>
+												<CommandInput placeholder="Search cities..." />
+												<CommandList>
+													<CommandEmpty>No city found.</CommandEmpty>
+													<CommandGroup>
+														{cities.map((city) => (
+															<CommandItem
+																key={city.name}
+																value={city.name}
+																onSelect={() => {
+																	field.handleChange(city.name);
+																	setCityComboOpen(false);
+																}}
+															>
+																<Check
+																	className={`mr-2 h-4 w-4 ${
+																		field.state.value === city.name
+																			? "opacity-100"
+																			: "opacity-0"
+																	}`}
+																/>
+																{city.name}
+															</CommandItem>
+														))}
+													</CommandGroup>
+												</CommandList>
+											</Command>
+										</PopoverContent>
+									</Popover>
+								</div>
+							);
+						}}
 					</form.Field>
 
 					<form.Field name="state">
-						{(field) => (
-							<div className="space-y-2">
-								<Label htmlFor="state">State</Label>
-								<Input
-									id="state"
-									value={field.state.value}
-									onChange={(e) => field.handleChange(e.target.value)}
-									onBlur={field.handleBlur}
-									placeholder="IL"
-								/>
-							</div>
-						)}
+						{(field) => {
+							const selectedState = usStates.find(
+								(s) => s.isoCode === field.state.value,
+							);
+
+							return (
+								<div className="space-y-2">
+									<Label htmlFor="state">State</Label>
+									<Popover
+										open={stateComboOpen}
+										onOpenChange={setStateComboOpen}
+									>
+										<PopoverTrigger asChild>
+											<Button
+												variant="outline"
+												role="combobox"
+												aria-expanded={stateComboOpen}
+												className="w-full justify-between"
+												type="button"
+											>
+												{selectedState ? selectedState.name : "Select state..."}
+												<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+											</Button>
+										</PopoverTrigger>
+										<PopoverContent className="w-full p-0" align="start">
+											<Command>
+												<CommandInput placeholder="Search states..." />
+												<CommandList>
+													<CommandEmpty>No state found.</CommandEmpty>
+													<CommandGroup>
+														{usStates.map((state) => (
+															<CommandItem
+																key={state.isoCode}
+																value={state.name}
+																onSelect={() => {
+																	field.handleChange(state.isoCode);
+																	// Clear city when state changes
+																	form.setFieldValue("city", "");
+																	setStateComboOpen(false);
+																}}
+															>
+																<Check
+																	className={`mr-2 h-4 w-4 ${
+																		field.state.value === state.isoCode
+																			? "opacity-100"
+																			: "opacity-0"
+																	}`}
+																/>
+																{state.name}
+															</CommandItem>
+														))}
+													</CommandGroup>
+												</CommandList>
+											</Command>
+										</PopoverContent>
+									</Popover>
+								</div>
+							);
+						}}
 					</form.Field>
 
 					<form.Field name="country">
@@ -364,7 +483,8 @@ export function AthleteForm({
 									value={field.state.value}
 									onChange={(e) => field.handleChange(e.target.value)}
 									onBlur={field.handleBlur}
-									placeholder="USA"
+									placeholder="United States"
+									disabled
 								/>
 							</div>
 						)}
@@ -488,6 +608,32 @@ export function AthleteForm({
 									onBlur={field.handleBlur}
 									placeholder="28"
 								/>
+							</div>
+						)}
+					</form.Field>
+
+					<form.Field name="student_type">
+						{(field) => (
+							<div className="space-y-2">
+								<Label htmlFor="student_type">Student Type</Label>
+								<Select
+									value={field.state.value}
+									onValueChange={field.handleChange}
+								>
+									<SelectTrigger id="student_type">
+										<SelectValue placeholder="Select student type" />
+									</SelectTrigger>
+									<SelectContent>
+										{STUDENT_TYPES.map((type) => (
+											<SelectItem key={type} value={type}>
+												{type
+													.split("_")
+													.map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+													.join(" ")}
+											</SelectItem>
+										))}
+									</SelectContent>
+								</Select>
 							</div>
 						)}
 					</form.Field>
@@ -752,32 +898,6 @@ export function AthleteForm({
 									</SelectTrigger>
 									<SelectContent>
 										{PAYMENT_TYPES.map((type) => (
-											<SelectItem key={type} value={type}>
-												{type
-													.split("_")
-													.map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-													.join(" ")}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-							</div>
-						)}
-					</form.Field>
-
-					<form.Field name="student_type">
-						{(field) => (
-							<div className="space-y-2">
-								<Label htmlFor="student_type">Student Type</Label>
-								<Select
-									value={field.state.value}
-									onValueChange={field.handleChange}
-								>
-									<SelectTrigger id="student_type">
-										<SelectValue placeholder="Select student type" />
-									</SelectTrigger>
-									<SelectContent>
-										{STUDENT_TYPES.map((type) => (
 											<SelectItem key={type} value={type}>
 												{type
 													.split("_")

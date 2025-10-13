@@ -5,6 +5,56 @@ import { z } from "zod";
 // Database types
 export type TeamMemberRow = Tables<"team_members">;
 
+// US Timezone options (comprehensive list including all US states and territories)
+export const US_TIMEZONES = [
+	// Continental US - Eastern Time Zone
+	{ value: "America/New_York", label: "Eastern Time (America/New_York)" },
+
+	// Continental US - Central Time Zone
+	{ value: "America/Chicago", label: "Central Time (America/Chicago)" },
+
+	// Continental US - Mountain Time Zone
+	{ value: "America/Denver", label: "Mountain Time (America/Denver)" },
+	{ value: "America/Phoenix", label: "Arizona - No DST (America/Phoenix)" },
+
+	// Continental US - Pacific Time Zone
+	{ value: "America/Los_Angeles", label: "Pacific Time (America/Los_Angeles)" },
+
+	// Alaska
+	{ value: "America/Anchorage", label: "Alaska Time (America/Anchorage)" },
+	{ value: "America/Juneau", label: "Alaska - Juneau (America/Juneau)" },
+	{ value: "America/Nome", label: "Alaska - Nome (America/Nome)" },
+	{ value: "America/Sitka", label: "Alaska - Sitka (America/Sitka)" },
+	{ value: "America/Yakutat", label: "Alaska - Yakutat (America/Yakutat)" },
+
+	// Hawaii
+	{
+		value: "Pacific/Honolulu",
+		label: "Hawaii-Aleutian Time (Pacific/Honolulu)",
+	},
+
+	// US Territories - Atlantic
+	{
+		value: "America/Puerto_Rico",
+		label: "Atlantic Time - Puerto Rico (America/Puerto_Rico)",
+	},
+	{
+		value: "America/St_Thomas",
+		label: "Atlantic Time - US Virgin Islands (America/St_Thomas)",
+	},
+
+	// US Territories - Pacific
+	{ value: "Pacific/Guam", label: "Chamorro Time - Guam (Pacific/Guam)" },
+	{
+		value: "Pacific/Saipan",
+		label: "Chamorro Time - Northern Mariana Islands (Pacific/Saipan)",
+	},
+	{
+		value: "Pacific/Pago_Pago",
+		label: "Samoa Time - American Samoa (Pacific/Pago_Pago)",
+	},
+] as const;
+
 // Validation utilities
 export const validationUtils = {
 	// Name validation with proper formatting

@@ -1,10 +1,23 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import type { Tables } from "@/utils/supabase/database.types";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+	Command,
+	CommandEmpty,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+	CommandList,
+} from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
 import {
 	Select,
 	SelectContent,
@@ -13,7 +26,8 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 
-import { Edit3, MapPin, Save, X } from "lucide-react";
+import { City, State } from "country-state-city";
+import { Check, ChevronsUpDown, Edit3, MapPin, Save, X } from "lucide-react";
 
 interface UniversityLocationSectionProps {
 	university: Tables<"universities">;
@@ -30,24 +44,52 @@ export function UniversityLocationSection({
 	onSave,
 	onCancel,
 }: UniversityLocationSectionProps) {
+	// Get US states
+	const usStates = useMemo(() => {
+		return State.getStatesOfCountry("US").sort((a, b) =>
+			a.name.localeCompare(b.name),
+		);
+	}, []);
+
+	// Convert state abbreviation to ISO code for initial form data
+	const initialStateCode = university.state
+		? usStates.find((s) => s.isoCode === university.state)?.isoCode || ""
+		: "";
+
 	const [formData, setFormData] = useState({
 		city: university.city || "",
-		state: university.state || "",
+		state: initialStateCode,
 		region: university.region || "",
 		size_of_city: university.size_of_city || "",
 		conference_raw: university.conference_raw || "",
 		division_raw: university.division_raw || "",
 	});
 
+	const [stateComboOpen, setStateComboOpen] = useState(false);
+	const [cityComboOpen, setCityComboOpen] = useState(false);
+
+	// Get cities for selected state
+	const cities = useMemo(() => {
+		if (!formData.state) return [];
+		return City.getCitiesOfState("US", formData.state).sort((a, b) =>
+			a.name.localeCompare(b.name),
+		);
+	}, [formData.state]);
+
 	const handleSave = () => {
+		// State is already stored as ISO code (abbreviation) in DB, so no conversion needed
 		onSave?.(formData);
 	};
 
 	const handleCancel = () => {
-		// Reset form data to original values
+		// Reset to initial state with state abbreviation converted to ISO code
+		const resetStateCode = university.state
+			? usStates.find((s) => s.isoCode === university.state)?.isoCode || ""
+			: "";
+
 		setFormData({
 			city: university.city || "",
-			state: university.state || "",
+			state: resetStateCode,
 			region: university.region || "",
 			size_of_city: university.size_of_city || "",
 			conference_raw: university.conference_raw || "",
@@ -98,34 +140,125 @@ export function UniversityLocationSection({
 			<CardContent className="space-y-4">
 				<div>
 					<label className="font-medium text-muted-foreground text-sm">
-						City
+						State
 					</label>
 					{isEditing ? (
-						<Input
-							value={formData.city}
-							onChange={(e) =>
-								setFormData((prev) => ({ ...prev, city: e.target.value }))
-							}
-							className="mt-1"
-						/>
+						<Popover open={stateComboOpen} onOpenChange={setStateComboOpen}>
+							<PopoverTrigger asChild>
+								<Button
+									variant="outline"
+									role="combobox"
+									aria-expanded={stateComboOpen}
+									className="mt-1 w-full justify-between"
+									type="button"
+								>
+									{formData.state
+										? usStates.find((s) => s.isoCode === formData.state)?.name
+										: "Select state..."}
+									<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+								</Button>
+							</PopoverTrigger>
+							<PopoverContent className="w-full p-0" align="start">
+								<Command>
+									<CommandInput placeholder="Search states..." />
+									<CommandList>
+										<CommandEmpty>No state found.</CommandEmpty>
+										<CommandGroup>
+											{usStates.map((state) => (
+												<CommandItem
+													key={state.isoCode}
+													value={state.name}
+													onSelect={() => {
+														setFormData((prev) => ({
+															...prev,
+															state: state.isoCode,
+															city: "", // Clear city when state changes
+														}));
+														setStateComboOpen(false);
+													}}
+												>
+													<Check
+														className={`mr-2 h-4 w-4 ${
+															formData.state === state.isoCode
+																? "opacity-100"
+																: "opacity-0"
+														}`}
+													/>
+													{state.name}
+												</CommandItem>
+											))}
+										</CommandGroup>
+									</CommandList>
+								</Command>
+							</PopoverContent>
+						</Popover>
 					) : (
-						<p className="text-sm">{university.city || "Not provided"}</p>
+						<p className="text-sm">
+							{university.state
+								? usStates.find((s) => s.isoCode === university.state)?.name ||
+									university.state
+								: "Not provided"}
+						</p>
 					)}
 				</div>
 				<div>
 					<label className="font-medium text-muted-foreground text-sm">
-						State
+						City
 					</label>
 					{isEditing ? (
-						<Input
-							value={formData.state}
-							onChange={(e) =>
-								setFormData((prev) => ({ ...prev, state: e.target.value }))
-							}
-							className="mt-1"
-						/>
+						<Popover open={cityComboOpen} onOpenChange={setCityComboOpen}>
+							<PopoverTrigger asChild>
+								<Button
+									variant="outline"
+									role="combobox"
+									aria-expanded={cityComboOpen}
+									className="mt-1 w-full justify-between"
+									type="button"
+									disabled={!formData.state}
+								>
+									{formData.city
+										? formData.city
+										: formData.state
+											? "Select city..."
+											: "Select state first..."}
+									<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+								</Button>
+							</PopoverTrigger>
+							<PopoverContent className="w-full p-0" align="start">
+								<Command>
+									<CommandInput placeholder="Search cities..." />
+									<CommandList>
+										<CommandEmpty>No city found.</CommandEmpty>
+										<CommandGroup>
+											{cities.map((city) => (
+												<CommandItem
+													key={city.name}
+													value={city.name}
+													onSelect={() => {
+														setFormData((prev) => ({
+															...prev,
+															city: city.name,
+														}));
+														setCityComboOpen(false);
+													}}
+												>
+													<Check
+														className={`mr-2 h-4 w-4 ${
+															formData.city === city.name
+																? "opacity-100"
+																: "opacity-0"
+														}`}
+													/>
+													{city.name}
+												</CommandItem>
+											))}
+										</CommandGroup>
+									</CommandList>
+								</Command>
+							</PopoverContent>
+						</Popover>
 					) : (
-						<p className="text-sm">{university.state || "Not provided"}</p>
+						<p className="text-sm">{university.city || "Not provided"}</p>
 					)}
 				</div>
 				<div>
