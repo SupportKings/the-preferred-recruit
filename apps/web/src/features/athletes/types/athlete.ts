@@ -107,8 +107,8 @@ export const validationUtils = {
 	graduationYear: z
 		.number({ invalid_type_error: "Must be a number" })
 		.int("Must be a whole number")
-		.min(2000, "Year must be 2000 or later")
-		.max(2050, "Year must be 2050 or earlier")
+		.min(1900, "Year must be 1900 or later")
+		.max(2100, "Year must be 2100 or earlier")
 		.optional()
 		.or(z.literal("").transform(() => undefined)),
 

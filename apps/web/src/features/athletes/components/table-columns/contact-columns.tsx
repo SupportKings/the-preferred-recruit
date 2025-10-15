@@ -1,10 +1,24 @@
+"use client";
+
+import { useState } from "react";
+
 import Link from "next/link";
 
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { StatusBadge } from "@/components/ui/status-badge";
+
+import { updateAthleteContact } from "@/features/contacts/actions/relations/contactAthletes";
 
 import { createColumnHelper } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { Edit, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 const formatDate = (dateString: string | null) => {
 	if (!dateString) return "Not set";
@@ -34,6 +48,75 @@ const formatRelationship = (
 
 	return relationshipMap[relationship.toLowerCase()] || relationship;
 };
+
+// Inline edit component for Primary status
+function InlinePrimaryCell({
+	contactAthleteId,
+	currentIsPrimary,
+}: {
+	contactAthleteId: string;
+	currentIsPrimary: boolean;
+}) {
+	const [isEditing, setIsEditing] = useState(false);
+	const [isPrimary, setIsPrimary] = useState(currentIsPrimary);
+	const [isUpdating, setIsUpdating] = useState(false);
+
+	const handlePrimaryChange = async (newValue: string) => {
+		const newIsPrimary = newValue === "true";
+
+		if (newIsPrimary === isPrimary) {
+			setIsEditing(false);
+			return;
+		}
+
+		setIsUpdating(true);
+		try {
+			await updateAthleteContact(contactAthleteId, {
+				is_primary: newIsPrimary,
+			});
+			setIsPrimary(newIsPrimary);
+			toast.success(
+				newIsPrimary ? "Set as primary contact" : "Set as secondary contact",
+			);
+		} catch (error) {
+			console.error("Failed to update primary status:", error);
+			toast.error("Failed to update primary status");
+		} finally {
+			setIsUpdating(false);
+			setIsEditing(false);
+		}
+	};
+
+	if (isEditing) {
+		return (
+			<Select
+				value={isPrimary.toString()}
+				onValueChange={handlePrimaryChange}
+				disabled={isUpdating}
+				open={isEditing}
+				onOpenChange={setIsEditing}
+			>
+				<SelectTrigger className="h-8 w-full">
+					<SelectValue />
+				</SelectTrigger>
+				<SelectContent>
+					<SelectItem value="true">Primary</SelectItem>
+					<SelectItem value="false">Secondary</SelectItem>
+				</SelectContent>
+			</Select>
+		);
+	}
+
+	return (
+		<button
+			type="button"
+			onClick={() => setIsEditing(true)}
+			className="cursor-pointer transition-opacity hover:opacity-70"
+		>
+			<StatusBadge>{isPrimary ? "Primary" : "Secondary"}</StatusBadge>
+		</button>
+	);
+}
 
 export const createContactColumns = () => {
 	const contactColumnHelper = createColumnHelper<any>();
@@ -76,11 +159,14 @@ export const createContactColumns = () => {
 			cell: (info) => formatRelationship(info.getValue()),
 		}),
 
-		// Is Primary
+		// Is Primary - with inline edit
 		contactColumnHelper.accessor("is_primary", {
 			header: "Primary?",
 			cell: (info) => (
-				<StatusBadge>{info.getValue() ? "Primary" : "Secondary"}</StatusBadge>
+				<InlinePrimaryCell
+					contactAthleteId={info.row.original.id}
+					currentIsPrimary={info.getValue() || false}
+				/>
 			),
 		}),
 

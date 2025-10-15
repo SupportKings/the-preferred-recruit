@@ -59,6 +59,7 @@ export function AthleteLookup({
 			const query = supabase
 				.from("athletes")
 				.select("id, full_name, contact_email, graduation_year")
+				.eq("is_deleted", false)
 				.order("full_name");
 
 			const { data, error } = await query;

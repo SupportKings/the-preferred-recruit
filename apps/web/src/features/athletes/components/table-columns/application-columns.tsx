@@ -34,21 +34,39 @@ const formatStage = (stage: string | null | undefined): string => {
 export const createApplicationColumns = () => {
 	const applicationColumnHelper = createColumnHelper<any>();
 	return [
-		// University Name with link
+		// University Name with acceptance rate - clickable
 		applicationColumnHelper.accessor("university.name", {
 			header: "University",
 			cell: (info) => {
-				const universityId = info.row.original.university?.id;
+				const university = info.row.original.university;
+				const universityId = university?.id;
 				const name = info.getValue() || "Unknown";
+				const acceptanceRate = university?.acceptance_rate_pct;
 
-				if (!universityId) return name;
+				if (!universityId) {
+					return (
+						<div>
+							<div className="font-medium">{name}</div>
+							{acceptanceRate && (
+								<div className="text-muted-foreground text-xs">
+									{acceptanceRate}% acceptance
+								</div>
+							)}
+						</div>
+					);
+				}
 
 				return (
 					<Link
 						href={`/dashboard/universities/${universityId}`}
 						className="text-primary hover:underline"
 					>
-						{name}
+						<div className="font-medium">{name}</div>
+						{acceptanceRate && (
+							<div className="text-muted-foreground text-xs">
+								{acceptanceRate}% acceptance
+							</div>
+						)}
 					</Link>
 				);
 			},

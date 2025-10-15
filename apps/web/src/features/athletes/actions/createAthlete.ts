@@ -8,6 +8,7 @@ import { createClient } from "@/utils/supabase/server";
 
 import { getUser } from "@/queries/getUser";
 
+import { returnValidationErrors } from "next-safe-action";
 import { athleteCreateSchema } from "../types/athlete";
 
 export const createAthleteAction = actionClient
@@ -17,10 +18,9 @@ export const createAthleteAction = actionClient
 			// Authentication check
 			const user = await getUser();
 			if (!user) {
-				return {
-					success: false,
-					error: "You must be logged in to create an athlete",
-				};
+				return returnValidationErrors(athleteCreateSchema, {
+					_errors: ["You must be logged in to create an athlete"],
+				});
 			}
 
 			const supabase = await createClient();
@@ -34,15 +34,13 @@ export const createAthleteAction = actionClient
 					.maybeSingle();
 
 				if (existingAthlete) {
-					return {
-						success: false,
-						error: `An athlete with email ${parsedInput.contact_email} already exists: ${existingAthlete.full_name}`,
-						validationErrors: {
-							contact_email: {
-								_errors: ["This email is already in use"],
-							},
+					return returnValidationErrors(athleteCreateSchema, {
+						contact_email: {
+							_errors: [
+								`An athlete with email ${parsedInput.contact_email} already exists: ${existingAthlete.full_name}`,
+							],
 						},
-					};
+					});
 				}
 			}
 
@@ -55,10 +53,9 @@ export const createAthleteAction = actionClient
 
 			if (insertError) {
 				console.error("Error creating athlete:", insertError);
-				return {
-					success: false,
-					error: `Failed to create athlete: ${insertError.message}`,
-				};
+				return returnValidationErrors(athleteCreateSchema, {
+					_errors: [`Failed to create athlete: ${insertError.message}`],
+				});
 			}
 
 			// Revalidate paths
@@ -67,16 +64,19 @@ export const createAthleteAction = actionClient
 
 			return {
 				success: true,
-				data: athlete,
+				data: {
+					success: "Athlete created successfully",
+					athlete,
+				},
 			};
 		} catch (error) {
 			console.error("Unexpected error in createAthleteAction:", error);
-			return {
-				success: false,
-				error:
+			return returnValidationErrors(athleteCreateSchema, {
+				_errors: [
 					error instanceof Error
 						? error.message
-						: "An unexpected error occurred",
-			};
+						: "An unexpected error occurred while creating athlete",
+				],
+			});
 		}
 	});

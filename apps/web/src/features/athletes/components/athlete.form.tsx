@@ -95,15 +95,24 @@ export function AthleteForm({
 				} else {
 					router.push("/dashboard/athletes");
 				}
-			} else if (result.data?.validationErrors) {
-				const errors = getAllValidationErrors(result.data.validationErrors);
-				errors.forEach((error) => toast.error(error));
-			} else if (result.data?.error) {
-				toast.error(result.data.error);
 			}
 		},
 		onError: ({ error }) => {
-			toast.error(error.serverError || "Failed to create athlete");
+			// Handle validation errors with specific messages
+			if (error.validationErrors) {
+				const errors = getAllValidationErrors(error.validationErrors);
+				if (errors.length > 0) {
+					for (const errorMsg of errors) {
+						toast.error(errorMsg);
+					}
+				} else {
+					toast.error("Failed to create athlete. Please check your input.");
+				}
+			} else if (error.serverError) {
+				toast.error(error.serverError);
+			} else {
+				toast.error("Failed to create athlete. Please try again.");
+			}
 		},
 	});
 

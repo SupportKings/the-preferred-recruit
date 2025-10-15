@@ -142,6 +142,7 @@ export async function getAllAthletes() {
 		const { data: athletes, error } = await (supabase as any)
 			.from("athletes")
 			.select("*")
+			.eq("is_deleted", false)
 			.order("id", { ascending: false });
 
 		if (error) {
@@ -167,7 +168,8 @@ export async function getAthletesWithFilters(
 
 		let query = (supabase as any)
 			.from("athletes")
-			.select("*", { count: "exact" });
+			.select("*", { count: "exact" })
+			.eq("is_deleted", false);
 
 		// Apply filters with proper operator support
 		filters.forEach((filter) => {
@@ -274,7 +276,8 @@ export async function getAthletesWithFaceted(
 			facetedColumns.map(async (columnId) => {
 				let facetQuery = (supabase as any)
 					.from("athletes")
-					.select(columnId, { count: "exact" });
+					.select(columnId, { count: "exact" })
+					.eq("is_deleted", false);
 
 				// Apply existing filters (excluding the column we're faceting)
 				filters
@@ -393,7 +396,8 @@ export async function getAthletesFaceted(
 
 		let query = (supabase as any)
 			.from("athletes")
-			.select(columnId, { count: "exact" });
+			.select(columnId, { count: "exact" })
+			.eq("is_deleted", false);
 
 		// Apply existing filters (excluding the column we're faceting)
 		filters
