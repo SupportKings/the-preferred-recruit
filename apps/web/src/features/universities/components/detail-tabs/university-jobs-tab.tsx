@@ -19,7 +19,7 @@ import { updateUniversityJobAction } from "@/features/university-jobs/actions/up
 import { CreateUniversityJobModal } from "@/features/university-jobs/components/create-university-job-modal";
 
 import { format } from "date-fns";
-import { Briefcase, Eye, Trash2 } from "lucide-react";
+import { Briefcase, ExternalLink, Eye, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { InlineEditCell } from "./inline-edit-cell";
 
@@ -29,6 +29,7 @@ type UniversityJob = Tables<"university_jobs"> & {
 		full_name: string | null;
 		email: string | null;
 		primary_specialty: string | null;
+		linkedin_profile: string | null;
 	} | null;
 	programs: {
 		id: string;
@@ -93,7 +94,7 @@ export function UniversityJobsTab({
 				<div className="flex items-center justify-between">
 					<CardTitle className="flex items-center gap-2">
 						<Briefcase className="h-5 w-5" />
-						Coaches & Staff
+						University Jobs (Coaches)
 					</CardTitle>
 					<CreateUniversityJobModal universityId={universityId} />
 				</div>
@@ -116,7 +117,6 @@ export function UniversityJobsTab({
 									<TableHead>Specialty</TableHead>
 									<TableHead>Job Title</TableHead>
 									<TableHead>Program</TableHead>
-									<TableHead>Scope</TableHead>
 									<TableHead>Contact</TableHead>
 									<TableHead>Period</TableHead>
 									<TableHead className="w-[100px]">Actions</TableHead>
@@ -126,7 +126,27 @@ export function UniversityJobsTab({
 								{jobs.map((job) => (
 									<TableRow key={job.id}>
 										<TableCell className="font-medium">
-											{job.coaches?.full_name || "Unassigned"}
+											{job.coaches?.full_name ? (
+												<div className="flex items-center gap-2">
+													<Link
+														href={`/dashboard/coaches/${job.coaches.id}`}
+														className="text-primary hover:underline"
+													>
+														{job.coaches.full_name}
+													</Link>
+													<Link
+														href={`/dashboard/coaches/${job.coaches.id}`}
+														className="text-muted-foreground hover:text-primary"
+														title="View coach details"
+													>
+														<ExternalLink className="h-3.5 w-3.5" />
+													</Link>
+												</div>
+											) : (
+												<span className="text-muted-foreground">
+													{job.coaches ? "Unnamed Coach" : "Unassigned"}
+												</span>
+											)}
 										</TableCell>
 										<TableCell className="capitalize">
 											{job.coaches?.primary_specialty || "-"}
@@ -141,24 +161,34 @@ export function UniversityJobsTab({
 												placeholder="Job Title"
 											/>
 										</TableCell>
-										<TableCell className="capitalize">
-											{job.programs?.gender || "-"}
-										</TableCell>
 										<TableCell>
-											<InlineEditCell
-												value={job.program_scope}
-												onSave={(value) =>
-													handleInlineEdit(job.id, "program_scope", value)
-												}
-												type="select"
-												options={[
-													{ value: "men", label: "Men" },
-													{ value: "women", label: "Women" },
-													{ value: "both", label: "Both" },
-													{ value: "n/a", label: "N/A" },
-												]}
-												placeholder="Scope"
-											/>
+											{job.programs ? (
+												<div className="flex items-center gap-2">
+													<Link
+														href={`/dashboard/programs/${job.programs.id}`}
+														className="text-primary hover:underline"
+													>
+														{job.programs.gender === "men"
+															? "Men's Program"
+															: job.programs.gender === "women"
+																? "Women's Program"
+																: "Program"}
+													</Link>
+													{job.programs.team_url && (
+														<a
+															href={job.programs.team_url}
+															target="_blank"
+															rel="noopener noreferrer"
+															className="text-muted-foreground hover:text-primary"
+															title="Visit team website"
+														>
+															<ExternalLink className="h-3.5 w-3.5" />
+														</a>
+													)}
+												</div>
+											) : (
+												<span className="text-muted-foreground">-</span>
+											)}
 										</TableCell>
 										<TableCell>
 											<div className="space-y-1 text-sm">
@@ -182,18 +212,15 @@ export function UniversityJobsTab({
 										</TableCell>
 										<TableCell>
 											<div className="text-sm">
-												{job.start_date && (
+												{job.start_date ? (
 													<div>
-														From:{" "}
 														{format(new Date(job.start_date), "MMM dd, yyyy")}
+														{job.end_date &&
+															` - ${format(new Date(job.end_date), "MMM dd, yyyy")}`}
 													</div>
+												) : (
+													"-"
 												)}
-												{job.end_date && (
-													<div>
-														To: {format(new Date(job.end_date), "MMM dd, yyyy")}
-													</div>
-												)}
-												{!job.start_date && !job.end_date && "-"}
 											</div>
 										</TableCell>
 										<TableCell>

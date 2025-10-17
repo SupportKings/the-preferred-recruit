@@ -226,7 +226,19 @@ export function UniversityJobLookup({
 			)}
 			<Popover open={open} onOpenChange={setOpen}>
 				<PopoverTrigger asChild>
-					<div className="relative">
+					<div
+						className="relative"
+						onClick={(e) => {
+							e.preventDefault();
+							if (!open) setOpen(true);
+						}}
+						onKeyDown={(e) => {
+							if (e.key === "Enter" || e.key === " ") {
+								e.preventDefault();
+								if (!open) setOpen(true);
+							}
+						}}
+					>
 						<div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
 							{loading ? (
 								<Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />

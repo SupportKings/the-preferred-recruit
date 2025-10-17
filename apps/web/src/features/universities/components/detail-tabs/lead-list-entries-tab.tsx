@@ -1,8 +1,14 @@
 "use client";
 
+import { useState } from "react";
+
+import Link from "next/link";
+
 import type { Tables } from "@/utils/supabase/database.types";
 
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatusBadge } from "@/components/ui/status-badge";
 import {
 	Table,
 	TableBody,
@@ -12,8 +18,12 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 
+import { deleteSchoolLeadListEntry } from "@/features/school-lead-lists/actions/relations/entries";
+
 import { format } from "date-fns";
-import { List } from "lucide-react";
+import { Edit2, ExternalLink, List, Plus, Trash2 } from "lucide-react";
+import { toast } from "sonner";
+import { ManageSchoolLeadListEntryModal } from "../shared/manage-school-lead-list-entry-modal";
 
 type LeadListEntry = Tables<"school_lead_list_entries"> & {
 	school_lead_lists: {
@@ -34,14 +44,84 @@ interface LeadListEntriesTabProps {
 	onRefresh: () => void;
 }
 
-export function LeadListEntriesTab({ entries }: LeadListEntriesTabProps) {
+// Format status with proper capitalization
+const formatStatus = (status: string | null | undefined): string => {
+	if (!status || typeof status !== "string") return "Unknown";
+
+	const statusMap: Record<string, string> = {
+		included: "Included",
+		excluded: "Excluded",
+		pending: "Pending",
+		contacted: "Contacted",
+		responded: "Responded",
+	};
+
+	return statusMap[status.toLowerCase()] || status;
+};
+
+// Format priority with proper capitalization
+const formatPriority = (priority: string | null | undefined): string => {
+	if (!priority || typeof priority !== "string") return "Not Set";
+
+	const priorityMap: Record<string, string> = {
+		low: "Low",
+		medium: "Medium",
+		high: "High",
+		urgent: "Urgent",
+	};
+
+	return priorityMap[priority.toLowerCase()] || priority;
+};
+
+export function LeadListEntriesTab({
+	entries,
+	universityId,
+	onRefresh,
+}: LeadListEntriesTabProps) {
+	const [editModal, setEditModal] = useState<{
+		isOpen: boolean;
+		data: LeadListEntry | null;
+	}>({
+		isOpen: false,
+		data: null,
+	});
+	const [isDeleting, setIsDeleting] = useState(false);
+
+	const handleDelete = async (entryId: string) => {
+		if (!confirm("Are you sure you want to remove this entry?")) return;
+
+		setIsDeleting(true);
+		try {
+			await deleteSchoolLeadListEntry(entryId);
+			toast.success("Entry removed successfully");
+			onRefresh();
+		} catch (error) {
+			console.error("Error deleting entry:", error);
+			toast.error("Failed to remove entry. Please try again.");
+		} finally {
+			setIsDeleting(false);
+		}
+	};
+
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle className="flex items-center gap-2">
-					<List className="h-5 w-5" />
-					Lead List Entries
-				</CardTitle>
+				<div className="flex items-center justify-between">
+					<CardTitle className="flex items-center gap-2">
+						<List className="h-5 w-5" />
+						Lead List Entries
+					</CardTitle>
+					<ManageSchoolLeadListEntryModal
+						universityId={universityId}
+						mode="add"
+						onSuccess={onRefresh}
+					>
+						<Button variant="outline" size="sm" className="gap-2">
+							<Plus className="h-4 w-4" />
+							Add Entry
+						</Button>
+					</ManageSchoolLeadListEntryModal>
+				</div>
 			</CardHeader>
 			<CardContent>
 				{entries.length === 0 ? (
@@ -63,22 +143,71 @@ export function LeadListEntriesTab({ entries }: LeadListEntriesTabProps) {
 									<TableHead>Status</TableHead>
 									<TableHead>Added At</TableHead>
 									<TableHead>Notes</TableHead>
+									<TableHead className="w-[120px]">Actions</TableHead>
 								</TableRow>
 							</TableHeader>
 							<TableBody>
 								{entries.map((entry) => (
 									<TableRow key={entry.id}>
 										<TableCell className="font-medium">
-											{entry.school_lead_lists?.name || "Unknown List"}
+											{entry.school_lead_lists ? (
+												<div className="flex items-center gap-2">
+													<Link
+														href={`/dashboard/school-lead-lists/${entry.school_lead_lists.id}`}
+														className="text-primary hover:underline"
+													>
+														{entry.school_lead_lists.name || "Unknown List"}
+													</Link>
+													<Link
+														href={`/dashboard/school-lead-lists/${entry.school_lead_lists.id}`}
+														className="text-muted-foreground hover:text-primary"
+														title="View lead list details"
+													>
+														<ExternalLink className="h-3.5 w-3.5" />
+													</Link>
+												</div>
+											) : (
+												<span className="text-muted-foreground">
+													Unknown List
+												</span>
+											)}
 										</TableCell>
-										<TableCell className="capitalize">
-											{entry.school_lead_lists?.priority || "-"}
+										<TableCell>
+											<StatusBadge>
+												{formatPriority(entry.school_lead_lists?.priority)}
+											</StatusBadge>
 										</TableCell>
-										<TableCell className="capitalize">
-											{entry.programs?.gender || "-"}
+										<TableCell>
+											{entry.programs ? (
+												<div className="flex items-center gap-2">
+													<Link
+														href={`/dashboard/programs/${entry.programs.id}`}
+														className="text-primary hover:underline"
+													>
+														{entry.programs.gender === "men"
+															? "Men's Program"
+															: entry.programs.gender === "women"
+																? "Women's Program"
+																: "Program"}
+													</Link>
+													{entry.programs.team_url && (
+														<a
+															href={entry.programs.team_url}
+															target="_blank"
+															rel="noopener noreferrer"
+															className="text-muted-foreground hover:text-primary"
+															title="Visit team website"
+														>
+															<ExternalLink className="h-3.5 w-3.5" />
+														</a>
+													)}
+												</div>
+											) : (
+												<span className="text-muted-foreground">-</span>
+											)}
 										</TableCell>
-										<TableCell className="capitalize">
-											{entry.status || "-"}
+										<TableCell>
+											<StatusBadge>{formatStatus(entry.status)}</StatusBadge>
 										</TableCell>
 										<TableCell>
 											{entry.added_at
@@ -88,6 +217,30 @@ export function LeadListEntriesTab({ entries }: LeadListEntriesTabProps) {
 										<TableCell className="max-w-[200px] truncate">
 											{entry.internal_notes || "-"}
 										</TableCell>
+										<TableCell>
+											<div className="flex gap-1">
+												<Button
+													variant="ghost"
+													size="sm"
+													onClick={() =>
+														setEditModal({
+															isOpen: true,
+															data: entry,
+														})
+													}
+												>
+													<Edit2 className="h-4 w-4" />
+												</Button>
+												<Button
+													variant="ghost"
+													size="sm"
+													onClick={() => handleDelete(entry.id)}
+													disabled={isDeleting}
+												>
+													<Trash2 className="h-4 w-4 text-red-600" />
+												</Button>
+											</div>
+										</TableCell>
 									</TableRow>
 								))}
 							</TableBody>
@@ -95,6 +248,18 @@ export function LeadListEntriesTab({ entries }: LeadListEntriesTabProps) {
 					</div>
 				)}
 			</CardContent>
+
+			{/* Edit Modal */}
+			<ManageSchoolLeadListEntryModal
+				universityId={universityId}
+				entry={editModal.data}
+				mode="edit"
+				open={editModal.isOpen}
+				onOpenChange={(open: boolean) =>
+					setEditModal((prev) => ({ ...prev, isOpen: open }))
+				}
+				onSuccess={onRefresh}
+			/>
 		</Card>
 	);
 }

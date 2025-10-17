@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import { deleteCampaignLead } from "@/features/athletes/actions/campaignLeads";
 import { updateUniversity } from "@/features/universities/actions/updateUniversity";
 import { useUniversity } from "@/features/universities/queries/useUniversities";
 
@@ -127,8 +128,14 @@ export default function UniversityDetailView({
 
 	const handleDelete = async () => {
 		try {
-			// We'll implement specific delete actions for each relationship type
-			toast.success("Record deleted successfully");
+			switch (deleteModal.type) {
+				case "campaign_lead":
+					await deleteCampaignLead(deleteModal.id);
+					toast.success("Campaign lead deleted successfully");
+					break;
+				default:
+					throw new Error("Unknown delete type");
+			}
 
 			// Invalidate the university query to refresh the data
 			await queryClient.invalidateQueries({
@@ -207,16 +214,19 @@ export default function UniversityDetailView({
 						Programs ({university.programs?.length || 0})
 					</TabsTrigger>
 					<TabsTrigger value="jobs">
-						Coaches & Staff ({university.university_jobs?.length || 0})
+						University Jobs (Coaches) ({university.university_jobs?.length || 0}
+						)
 					</TabsTrigger>
 					<TabsTrigger value="applications">
-						Applications ({university.athlete_applications?.length || 0})
+						Athlete Applications ({university.athlete_applications?.length || 0}
+						)
 					</TabsTrigger>
 					<TabsTrigger value="leads">
-						Lead Lists ({university.school_lead_list_entries?.length || 0})
+						Lead List Entries (
+						{university.school_lead_list_entries?.length || 0})
 					</TabsTrigger>
 					<TabsTrigger value="campaigns">
-						Campaigns ({university.campaign_leads?.length || 0})
+						Campaign Leads ({university.campaign_leads?.length || 0})
 					</TabsTrigger>
 					<TabsTrigger value="knowledge">
 						Intel ({university.ball_knowledge?.length || 0})
@@ -275,6 +285,7 @@ export default function UniversityDetailView({
 					<CampaignLeadsTab
 						leads={university.campaign_leads || []}
 						universityId={universityId}
+						setDeleteModal={setDeleteModal}
 						onRefresh={() =>
 							queryClient.invalidateQueries({
 								queryKey: ["universities", "detail", universityId],

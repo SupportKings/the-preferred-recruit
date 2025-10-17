@@ -1,112 +1,117 @@
 "use client";
 
-import type { Tables } from "@/utils/supabase/database.types";
+import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { UniversalDataTable } from "@/components/universal-data-table/universal-data-table";
+
+import { updateCampaignLead } from "@/features/athletes/actions/campaignLeads";
+import { ManageCampaignLeadModal } from "@/features/universities/components/shared/manage-campaign-lead-modal";
+import { createCampaignLeadColumns } from "@/features/universities/components/table-columns/campaign-lead-columns";
+
 import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow,
-} from "@/components/ui/table";
-
-import { format } from "date-fns";
-import { Send } from "lucide-react";
-
-type CampaignLead = Tables<"campaign_leads"> & {
-	campaigns: {
-		id: string;
-		name: string | null;
-		type: string | null;
-	} | null;
-	programs: {
-		id: string;
-		gender: string | null;
-		team_url: string | null;
-	} | null;
-	university_jobs: {
-		id: string;
-		job_title: string | null;
-		work_email: string | null;
-	} | null;
-};
+	getCoreRowModel,
+	getSortedRowModel,
+	useReactTable,
+} from "@tanstack/react-table";
+import { PlusIcon, Send } from "lucide-react";
+import { toast } from "sonner";
 
 interface CampaignLeadsTabProps {
-	leads: CampaignLead[];
+	leads: any[];
 	universityId: string;
+	setDeleteModal: (modal: {
+		isOpen: boolean;
+		type: string;
+		id: string;
+		title: string;
+	}) => void;
 	onRefresh: () => void;
 }
 
-export function CampaignLeadsTab({ leads }: CampaignLeadsTabProps) {
+export function CampaignLeadsTab({
+	leads,
+	universityId,
+	setDeleteModal,
+	onRefresh,
+}: CampaignLeadsTabProps) {
+	const [editModal, setEditModal] = useState<{
+		isOpen: boolean;
+		type: string;
+		data: any;
+	}>({
+		isOpen: false,
+		type: "",
+		data: null,
+	});
+
+	const handleInlineEdit = async (
+		leadId: string,
+		field: string,
+		value: string | null,
+	) => {
+		try {
+			await updateCampaignLead(leadId, {
+				[field]: value,
+			} as Parameters<typeof updateCampaignLead>[1]);
+
+			toast.success("Campaign lead updated successfully");
+			onRefresh();
+		} catch (error) {
+			console.error("Error updating campaign lead:", error);
+			toast.error("Failed to update campaign lead");
+		}
+	};
+
+	const leadColumns = createCampaignLeadColumns(
+		handleInlineEdit,
+		setDeleteModal,
+		setEditModal,
+	);
+
+	const leadsTable = useReactTable({
+		data: leads || [],
+		columns: leadColumns,
+		getCoreRowModel: getCoreRowModel(),
+		getSortedRowModel: getSortedRowModel(),
+	});
+
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle className="flex items-center gap-2">
-					<Send className="h-5 w-5" />
-					Campaign Leads
-				</CardTitle>
+				<div className="flex items-center justify-between">
+					<CardTitle className="flex items-center gap-2">
+						<Send className="h-5 w-5" />
+						Campaign Leads
+					</CardTitle>
+					<ManageCampaignLeadModal universityId={universityId} mode="add" />
+				</div>
 			</CardHeader>
 			<CardContent>
-				{leads.length === 0 ? (
-					<div className="py-8 text-center text-muted-foreground">
-						<Send className="mx-auto mb-4 h-12 w-12 opacity-50" />
-						<p className="text-sm">No campaign leads yet</p>
-						<p className="mt-1 text-xs">
-							This university hasn't been targeted in any campaigns yet
-						</p>
-					</div>
-				) : (
-					<div className="rounded-lg border">
-						<Table>
-							<TableHeader>
-								<TableRow>
-									<TableHead>Campaign</TableHead>
-									<TableHead>Type</TableHead>
-									<TableHead>Program</TableHead>
-									<TableHead>Coach/Job</TableHead>
-									<TableHead>Status</TableHead>
-									<TableHead>First Reply</TableHead>
-								</TableRow>
-							</TableHeader>
-							<TableBody>
-								{leads.map((lead) => (
-									<TableRow key={lead.id}>
-										<TableCell className="font-medium">
-											{lead.campaigns?.name || "Unknown Campaign"}
-										</TableCell>
-										<TableCell className="capitalize">
-											{lead.campaigns?.type || "-"}
-										</TableCell>
-										<TableCell className="capitalize">
-											{lead.programs?.gender || "-"}
-										</TableCell>
-										<TableCell>
-											<div className="text-sm">
-												<div>{lead.university_jobs?.job_title || "-"}</div>
-												{lead.university_jobs?.work_email && (
-													<div className="text-muted-foreground text-xs">
-														{lead.university_jobs.work_email}
-													</div>
-												)}
-											</div>
-										</TableCell>
-										<TableCell className="capitalize">
-											{lead.status || "-"}
-										</TableCell>
-										<TableCell>
-											{lead.first_reply_at
-												? format(new Date(lead.first_reply_at), "MMM dd, yyyy")
-												: "-"}
-										</TableCell>
-									</TableRow>
-								))}
-							</TableBody>
-						</Table>
-					</div>
-				)}
+				<UniversalDataTable
+					table={leadsTable}
+					emptyStateMessage="No campaign leads found for this university"
+					emptyStateAction={
+						<ManageCampaignLeadModal universityId={universityId} mode="add">
+							<Button size="sm">
+								<PlusIcon className="h-4 w-4" />
+								Add Campaign Lead
+							</Button>
+						</ManageCampaignLeadModal>
+					}
+				/>
 			</CardContent>
+
+			<ManageCampaignLeadModal
+				universityId={universityId}
+				mode="edit"
+				lead={editModal.data}
+				open={editModal.isOpen && editModal.type === "campaign_lead"}
+				onOpenChange={(open: boolean) =>
+					setEditModal((prev) => ({ ...prev, isOpen: open }))
+				}
+			/>
 		</Card>
 	);
 }

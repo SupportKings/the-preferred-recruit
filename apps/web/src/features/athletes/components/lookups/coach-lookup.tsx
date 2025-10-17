@@ -124,15 +124,15 @@ export function CoachLookup({
 				</Label>
 			)}
 			<Popover open={open} onOpenChange={setOpen}>
-				<PopoverTrigger asChild>
-					<div className="relative">
-						<div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-							{loading ? (
-								<Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-							) : (
-								<Search className="h-4 w-4 text-muted-foreground" />
-							)}
-						</div>
+				<div className="relative">
+					<div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+						{loading ? (
+							<Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+						) : (
+							<Search className="h-4 w-4 text-muted-foreground" />
+						)}
+					</div>
+					<PopoverTrigger asChild>
 						<Input
 							ref={inputRef}
 							type="text"
@@ -155,25 +155,25 @@ export function CoachLookup({
 								selectedCoach && !searchQuery && "cursor-pointer",
 							)}
 						/>
-						{selectedCoach && !searchQuery && (
-							<div className="absolute inset-y-0 right-8 left-9 flex items-center">
-								<Badge variant="secondary" className="max-w-full truncate">
-									{selectedCoach.full_name}
-								</Badge>
-							</div>
-						)}
-						{value && (
-							<button
-								type="button"
-								onClick={handleClear}
-								className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
-								disabled={disabled}
-							>
-								<X className="h-4 w-4" />
-							</button>
-						)}
-					</div>
-				</PopoverTrigger>
+					</PopoverTrigger>
+					{selectedCoach && !searchQuery && (
+						<div className="pointer-events-none absolute inset-y-0 right-8 left-9 flex items-center">
+							<Badge variant="secondary" className="max-w-full truncate">
+								{selectedCoach.full_name}
+							</Badge>
+						</div>
+					)}
+					{value && (
+						<button
+							type="button"
+							onClick={handleClear}
+							className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
+							disabled={disabled}
+						>
+							<X className="h-4 w-4" />
+						</button>
+					)}
+				</div>
 				<PopoverContent
 					className="w-[var(--radix-popover-trigger-width)] p-0"
 					align="start"

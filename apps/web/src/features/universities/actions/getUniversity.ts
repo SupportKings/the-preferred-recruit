@@ -34,7 +34,8 @@ export async function getUniversity(id: string) {
 						id,
 						full_name,
 						email,
-						primary_specialty
+						primary_specialty,
+						linkedin_profile
 					),
 					programs (
 						id,
@@ -56,7 +57,9 @@ export async function getUniversity(id: string) {
 					athletes (
 						id,
 						full_name,
-						contact_email
+						contact_email,
+						athlete_net_url,
+						instagram_handle
 					),
 					programs (
 						id,
@@ -93,7 +96,8 @@ export async function getUniversity(id: string) {
 					campaigns (
 						id,
 						name,
-						type
+						type,
+						sending_tool_campaign_url
 					),
 					programs (
 						id,
@@ -103,7 +107,12 @@ export async function getUniversity(id: string) {
 					university_jobs (
 						id,
 						job_title,
-						work_email
+						work_email,
+						coaches (
+							id,
+							full_name,
+							linkedin_profile
+						)
 					)
 				),
 				ball_knowledge (

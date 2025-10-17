@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
 	Dialog,
 	DialogContent,
@@ -229,12 +230,12 @@ export function CreateUniversityJobModal({
 					<div className="grid gap-4 md:grid-cols-2">
 						<div>
 							<Label>Start Date</Label>
-							<Input
-								type="date"
+							<DatePicker
 								value={formData.start_date}
-								onChange={(e) =>
-									setFormData({ ...formData, start_date: e.target.value })
+								onChange={(value) =>
+									setFormData({ ...formData, start_date: value })
 								}
+								placeholder="Select start date"
 							/>
 							<p className="mt-1 text-muted-foreground text-xs">
 								When this job starts
@@ -243,12 +244,12 @@ export function CreateUniversityJobModal({
 
 						<div>
 							<Label>End Date</Label>
-							<Input
-								type="date"
+							<DatePicker
 								value={formData.end_date}
-								onChange={(e) =>
-									setFormData({ ...formData, end_date: e.target.value })
+								onChange={(value) =>
+									setFormData({ ...formData, end_date: value })
 								}
+								placeholder="Select end date"
 							/>
 							<p className="mt-1 text-muted-foreground text-xs">
 								When this job ends
