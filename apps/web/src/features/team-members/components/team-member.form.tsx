@@ -53,7 +53,13 @@ export function TeamMemberForm({
 				if (onSuccess) {
 					onSuccess();
 				} else {
-					router.push("/dashboard/team-members");
+					// Navigate to team member details page
+					const teamMemberId = result.data?.data?.id;
+					if (teamMemberId) {
+						router.push(`/dashboard/team-members/${teamMemberId}`);
+					} else {
+						router.push("/dashboard/team-members");
+					}
 				}
 			} else if (result.data?.error) {
 				toast.error(result.data.error);

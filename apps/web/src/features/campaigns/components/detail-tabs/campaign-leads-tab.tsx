@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UniversalDataTable } from "@/components/universal-data-table/universal-data-table";
 
@@ -14,7 +15,7 @@ import {
 	getSortedRowModel,
 	useReactTable,
 } from "@tanstack/react-table";
-import { Users } from "lucide-react";
+import { PlusIcon, Users } from "lucide-react";
 
 interface CampaignLeadsTabProps {
 	campaignId: string;
@@ -52,28 +53,6 @@ export function CampaignLeadsTab({
 		getSortedRowModel: getSortedRowModel(),
 	});
 
-	if (!campaignLeads || campaignLeads.length === 0) {
-		return (
-			<Card>
-				<CardHeader>
-					<CardTitle className="flex items-center gap-2">
-						<Users className="h-5 w-5" />
-						Campaign Leads
-					</CardTitle>
-				</CardHeader>
-				<CardContent>
-					<div className="py-8 text-center text-muted-foreground">
-						<Users className="mx-auto mb-4 h-12 w-12 opacity-50" />
-						<p className="text-sm">No campaign leads yet</p>
-						<p className="mt-1 text-xs">
-							Campaign leads will appear here once added to this campaign
-						</p>
-					</div>
-				</CardContent>
-			</Card>
-		);
-	}
-
 	return (
 		<Card>
 			<CardHeader>
@@ -94,6 +73,18 @@ export function CampaignLeadsTab({
 					table={leadsTable}
 					rowActions={leadRowActions}
 					emptyStateMessage="No campaign leads found for this campaign"
+					emptyStateAction={
+						<ManageCampaignLeadModal
+							campaignId={campaignId}
+							athleteId={athleteId}
+							mode="add"
+						>
+							<Button size="sm">
+								<PlusIcon className="h-4 w-4" />
+								Add Campaign Lead
+							</Button>
+						</ManageCampaignLeadModal>
+					}
 				/>
 			</CardContent>
 

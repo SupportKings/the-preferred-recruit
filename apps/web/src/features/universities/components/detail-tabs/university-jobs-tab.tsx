@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import Link from "next/link";
 
 import type { Tables } from "@/utils/supabase/database.types";
 
@@ -15,9 +15,13 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 
+import { updateUniversityJobAction } from "@/features/university-jobs/actions/updateUniversityJob";
+import { CreateUniversityJobModal } from "@/features/university-jobs/components/create-university-job-modal";
+
 import { format } from "date-fns";
-import { Briefcase, Edit2, Trash2 } from "lucide-react";
+import { Briefcase, Eye, Trash2 } from "lucide-react";
 import { toast } from "sonner";
+import { InlineEditCell } from "./inline-edit-cell";
 
 type UniversityJob = Tables<"university_jobs"> & {
 	coaches: {
@@ -44,17 +48,7 @@ export function UniversityJobsTab({
 	universityId,
 	onRefresh,
 }: UniversityJobsTabProps) {
-	const [editModal, setEditModal] = useState<{
-		isOpen: boolean;
-		type: string;
-		data: UniversityJob | null;
-	}>({
-		isOpen: false,
-		type: "",
-		data: null,
-	});
-
-	const handleDelete = async (jobId: string) => {
+	const handleDelete = async (_jobId: string) => {
 		if (!confirm("Are you sure you want to delete this job?")) return;
 
 		try {
@@ -67,13 +61,42 @@ export function UniversityJobsTab({
 		}
 	};
 
+	const handleInlineEdit = async (
+		jobId: string,
+		field: string,
+		value: string | null,
+	) => {
+		try {
+			const result = await updateUniversityJobAction({
+				id: jobId,
+				[field]: value,
+			} as Parameters<typeof updateUniversityJobAction>[0]);
+
+			if (result?.validationErrors) {
+				toast.error("Failed to update job");
+				return;
+			}
+
+			if (result?.data?.success) {
+				toast.success("Job updated successfully");
+				onRefresh();
+			}
+		} catch (error) {
+			console.error("Error updating job:", error);
+			toast.error("Failed to update job");
+		}
+	};
+
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle className="flex items-center gap-2">
-					<Briefcase className="h-5 w-5" />
-					Coaches & Staff
-				</CardTitle>
+				<div className="flex items-center justify-between">
+					<CardTitle className="flex items-center gap-2">
+						<Briefcase className="h-5 w-5" />
+						Coaches & Staff
+					</CardTitle>
+					<CreateUniversityJobModal universityId={universityId} />
+				</div>
 			</CardHeader>
 			<CardContent>
 				{jobs.length === 0 ? (
@@ -108,22 +131,53 @@ export function UniversityJobsTab({
 										<TableCell className="capitalize">
 											{job.coaches?.primary_specialty || "-"}
 										</TableCell>
-										<TableCell>{job.job_title || "-"}</TableCell>
+										<TableCell>
+											<InlineEditCell
+												value={job.job_title}
+												onSave={(value) =>
+													handleInlineEdit(job.id, "job_title", value)
+												}
+												type="text"
+												placeholder="Job Title"
+											/>
+										</TableCell>
 										<TableCell className="capitalize">
 											{job.programs?.gender || "-"}
 										</TableCell>
-										<TableCell className="capitalize">
-											{job.program_scope || "-"}
+										<TableCell>
+											<InlineEditCell
+												value={job.program_scope}
+												onSave={(value) =>
+													handleInlineEdit(job.id, "program_scope", value)
+												}
+												type="select"
+												options={[
+													{ value: "men", label: "Men" },
+													{ value: "women", label: "Women" },
+													{ value: "both", label: "Both" },
+													{ value: "n/a", label: "N/A" },
+												]}
+												placeholder="Scope"
+											/>
 										</TableCell>
 										<TableCell>
-											<div className="text-sm">
-												{job.work_email && (
-													<div className="max-w-[150px] truncate">
-														{job.work_email}
-													</div>
-												)}
-												{job.work_phone && <div>{job.work_phone}</div>}
-												{!job.work_email && !job.work_phone && "-"}
+											<div className="space-y-1 text-sm">
+												<InlineEditCell
+													value={job.work_email}
+													onSave={(value) =>
+														handleInlineEdit(job.id, "work_email", value)
+													}
+													type="email"
+													placeholder="Work Email"
+												/>
+												<InlineEditCell
+													value={job.work_phone}
+													onSave={(value) =>
+														handleInlineEdit(job.id, "work_phone", value)
+													}
+													type="tel"
+													placeholder="Work Phone"
+												/>
 											</div>
 										</TableCell>
 										<TableCell>
@@ -144,18 +198,10 @@ export function UniversityJobsTab({
 										</TableCell>
 										<TableCell>
 											<div className="flex gap-1">
-												<Button
-													variant="ghost"
-													size="sm"
-													onClick={() =>
-														setEditModal({
-															isOpen: true,
-															type: "job",
-															data: job,
-														})
-													}
-												>
-													<Edit2 className="h-4 w-4" />
+												<Button variant="ghost" size="sm" asChild>
+													<Link href={`/dashboard/university-jobs/${job.id}`}>
+														<Eye className="h-4 w-4" />
+													</Link>
 												</Button>
 												<Button
 													variant="ghost"
@@ -173,18 +219,6 @@ export function UniversityJobsTab({
 					</div>
 				)}
 			</CardContent>
-
-			{/* TODO: Implement ManageUniversityJobModal component */}
-			{/* <ManageUniversityJobModal
-				universityId={universityId}
-				job={editModal.data}
-				mode="edit"
-				open={editModal.isOpen && editModal.type === "job"}
-				onOpenChange={(open: boolean) =>
-					setEditModal((prev) => ({ ...prev, isOpen: open }))
-				}
-				onSuccess={onRefresh}
-			/> */}
 		</Card>
 	);
 }

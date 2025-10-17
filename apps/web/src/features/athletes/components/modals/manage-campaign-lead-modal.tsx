@@ -225,7 +225,7 @@ export function ManageCampaignLeadModal({
 						disabled={isEdit || !formData.university_id}
 					/>
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="status">Status</Label>
 						<Select
 							value={formData.status}
@@ -246,7 +246,7 @@ export function ManageCampaignLeadModal({
 						</Select>
 					</div>
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="first_reply_date">First Reply Date</Label>
 						<DatePicker
 							id="first_reply_date"
@@ -258,7 +258,7 @@ export function ManageCampaignLeadModal({
 						/>
 					</div>
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="internal_notes">Internal Notes</Label>
 						<Textarea
 							id="internal_notes"

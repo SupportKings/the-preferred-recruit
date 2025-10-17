@@ -176,7 +176,7 @@ export function ManageReplyModal({
 				</DialogHeader>
 
 				<form onSubmit={handleSubmit} className="space-y-4">
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="type">Reply Type *</Label>
 						<Select
 							value={formData.type}
@@ -202,7 +202,7 @@ export function ManageReplyModal({
 						</Select>
 					</div>
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="occurred_at">Occurred At *</Label>
 						<DatePicker
 							id="occurred_at"
@@ -214,7 +214,7 @@ export function ManageReplyModal({
 						/>
 					</div>
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="summary">Summary</Label>
 						<Textarea
 							id="summary"
@@ -230,7 +230,7 @@ export function ManageReplyModal({
 					{/* Campaign and Coach fields only show in Create mode */}
 					{!isEdit && (
 						<>
-							<div>
+							<div className="space-y-2">
 								<Label htmlFor="campaign_id">Campaign (Optional)</Label>
 								<Select
 									value={formData.campaign_id || "NONE"}
@@ -268,7 +268,7 @@ export function ManageReplyModal({
 						</>
 					)}
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="internal_notes">Internal Notes</Label>
 						<Textarea
 							id="internal_notes"

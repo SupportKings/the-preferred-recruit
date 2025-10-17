@@ -80,7 +80,13 @@ export function UniversityForm({
 				if (onSuccess) {
 					onSuccess();
 				} else {
-					router.push("/dashboard/universities");
+					// Navigate to the university details page
+					const universityId = result.data?.data?.id;
+					if (universityId) {
+						router.push(`/dashboard/universities/${universityId}`);
+					} else {
+						router.push("/dashboard/universities");
+					}
 				}
 			} else if (result.data?.validationErrors) {
 				const errors = getAllValidationErrors(result.data.validationErrors);

@@ -229,7 +229,7 @@ export function ManageCampaignLeadModal({
 					{/* Fields only shown in Create mode */}
 					{!isEdit && (
 						<>
-							<div>
+							<div className="space-y-2">
 								<Label htmlFor="campaign_id">Campaign *</Label>
 								<Select
 									value={formData.campaign_id || "NONE"}
@@ -254,7 +254,7 @@ export function ManageCampaignLeadModal({
 								</Select>
 							</div>
 
-							<div>
+							<div className="space-y-2">
 								<Label htmlFor="university_id">University</Label>
 								<Select
 									value={formData.university_id || "NONE"}
@@ -281,7 +281,7 @@ export function ManageCampaignLeadModal({
 								</Select>
 							</div>
 
-							<div>
+							<div className="space-y-2">
 								<Label htmlFor="program_id">Program</Label>
 								<Select
 									value={formData.program_id || "NONE"}
@@ -315,7 +315,7 @@ export function ManageCampaignLeadModal({
 								</Select>
 							</div>
 
-							<div>
+							<div className="space-y-2">
 								<Label htmlFor="coach_search">Coach/Job (Optional)</Label>
 								<Popover
 									open={coachPopoverOpen}
@@ -429,7 +429,7 @@ export function ManageCampaignLeadModal({
 					)}
 
 					{/* Fields shown in both Create and Edit mode */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="status">Lead Status *</Label>
 						<Select
 							value={formData.status}
@@ -450,7 +450,7 @@ export function ManageCampaignLeadModal({
 						</Select>
 					</div>
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="include_reason">Include Reason</Label>
 						<Textarea
 							id="include_reason"
@@ -463,7 +463,7 @@ export function ManageCampaignLeadModal({
 						/>
 					</div>
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="internal_notes">Internal Notes</Label>
 						<Textarea
 							id="internal_notes"

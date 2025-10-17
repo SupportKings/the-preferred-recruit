@@ -172,7 +172,7 @@ export function ManageCampaignModal({
 				</DialogHeader>
 
 				<form onSubmit={handleSubmit} className="space-y-4">
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="name">Campaign Name *</Label>
 						<Input
 							id="name"
@@ -185,7 +185,7 @@ export function ManageCampaignModal({
 						/>
 					</div>
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="type">Type</Label>
 						<Select
 							value={formData.type}
@@ -206,7 +206,7 @@ export function ManageCampaignModal({
 					</div>
 
 					{isEdit && (
-						<div>
+						<div className="space-y-2">
 							<Label htmlFor="status">Status</Label>
 							<Select
 								value={formData.status}
@@ -238,7 +238,7 @@ export function ManageCampaignModal({
 						required={false}
 					/>
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="daily_send_cap">Daily Send Cap</Label>
 						<Input
 							id="daily_send_cap"
@@ -251,7 +251,7 @@ export function ManageCampaignModal({
 						/>
 					</div>
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="start_date">Start Date</Label>
 						<DatePicker
 							id="start_date"
@@ -263,7 +263,7 @@ export function ManageCampaignModal({
 						/>
 					</div>
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="internal_notes">Internal Notes</Label>
 						<Textarea
 							id="internal_notes"

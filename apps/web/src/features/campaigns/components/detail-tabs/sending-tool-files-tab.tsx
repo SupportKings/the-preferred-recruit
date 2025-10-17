@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UniversalDataTable } from "@/components/universal-data-table/universal-data-table";
 
@@ -14,7 +15,7 @@ import {
 	getSortedRowModel,
 	useReactTable,
 } from "@tanstack/react-table";
-import { FileText } from "lucide-react";
+import { FileText, PlusIcon } from "lucide-react";
 
 interface SendingToolFilesTabProps {
 	campaignId: string;
@@ -52,29 +53,6 @@ export function SendingToolFilesTab({
 		getSortedRowModel: getSortedRowModel(),
 	});
 
-	if (!sendingToolLeadLists || sendingToolLeadLists.length === 0) {
-		return (
-			<Card>
-				<CardHeader>
-					<CardTitle className="flex items-center gap-2">
-						<FileText className="h-5 w-5" />
-						Sending Tool Files
-					</CardTitle>
-				</CardHeader>
-				<CardContent>
-					<div className="py-8 text-center text-muted-foreground">
-						<FileText className="mx-auto mb-4 h-12 w-12 opacity-50" />
-						<p className="text-sm">No sending tool files yet</p>
-						<p className="mt-1 text-xs">
-							Sending tool export files will appear here once generated for this
-							campaign
-						</p>
-					</div>
-				</CardContent>
-			</Card>
-		);
-	}
-
 	return (
 		<Card>
 			<CardHeader>
@@ -95,6 +73,18 @@ export function SendingToolFilesTab({
 					table={filesTable}
 					rowActions={fileRowActions}
 					emptyStateMessage="No sending tool files found for this campaign"
+					emptyStateAction={
+						<ManageSendingToolLeadListModal
+							athleteId={athleteId}
+							campaignId={campaignId}
+							mode="add"
+						>
+							<Button size="sm">
+								<PlusIcon className="h-4 w-4" />
+								Add Sending Tool File
+							</Button>
+						</ManageSendingToolLeadListModal>
+					}
 				/>
 			</CardContent>
 

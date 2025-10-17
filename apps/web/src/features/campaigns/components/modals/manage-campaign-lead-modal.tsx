@@ -178,7 +178,7 @@ export function ManageCampaignLeadModal({
 						required={false}
 					/>
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="include_reason">Include Reason</Label>
 						<Textarea
 							id="include_reason"
@@ -191,7 +191,7 @@ export function ManageCampaignLeadModal({
 						/>
 					</div>
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="status">Lead Status</Label>
 						<Select
 							value={formData.status}
@@ -210,7 +210,7 @@ export function ManageCampaignLeadModal({
 						</Select>
 					</div>
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="internal_notes">Internal Notes</Label>
 						<Textarea
 							id="internal_notes"

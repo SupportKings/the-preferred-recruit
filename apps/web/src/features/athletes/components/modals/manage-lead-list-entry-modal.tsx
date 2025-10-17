@@ -200,7 +200,7 @@ export function ManageLeadListEntryModal({
 						disabled={isEdit || !formData.university_id}
 					/>
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="status">Status</Label>
 						<Select
 							value={formData.status}
@@ -221,7 +221,7 @@ export function ManageLeadListEntryModal({
 						</Select>
 					</div>
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="priority">Priority</Label>
 						<Select
 							value={formData.priority}
@@ -240,7 +240,7 @@ export function ManageLeadListEntryModal({
 						</Select>
 					</div>
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="internal_notes">Internal Notes</Label>
 						<Textarea
 							id="internal_notes"

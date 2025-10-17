@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UniversalDataTable } from "@/components/universal-data-table/universal-data-table";
 
@@ -14,7 +15,7 @@ import {
 	getSortedRowModel,
 	useReactTable,
 } from "@tanstack/react-table";
-import { MessageSquare } from "lucide-react";
+import { MessageSquare, PlusIcon } from "lucide-react";
 
 interface RepliesTabProps {
 	campaignId: string;
@@ -49,28 +50,6 @@ export function RepliesTab({
 		getSortedRowModel: getSortedRowModel(),
 	});
 
-	if (!replies || replies.length === 0) {
-		return (
-			<Card>
-				<CardHeader>
-					<CardTitle className="flex items-center gap-2">
-						<MessageSquare className="h-5 w-5" />
-						Replies
-					</CardTitle>
-				</CardHeader>
-				<CardContent>
-					<div className="py-8 text-center text-muted-foreground">
-						<MessageSquare className="mx-auto mb-4 h-12 w-12 opacity-50" />
-						<p className="text-sm">No replies yet</p>
-						<p className="mt-1 text-xs">
-							Coach replies will appear here once received for this campaign
-						</p>
-					</div>
-				</CardContent>
-			</Card>
-		);
-	}
-
 	return (
 		<Card>
 			<CardHeader>
@@ -92,6 +71,19 @@ export function RepliesTab({
 					table={repliesTable}
 					rowActions={replyRowActions}
 					emptyStateMessage="No replies found for this campaign"
+					emptyStateAction={
+						<ManageReplyModal
+							athleteId={athleteId}
+							campaignId={campaignId}
+							mode="add"
+							allowCrossAthleteApplications={true}
+						>
+							<Button size="sm">
+								<PlusIcon className="h-4 w-4" />
+								Add Reply
+							</Button>
+						</ManageReplyModal>
+					}
 				/>
 			</CardContent>
 

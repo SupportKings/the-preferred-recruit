@@ -190,7 +190,7 @@ export function ManageResultModal({
 					/>
 
 					{/* Performance Mark */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="performance_mark">Performance Mark *</Label>
 						<Input
 							id="performance_mark"
@@ -204,7 +204,7 @@ export function ManageResultModal({
 					</div>
 
 					{/* Date Recorded */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="date_recorded">Date Recorded</Label>
 						<DatePicker
 							id="date_recorded"
@@ -217,7 +217,7 @@ export function ManageResultModal({
 					</div>
 
 					{/* Location */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="location">Location</Label>
 						<Input
 							id="location"
@@ -230,7 +230,7 @@ export function ManageResultModal({
 					</div>
 
 					{/* Wind */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="wind">Wind</Label>
 						<Input
 							id="wind"
@@ -277,7 +277,7 @@ export function ManageResultModal({
 					</div>
 
 					{/* Internal Notes */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="internal_notes">Internal Notes</Label>
 						<Textarea
 							id="internal_notes"

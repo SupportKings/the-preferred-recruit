@@ -164,7 +164,7 @@ export function ManageLeadListModal({
 
 				<form onSubmit={handleSubmit} className="space-y-4">
 					{/* Name */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="name">List Name *</Label>
 						<Input
 							id="name"
@@ -178,7 +178,7 @@ export function ManageLeadListModal({
 					</div>
 
 					{/* Priority */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="priority">Priority</Label>
 						<Input
 							id="priority"
@@ -192,7 +192,7 @@ export function ManageLeadListModal({
 					</div>
 
 					{/* Type */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="type">Type</Label>
 						<Select
 							value={formData.type || "none"}
@@ -224,7 +224,7 @@ export function ManageLeadListModal({
 					</div>
 
 					{/* Season Label */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="season_label">Season Label</Label>
 						<Input
 							id="season_label"
@@ -237,7 +237,7 @@ export function ManageLeadListModal({
 					</div>
 
 					{/* Internal Notes */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="internal_notes">Internal Notes</Label>
 						<Textarea
 							id="internal_notes"

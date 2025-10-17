@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UniversalDataTable } from "@/components/universal-data-table/universal-data-table";
 
@@ -10,7 +11,7 @@ import {
 	getSortedRowModel,
 	useReactTable,
 } from "@tanstack/react-table";
-import { Users } from "lucide-react";
+import { PlusIcon, Users } from "lucide-react";
 import { ManageContactAthleteModal } from "../manage-contact-athlete-modal";
 import {
 	createAthleteColumns,
@@ -77,6 +78,17 @@ export function ContactAthletesSection({
 						rowActions={athleteRowActions}
 						emptyStateMessage="No athlete relationships found for this contact"
 						totalCount={contactAthletes.length}
+						emptyStateAction={
+							<ManageContactAthleteModal
+								contactId={contactId}
+								mode="add"
+							>
+								<Button size="sm">
+									<PlusIcon className="h-4 w-4" />
+									Add Athlete Relationship
+								</Button>
+							</ManageContactAthleteModal>
+						}
 					/>
 				)}
 			</CardContent>

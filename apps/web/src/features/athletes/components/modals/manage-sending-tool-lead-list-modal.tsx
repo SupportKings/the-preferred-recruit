@@ -175,7 +175,7 @@ export function ManageSendingToolLeadListModal({
 						disabled={isEdit || !!campaignId}
 					/>
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="format">Format</Label>
 						<Select
 							value={formData.format}
@@ -194,7 +194,7 @@ export function ManageSendingToolLeadListModal({
 						</Select>
 					</div>
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="row_count">Row Count</Label>
 						<Input
 							id="row_count"
@@ -207,7 +207,7 @@ export function ManageSendingToolLeadListModal({
 						/>
 					</div>
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="file_url">File URL</Label>
 						<Input
 							id="file_url"
@@ -219,7 +219,7 @@ export function ManageSendingToolLeadListModal({
 						/>
 					</div>
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="internal_notes">Internal Notes</Label>
 						<Textarea
 							id="internal_notes"

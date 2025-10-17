@@ -80,7 +80,13 @@ export function CoachForm({
 				if (onSuccess) {
 					onSuccess();
 				} else {
-					router.push("/dashboard/coaches");
+					// Navigate to coach details page
+					const coachId = result.data?.data?.id;
+					if (coachId) {
+						router.push(`/dashboard/coaches/${coachId}`);
+					} else {
+						router.push("/dashboard/coaches");
+					}
 				}
 			} else if (result.data?.validationErrors) {
 				const errors = getAllValidationErrors(result.data.validationErrors);

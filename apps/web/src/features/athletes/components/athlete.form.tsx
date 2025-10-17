@@ -93,7 +93,13 @@ export function AthleteForm({
 				if (onSuccess) {
 					onSuccess();
 				} else {
-					router.push("/dashboard/athletes");
+					// Navigate to the athlete details page
+					const athleteId = result.data.data?.athlete?.id;
+					if (athleteId) {
+						router.push(`/dashboard/athletes/${athleteId}`);
+					} else {
+						router.push("/dashboard/athletes");
+					}
 				}
 			}
 		},

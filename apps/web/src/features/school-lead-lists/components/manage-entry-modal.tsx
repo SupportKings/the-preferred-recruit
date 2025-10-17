@@ -188,7 +188,7 @@ export function ManageEntryModal({
 					/>
 
 					{/* Status Field */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="status">Status *</Label>
 						<Select
 							value={formData.status}
@@ -210,7 +210,7 @@ export function ManageEntryModal({
 					</div>
 
 					{/* Internal Notes Field */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="internal_notes">Internal Notes</Label>
 						<Textarea
 							id="internal_notes"

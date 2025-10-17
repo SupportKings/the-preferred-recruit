@@ -202,7 +202,7 @@ export function ManageApplicationModal({
 					/>
 
 					{/* Stage */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="stage">Stage</Label>
 						<Select
 							value={formData.stage}
@@ -225,7 +225,7 @@ export function ManageApplicationModal({
 					</div>
 
 					{/* Start Date */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="start_date">Start Date</Label>
 						<DatePicker
 							id="start_date"
@@ -258,7 +258,7 @@ export function ManageApplicationModal({
 					/>
 
 					{/* Offer Notes */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="offer_notes">Offer Notes</Label>
 						<Textarea
 							id="offer_notes"

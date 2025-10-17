@@ -186,7 +186,7 @@ export function ManageCampaignModal({
 					/>
 
 					{/* Campaign Name */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="name">
 							Campaign Name <span className="text-destructive">*</span>
 						</Label>
@@ -202,7 +202,7 @@ export function ManageCampaignModal({
 					</div>
 
 					{/* Type */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="type">Type</Label>
 						<Select
 							value={formData.type}
@@ -223,7 +223,7 @@ export function ManageCampaignModal({
 					</div>
 
 					{/* Status */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="status">Status</Label>
 						<Select
 							value={formData.status}
@@ -250,7 +250,7 @@ export function ManageCampaignModal({
 					</div>
 
 					{/* Daily Send Cap */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="daily_send_cap">Daily Send Cap</Label>
 						<Input
 							id="daily_send_cap"
@@ -265,7 +265,7 @@ export function ManageCampaignModal({
 					</div>
 
 					{/* Start Date */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="start_date">Start Date</Label>
 						<DatePicker
 							id="start_date"
@@ -278,7 +278,7 @@ export function ManageCampaignModal({
 					</div>
 
 					{/* End Date */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="end_date">End Date (Optional)</Label>
 						<DatePicker
 							id="end_date"
@@ -291,7 +291,7 @@ export function ManageCampaignModal({
 					</div>
 
 					{/* Internal Notes */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="internal_notes">Internal Notes</Label>
 						<Textarea
 							id="internal_notes"

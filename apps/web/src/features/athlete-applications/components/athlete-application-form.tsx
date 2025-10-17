@@ -86,7 +86,13 @@ export function AthleteApplicationForm({
 				if (onSuccess) {
 					onSuccess();
 				} else {
-					router.push("/dashboard/athlete-applications");
+					// Navigate to application details page
+					const applicationId = result.data?.data?.id;
+					if (applicationId) {
+						router.push(`/dashboard/athlete-applications/${applicationId}`);
+					} else {
+						router.push("/dashboard/athlete-applications");
+					}
 				}
 			} else if (result.data?.validationErrors) {
 				const validationErrors = result.data.validationErrors;
@@ -131,7 +137,15 @@ export function AthleteApplicationForm({
 					athlete_id: value.athlete_id || undefined,
 					university_id: value.university_id || undefined,
 					program_id: value.program_id || undefined,
-					stage: value.stage as "" | "intro" | "ongoing" | "visit" | "offer" | "committed" | "dropped" | undefined,
+					stage: value.stage as
+						| ""
+						| "intro"
+						| "ongoing"
+						| "visit"
+						| "offer"
+						| "committed"
+						| "dropped"
+						| undefined,
 					start_date: value.start_date || undefined,
 					offer_date: value.offer_date || undefined,
 					commitment_date: value.commitment_date || undefined,
@@ -237,27 +251,33 @@ export function AthleteApplicationForm({
 										<CommandList>
 											<CommandEmpty>No athlete found.</CommandEmpty>
 											<CommandGroup>
-												{athletes.map((athlete: { id: string; full_name: string; graduation_year: number | null }) => (
-													<CommandItem
-														key={athlete.id}
-														value={`${athlete.full_name} ${athlete.graduation_year || ""}`}
-														onSelect={() => {
-															field.handleChange(athlete.id);
-															setAthleteOpen(false);
-														}}
-													>
-														<Check
-															className={`mr-2 size-4 ${
-																field.state.value === athlete.id
-																	? "opacity-100"
-																	: "opacity-0"
-															}`}
-														/>
-														{athlete.full_name}
-														{athlete.graduation_year &&
-															` (${athlete.graduation_year})`}
-													</CommandItem>
-												))}
+												{athletes.map(
+													(athlete: {
+														id: string;
+														full_name: string;
+														graduation_year: number | null;
+													}) => (
+														<CommandItem
+															key={athlete.id}
+															value={`${athlete.full_name} ${athlete.graduation_year || ""}`}
+															onSelect={() => {
+																field.handleChange(athlete.id);
+																setAthleteOpen(false);
+															}}
+														>
+															<Check
+																className={`mr-2 size-4 ${
+																	field.state.value === athlete.id
+																		? "opacity-100"
+																		: "opacity-0"
+																}`}
+															/>
+															{athlete.full_name}
+															{athlete.graduation_year &&
+																` (${athlete.graduation_year})`}
+														</CommandItem>
+													),
+												)}
 											</CommandGroup>
 										</CommandList>
 									</Command>

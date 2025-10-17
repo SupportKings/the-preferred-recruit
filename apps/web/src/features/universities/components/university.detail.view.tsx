@@ -207,7 +207,7 @@ export default function UniversityDetailView({
 						Programs ({university.programs?.length || 0})
 					</TabsTrigger>
 					<TabsTrigger value="jobs">
-						Coaches ({university.university_jobs?.length || 0})
+						Coaches & Staff ({university.university_jobs?.length || 0})
 					</TabsTrigger>
 					<TabsTrigger value="applications">
 						Applications ({university.athlete_applications?.length || 0})

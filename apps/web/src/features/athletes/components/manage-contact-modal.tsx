@@ -194,7 +194,7 @@ export function ManageContactModal({
 
 				<form onSubmit={handleSubmit} className="space-y-4">
 					{/* Full Name - Only editable in add mode */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="full_name">Full Name *</Label>
 						<Input
 							id="full_name"
@@ -210,7 +210,7 @@ export function ManageContactModal({
 
 					{/* Email - Only editable in add mode */}
 					{!isEdit && (
-						<div>
+						<div className="space-y-2">
 							<Label htmlFor="email">Email</Label>
 							<Input
 								id="email"
@@ -226,7 +226,7 @@ export function ManageContactModal({
 
 					{/* Phone - Only editable in add mode */}
 					{!isEdit && (
-						<div>
+						<div className="space-y-2">
 							<Label htmlFor="phone">Phone</Label>
 							<Input
 								id="phone"
@@ -241,7 +241,7 @@ export function ManageContactModal({
 
 					{/* Preferred Contact Method - Only editable in add mode */}
 					{!isEdit && (
-						<div>
+						<div className="space-y-2">
 							<Label htmlFor="preferred_contact_method">
 								Preferred Contact Method
 							</Label>
@@ -272,7 +272,7 @@ export function ManageContactModal({
 					)}
 
 					{/* Relationship */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="relationship">Relationship *</Label>
 						<Select
 							value={formData.relationship || "none"}
@@ -303,7 +303,7 @@ export function ManageContactModal({
 					</div>
 
 					{/* Start Date */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="start_date">Start Date</Label>
 						<DatePicker
 							id="start_date"
@@ -316,7 +316,7 @@ export function ManageContactModal({
 					</div>
 
 					{/* End Date */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="end_date">End Date</Label>
 						<DatePicker
 							id="end_date"
@@ -329,7 +329,7 @@ export function ManageContactModal({
 					</div>
 
 					{/* Internal Notes */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="internal_notes">Internal Notes</Label>
 						<Textarea
 							id="internal_notes"

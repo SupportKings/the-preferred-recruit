@@ -185,7 +185,7 @@ export function ManageChecklistModal({
 					/>
 
 					{/* Title */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="title">Title *</Label>
 						<Input
 							id="title"
@@ -199,7 +199,7 @@ export function ManageChecklistModal({
 					</div>
 
 					{/* Description */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="description">Description</Label>
 						<Textarea
 							id="description"
@@ -213,7 +213,7 @@ export function ManageChecklistModal({
 					</div>
 
 					{/* Sort Order */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="sort_order">Sort Order</Label>
 						<Input
 							id="sort_order"

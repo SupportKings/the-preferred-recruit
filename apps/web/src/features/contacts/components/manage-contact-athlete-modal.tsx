@@ -192,7 +192,7 @@ export function ManageContactAthleteModal({
 
 				<form onSubmit={handleSubmit} className="space-y-4">
 					{/* Athlete Selection */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="athlete_id">Athlete *</Label>
 						<Select
 							value={formData.athlete_id || "none"}
@@ -221,7 +221,7 @@ export function ManageContactAthleteModal({
 					</div>
 
 					{/* Relationship */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="relationship">Relationship *</Label>
 						<Select
 							value={formData.relationship || "none"}
@@ -252,7 +252,7 @@ export function ManageContactAthleteModal({
 					</div>
 
 					{/* Start Date */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="start_date">Start Date</Label>
 						<DatePicker
 							id="start_date"
@@ -265,7 +265,7 @@ export function ManageContactAthleteModal({
 					</div>
 
 					{/* End Date */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="end_date">End Date</Label>
 						<DatePicker
 							id="end_date"
@@ -278,7 +278,7 @@ export function ManageContactAthleteModal({
 					</div>
 
 					{/* Internal Notes */}
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="internal_notes">Internal Notes</Label>
 						<Textarea
 							id="internal_notes"
