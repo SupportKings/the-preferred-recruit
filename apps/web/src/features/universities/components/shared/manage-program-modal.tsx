@@ -28,8 +28,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { createProgramAction } from "@/features/programs/actions/createProgram";
 import { updateProgramAction } from "@/features/programs/actions/updateProgram";
 
-import { useAction } from "next-safe-action/hooks";
 import { Edit, Plus } from "lucide-react";
+import { useAction } from "next-safe-action/hooks";
 import { toast } from "sonner";
 
 interface ManageProgramModalProps {
@@ -128,7 +128,8 @@ export function ManageProgramModal({
 				}
 			} else {
 				const errorMessage =
-					err.error?.serverError || "Failed to create program. Please try again.";
+					err.error?.serverError ||
+					"Failed to create program. Please try again.";
 				toast.error(errorMessage);
 			}
 		},
@@ -174,7 +175,8 @@ export function ManageProgramModal({
 				}
 			} else {
 				const errorMessage =
-					err.error?.serverError || "Failed to update program. Please try again.";
+					err.error?.serverError ||
+					"Failed to update program. Please try again.";
 				toast.error(errorMessage);
 			}
 		},

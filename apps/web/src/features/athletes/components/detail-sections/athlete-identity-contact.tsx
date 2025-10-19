@@ -114,7 +114,7 @@ export function AthleteIdentityContact({
 					)}
 				</div>
 				<div>
-					<label className="font-medium text-muted-foreground text-sm flex items-center gap-1">
+					<label className="flex items-center gap-1 font-medium text-muted-foreground text-sm">
 						<Mail className="h-3 w-3" />
 						Contact Email
 					</label>
@@ -135,7 +135,7 @@ export function AthleteIdentityContact({
 					)}
 				</div>
 				<div>
-					<label className="font-medium text-muted-foreground text-sm flex items-center gap-1">
+					<label className="flex items-center gap-1 font-medium text-muted-foreground text-sm">
 						<Phone className="h-3 w-3" />
 						Phone
 					</label>

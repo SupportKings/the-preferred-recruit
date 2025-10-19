@@ -1,4 +1,5 @@
 import MainLayout from "@/components/layout/main-layout";
+
 import UniversityDetailHeader from "../layout/university.detail.header";
 
 interface UniversityDetailSkeletonProps {

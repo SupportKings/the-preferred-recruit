@@ -38,15 +38,17 @@ import { toast } from "sonner";
 import { deleteClient } from "../actions/deleteClient";
 import {
 	useBillingStatuses,
-	useOnboardingStatuses,
 	useClientsWithFaceted,
+	useOnboardingStatuses,
 } from "../queries/useClients";
 import { ClientDeleteModal } from "./client.delete.modal";
 
 // Type for client row from Supabase with status relations
 type ClientRow = Database["public"]["Tables"]["clients"]["Row"] & {
 	billing_status?: Database["public"]["Tables"]["billing_status"]["Row"] | null;
-	onboarding_status?: Database["public"]["Tables"]["onboarding_status"]["Row"] | null;
+	onboarding_status?:
+		| Database["public"]["Tables"]["onboarding_status"]["Row"]
+		| null;
 };
 
 // Create column helper for TanStack table
@@ -117,9 +119,7 @@ const clientTableColumns = [
 		cell: ({ row }) => {
 			const billingStatus = row.original.billing_status;
 			return (
-				<StatusBadge>
-					{billingStatus?.status_name || "No status"}
-				</StatusBadge>
+				<StatusBadge>{billingStatus?.status_name || "No status"}</StatusBadge>
 			);
 		},
 	}),
@@ -217,8 +217,10 @@ function ClientsTableContent({
 	);
 
 	// Fetch statuses for filter options using server-side hooks
-	const { data: billingStatuses, isPending: isBillingStatusesPending } = useBillingStatuses();
-	const { data: onboardingStatuses, isPending: isOnboardingStatusesPending } = useOnboardingStatuses();
+	const { data: billingStatuses, isPending: isBillingStatusesPending } =
+		useBillingStatuses();
+	const { data: onboardingStatuses, isPending: isOnboardingStatusesPending } =
+		useOnboardingStatuses();
 
 	// Extract data from combined result
 	const clientsData = clientsWithFaceted
@@ -228,8 +230,10 @@ function ClientsTableContent({
 			}
 		: { data: [], count: 0 };
 
-	const billingStatusFaceted = clientsWithFaceted?.facetedData?.billing_status_id;
-	const onboardingStatusFaceted = clientsWithFaceted?.facetedData?.onboarding_status_id;
+	const billingStatusFaceted =
+		clientsWithFaceted?.facetedData?.billing_status_id;
+	const onboardingStatusFaceted =
+		clientsWithFaceted?.facetedData?.onboarding_status_id;
 
 	// Create dynamic filter config with proper types based on database schema
 	const dynamicFilterConfig = [
@@ -312,9 +316,9 @@ function ClientsTableContent({
 			columnsConfig: dynamicFilterConfig,
 			filters,
 			onFiltersChange: setFilters,
-			faceted: { 
+			faceted: {
 				billing_status_id: billingStatusFaceted,
-				onboarding_status_id: onboardingStatusFaceted 
+				onboarding_status_id: onboardingStatusFaceted,
 			},
 			enableSelection: true,
 			pageSize: 25,
@@ -330,7 +334,8 @@ function ClientsTableContent({
 		});
 
 	// Check if filter options are still loading
-	const isFilterDataPending = isBillingStatusesPending || isOnboardingStatusesPending;
+	const isFilterDataPending =
+		isBillingStatusesPending || isOnboardingStatusesPending;
 
 	if (isError) {
 		return (

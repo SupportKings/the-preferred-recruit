@@ -1,11 +1,16 @@
 import { Suspense } from "react";
+
 import { notFound, redirect } from "next/navigation";
+
 import MainLayout from "@/components/layout/main-layout";
+
 import { getCampaign } from "@/features/campaigns/actions/getCampaign";
 import CampaignDetailSkeleton from "@/features/campaigns/components/campaign.detail.skeleton";
 import CampaignDetailView from "@/features/campaigns/components/campaign.detail.view";
 import CampaignDetailHeader from "@/features/campaigns/layout/campaign.detail.header";
+
 import { getUser } from "@/queries/getUser";
+
 import {
 	dehydrate,
 	HydrationBoundary,
@@ -18,7 +23,9 @@ interface CampaignDetailPageProps {
 	}>;
 }
 
-export default function CampaignDetailPage({ params }: CampaignDetailPageProps) {
+export default function CampaignDetailPage({
+	params,
+}: CampaignDetailPageProps) {
 	return (
 		<Suspense fallback={<CampaignDetailSkeleton campaignId="" />}>
 			<CampaignDetailPageAsync params={params} />

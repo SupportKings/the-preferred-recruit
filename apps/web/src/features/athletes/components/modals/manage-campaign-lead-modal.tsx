@@ -12,7 +12,6 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
 	Select,
@@ -36,7 +35,6 @@ import { toast } from "sonner";
 import { CampaignLookup } from "../lookups/campaign-lookup";
 import { CoachLookup } from "../lookups/coach-lookup";
 import { ProgramLookup } from "../lookups/program-lookup";
-import { UniversityJobLookup } from "../lookups/university-job-lookup";
 import { UniversityLookup } from "../lookups/university-lookup";
 
 interface ManageCampaignLeadModalProps {
@@ -98,7 +96,7 @@ export function ManageCampaignLeadModal({
 				internal_notes: "",
 			});
 		}
-	}, [isEdit, lead, open]);
+	}, [isEdit, lead]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -197,7 +195,6 @@ export function ManageCampaignLeadModal({
 								...formData,
 								university_id: value,
 								program_id: "",
-								coach_id: "",
 							})
 						}
 						label="University"
@@ -217,12 +214,11 @@ export function ManageCampaignLeadModal({
 					/>
 
 					<CoachLookup
-						universityId={formData.university_id}
 						value={formData.coach_id}
 						onChange={(value) => setFormData({ ...formData, coach_id: value })}
 						label="Coach (Optional)"
 						required={false}
-						disabled={isEdit || !formData.university_id}
+						disabled={isEdit}
 					/>
 
 					<div className="space-y-2">

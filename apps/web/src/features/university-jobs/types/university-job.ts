@@ -1,6 +1,6 @@
-import { z } from "zod";
-
 import type { Tables } from "@/utils/supabase/database.types";
+
+import { z } from "zod";
 
 // Database types
 export type UniversityJob = Tables<"university_jobs">;
@@ -82,10 +82,7 @@ export const universityJobUpdateSchema = z.object({
 	id: z.string().uuid(),
 	coach_id: z.string().uuid().nullable().optional(),
 	job_title: z.string().nullable().optional(),
-	program_scope: z
-		.enum(["men", "women", "both", "n/a"])
-		.nullable()
-		.optional(),
+	program_scope: z.enum(["men", "women", "both", "n/a"]).nullable().optional(),
 	university_id: z.string().uuid().nullable().optional(),
 	program_id: z.string().uuid().nullable().optional(),
 	work_email: z.string().email().nullable().optional(),

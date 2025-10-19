@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { MessageSquare } from "lucide-react";
-
 import { ManageReplyModal } from "../manage-reply-modal";
 
 interface NoRepliesProps {

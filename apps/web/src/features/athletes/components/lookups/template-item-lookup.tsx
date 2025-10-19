@@ -59,13 +59,13 @@ export function TemplateItemLookup({
 			const supabase = createClient();
 
 			let query = supabase
-				.from("checklist_template_items")
+				.from("checklist_definition_items")
 				.select("id, title, description, sort_order")
 				.order("sort_order");
 
 			// Filter by checklist template if provided
 			if (checklistTemplateId) {
-				query = query.eq("checklist_template_id", checklistTemplateId);
+				query = query.eq("checklist_definition_id", checklistTemplateId);
 			}
 
 			const { data, error } = await query;

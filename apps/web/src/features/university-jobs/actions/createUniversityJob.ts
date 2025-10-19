@@ -80,7 +80,21 @@ export const createUniversityJobAction = actionClient
 				}
 			}
 
-			// 4. Create the university job
+			// 4. Normalize date values
+			const startDate =
+				parsedInput.start_date &&
+				typeof parsedInput.start_date === "string" &&
+				parsedInput.start_date.trim() !== ""
+					? parsedInput.start_date
+					: null;
+			const endDate =
+				parsedInput.end_date &&
+				typeof parsedInput.end_date === "string" &&
+				parsedInput.end_date.trim() !== ""
+					? parsedInput.end_date
+					: null;
+
+			// 5. Create the university job
 			const { data: newJob, error: createError } = await supabase
 				.from("university_jobs")
 				.insert({
@@ -91,8 +105,8 @@ export const createUniversityJobAction = actionClient
 					job_title: parsedInput.job_title || null,
 					work_email: parsedInput.work_email || null,
 					work_phone: parsedInput.work_phone || null,
-					start_date: parsedInput.start_date || null,
-					end_date: parsedInput.end_date || null,
+					start_date: startDate,
+					end_date: endDate,
 					internal_notes: parsedInput.internal_notes || null,
 				})
 				.select()
@@ -101,7 +115,10 @@ export const createUniversityJobAction = actionClient
 			if (createError) {
 				console.error("Error creating university job:", createError);
 				return returnValidationErrors(createUniversityJobSchema, {
-					_errors: ["Failed to create university job. Please try again."],
+					_errors: [
+						createError.message ||
+							"Failed to create university job. Please try again.",
+					],
 				});
 			}
 
@@ -111,7 +128,7 @@ export const createUniversityJobAction = actionClient
 				});
 			}
 
-			// 5. Revalidate relevant paths
+			// 6. Revalidate relevant paths
 			revalidatePath("/dashboard/university-jobs");
 			revalidatePath("/dashboard/universities");
 			revalidatePath(`/dashboard/universities/${parsedInput.university_id}`);

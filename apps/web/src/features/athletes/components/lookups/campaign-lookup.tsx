@@ -50,18 +50,41 @@ export function CampaignLookup({
 }: CampaignLookupProps) {
 	const [open, setOpen] = useState(false);
 	const [campaigns, setCampaigns] = useState<Campaign[]>([]);
-	const [loading, setLoading] = useState(true);
+	const [loading, setLoading] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
 
+	// Fetch campaigns based on search query
 	useEffect(() => {
 		const fetchCampaigns = async () => {
+			// Only fetch if search query has at least 2 characters or if we have a selected value
+			if (!searchQuery || searchQuery.length < 2) {
+				// If there's a selected value, fetch just that campaign
+				if (value) {
+					const supabase = createClient();
+					const { data, error } = await supabase
+						.from("campaigns")
+						.select("id, name, type, status")
+						.eq("id", value)
+						.single();
+
+					if (!error && data) {
+						setCampaigns([data as Campaign]);
+					}
+				} else {
+					setCampaigns([]);
+				}
+				return;
+			}
+
 			setLoading(true);
 			const supabase = createClient();
 
 			let query = supabase
 				.from("campaigns")
 				.select("id, name, type, status")
-				.order("name");
+				.ilike("name", `%${searchQuery}%`)
+				.order("name")
+				.limit(50);
 
 			// Filter by athlete if provided
 			if (athleteId) {
@@ -76,25 +99,34 @@ export function CampaignLookup({
 				return;
 			}
 			if (data) {
-				console.log(`Fetched ${data.length} campaigns`);
+				console.log(
+					`Fetched ${data.length} campaigns for query: "${searchQuery}"`,
+				);
 				setCampaigns(data as Campaign[]);
 			}
 			setLoading(false);
 		};
 
-		fetchCampaigns();
-	}, [athleteId]);
+		// Debounce the search
+		const timeoutId = setTimeout(() => {
+			fetchCampaigns();
+		}, 300);
+
+		return () => clearTimeout(timeoutId);
+	}, [searchQuery, athleteId, value]);
 
 	const selectedCampaign = campaigns.find((campaign) => campaign.id === value);
 
-	const filteredCampaigns = campaigns.filter((campaign) => {
-		const searchLower = searchQuery.toLowerCase();
-		return (
-			campaign.name.toLowerCase().includes(searchLower) ||
-			campaign.type?.toLowerCase().includes(searchLower) ||
-			campaign.status?.toLowerCase().includes(searchLower)
-		);
-	});
+	// Get empty message based on search state
+	const getEmptyMessage = () => {
+		if (!searchQuery || searchQuery.length < 2) {
+			return "Type at least 2 characters to search campaigns...";
+		}
+		if (loading) {
+			return "Searching...";
+		}
+		return "No campaign found.";
+	};
 
 	return (
 		<div className="space-y-2">
@@ -124,14 +156,14 @@ export function CampaignLookup({
 				<PopoverContent className="w-full p-0" align="start">
 					<Command>
 						<CommandInput
-							placeholder="Search campaigns..."
+							placeholder="Search campaigns by name..."
 							value={searchQuery}
 							onValueChange={setSearchQuery}
 						/>
 						<CommandList>
-							<CommandEmpty>No campaign found.</CommandEmpty>
+							<CommandEmpty>{getEmptyMessage()}</CommandEmpty>
 							<CommandGroup>
-								{filteredCampaigns.map((campaign) => (
+								{campaigns.map((campaign) => (
 									<CommandItem
 										key={campaign.id}
 										value={`${campaign.name} ${campaign.type || ""} ${campaign.status || ""}`}

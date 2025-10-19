@@ -126,7 +126,7 @@ export async function getSendingToolLeadListsForAthlete(athleteId: string) {
 	const campaignIds = campaigns.map((c) => c.id);
 
 	// Then fetch all sending tool lead lists for these campaigns
-	const { data: lists, error: listsError } = await (supabase as any)
+	const { data: lists, error: listsError } = await supabase
 		.from("sending_tool_lead_lists")
 		.select(
 			`
@@ -136,15 +136,13 @@ export async function getSendingToolLeadListsForAthlete(athleteId: string) {
 			row_count,
 			file_url,
 			internal_notes,
-			created_at,
 			generated_by,
 			generated_at,
-			campaign:campaigns(id, name, type, status),
-			generated_by_user:team_members!sending_tool_lead_lists_generated_by_fkey(id, first_name, last_name, email)
+			campaign:campaigns(id, name, type, status)
 		`,
 		)
 		.in("campaign_id", campaignIds)
-		.order("created_at", { ascending: false });
+		.order("generated_at", { ascending: false });
 
 	if (listsError) {
 		console.error("Error fetching sending tool lead lists:", listsError);

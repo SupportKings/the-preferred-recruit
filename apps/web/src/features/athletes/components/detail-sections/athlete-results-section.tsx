@@ -11,7 +11,6 @@ import {
 	useReactTable,
 } from "@tanstack/react-table";
 import { Trophy } from "lucide-react";
-
 import { ManageResultModal } from "../modals/manage-result-modal";
 import {
 	createResultColumns,

@@ -9,7 +9,6 @@ import {
 	useReactTable,
 } from "@tanstack/react-table";
 import { MessageSquare } from "lucide-react";
-
 import { NoReplies } from "../empty-states/no-replies";
 import { ManageReplyModal } from "../manage-reply-modal";
 import {
@@ -65,7 +64,10 @@ export function UniversityJobRepliesSection({
 	});
 
 	const repliesColumns = createRepliesColumns();
-	const repliesRowActions = createRepliesRowActions(setDeleteModal, setEditModal);
+	const repliesRowActions = createRepliesRowActions(
+		setDeleteModal,
+		setEditModal,
+	);
 
 	const repliesTable = useReactTable({
 		data: replies || [],

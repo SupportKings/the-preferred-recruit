@@ -79,10 +79,7 @@ export function ContactAthletesSection({
 						emptyStateMessage="No athlete relationships found for this contact"
 						totalCount={contactAthletes.length}
 						emptyStateAction={
-							<ManageContactAthleteModal
-								contactId={contactId}
-								mode="add"
-							>
+							<ManageContactAthleteModal contactId={contactId} mode="add">
 								<Button size="sm">
 									<PlusIcon className="h-4 w-4" />
 									Add Athlete Relationship

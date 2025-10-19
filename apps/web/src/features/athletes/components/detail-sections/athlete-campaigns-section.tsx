@@ -11,9 +11,7 @@ import {
 	useReactTable,
 } from "@tanstack/react-table";
 import { Target } from "lucide-react";
-
 import { ManageCampaignModal } from "../modals/manage-campaign-modal";
-
 import {
 	createCampaignColumns,
 	createCampaignRowActions,
@@ -83,15 +81,15 @@ export function AthleteCampaignsSection({
 				)}
 			</CardContent>
 
-		<ManageCampaignModal
-			athleteId={athleteId}
-			campaign={editModal.data}
-			mode="edit"
-			open={editModal.isOpen && editModal.type === "campaign"}
-			onOpenChange={(open: boolean) =>
-				setEditModal((prev) => ({ ...prev, isOpen: open }))
-			}
-		/>
+			<ManageCampaignModal
+				athleteId={athleteId}
+				campaign={editModal.data}
+				mode="edit"
+				open={editModal.isOpen && editModal.type === "campaign"}
+				onOpenChange={(open: boolean) =>
+					setEditModal((prev) => ({ ...prev, isOpen: open }))
+				}
+			/>
 		</Card>
 	);
 }

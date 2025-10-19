@@ -379,7 +379,7 @@ export default function AthleteDetailView({
 				<TabsContent value="campaign-leads">
 					<AthleteCampaignLeadsSection
 						athleteId={athleteId}
-						campaignLeads={[]}
+						campaignLeads={athlete?.campaign_leads || []}
 						setDeleteModal={setDeleteModal}
 					/>
 				</TabsContent>

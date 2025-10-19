@@ -16,14 +16,13 @@ export const siteConfig = {
 	contact: {
 		businessAnalyst: {
 			name: "Steven Da Silva",
-			email: "steven@opskings.com"
+			email: "steven@opskings.com",
 		},
 		slackChannel: {
 			id: "C05PW0FSW0M",
-			name: "recruitment-team"
-		}
-
-	}
+			name: "recruitment-team",
+		},
+	},
 };
 
 export type siteConfig = typeof siteConfig;

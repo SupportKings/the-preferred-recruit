@@ -1,5 +1,4 @@
 import { useQuery } from "@tanstack/react-query";
-
 import { getUniversityJob } from "../actions/getUniversityJob";
 
 export const universityJobQueries = {

@@ -6,7 +6,7 @@ export async function getTeamMember(id: string) {
 	try {
 		const supabase = await createClient();
 
-		// Fetch team member with related user data
+		// Fetch team member with related user data and athletes
 		const { data: teamMember, error } = await (supabase as any)
 			.from("team_members")
 			.select(`
@@ -14,6 +14,28 @@ export async function getTeamMember(id: string) {
 				user:user_id (
 					id,
 					email
+				),
+				athletes_as_setter:athletes!athletes_sales_setter_id_fkey (
+					id,
+					full_name,
+					contact_email,
+					last_sales_call_at,
+					sales_call_note,
+					initial_contract_amount_usd,
+					initial_cash_collected_usd,
+					sales_setter_id,
+					sales_closer_id
+				),
+				athletes_as_closer:athletes!athletes_sales_closer_id_fkey (
+					id,
+					full_name,
+					contact_email,
+					last_sales_call_at,
+					sales_call_note,
+					initial_contract_amount_usd,
+					initial_cash_collected_usd,
+					sales_setter_id,
+					sales_closer_id
 				)
 			`)
 			.eq("id", id)

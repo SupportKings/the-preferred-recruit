@@ -3,11 +3,11 @@
 import { revalidatePath } from "next/cache";
 
 import { actionClient } from "@/lib/safe-action";
+
 import { createClient } from "@/utils/supabase/server";
 
-import { athleteUpdateSchema } from "../types/athlete";
-
 import { returnValidationErrors } from "next-safe-action";
+import { athleteUpdateSchema } from "../types/athlete";
 
 export const updateAthleteAction = actionClient
 	.inputSchema(athleteUpdateSchema)

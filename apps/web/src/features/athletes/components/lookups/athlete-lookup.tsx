@@ -48,45 +48,79 @@ export function AthleteLookup({
 }: AthleteLookupProps) {
 	const [open, setOpen] = useState(false);
 	const [athletes, setAthletes] = useState<Athlete[]>([]);
-	const [loading, setLoading] = useState(true);
+	const [loading, setLoading] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
 
+	// Fetch athletes based on search query
 	useEffect(() => {
 		const fetchAthletes = async () => {
+			// Only fetch if search query has at least 2 characters or if we have a selected value
+			if (!searchQuery || searchQuery.length < 2) {
+				// If there's a selected value, fetch just that athlete
+				if (value) {
+					const supabase = createClient();
+					const { data, error } = await supabase
+						.from("athletes")
+						.select("id, full_name, contact_email, graduation_year")
+						.eq("id", value)
+						.eq("is_deleted", false)
+						.single();
+
+					if (!error && data) {
+						setAthletes([data as Athlete]);
+					}
+				} else {
+					setAthletes([]);
+				}
+				return;
+			}
+
 			setLoading(true);
 			const supabase = createClient();
 
-			const query = supabase
+			const { data, error } = await supabase
 				.from("athletes")
 				.select("id, full_name, contact_email, graduation_year")
 				.eq("is_deleted", false)
-				.order("full_name");
-
-			const { data, error } = await query;
+				.or(
+					`full_name.ilike.%${searchQuery}%,contact_email.ilike.%${searchQuery}%`,
+				)
+				.order("full_name")
+				.limit(50);
 
 			if (error) {
 				console.error("Error fetching athletes:", error);
 				setAthletes([]);
 			} else {
+				console.log(
+					`Fetched ${data?.length || 0} athletes for query: "${searchQuery}"`,
+				);
 				setAthletes(data || []);
 			}
 
 			setLoading(false);
 		};
 
-		fetchAthletes();
-	}, []);
+		// Debounce the search
+		const timeoutId = setTimeout(() => {
+			fetchAthletes();
+		}, 300);
+
+		return () => clearTimeout(timeoutId);
+	}, [searchQuery, value]);
 
 	const selectedAthlete = athletes.find((athlete) => athlete.id === value);
 
-	const filteredAthletes = athletes.filter((athlete) => {
-		const searchLower = searchQuery.toLowerCase();
-		return (
-			athlete.full_name?.toLowerCase().includes(searchLower) ||
-			athlete.contact_email?.toLowerCase().includes(searchLower) ||
-			athlete.graduation_year?.toString().includes(searchLower)
-		);
-	});
+	// Get empty message based on search state
+	const getEmptyMessage = () => {
+		if (!searchQuery || searchQuery.length < 2) {
+			return "Type at least 2 characters to search by name or email...";
+		}
+		if (loading) {
+			return "Searching...";
+		}
+		return "No athletes found.";
+	};
 
 	return (
 		<div className="space-y-2">
@@ -114,17 +148,17 @@ export function AthleteLookup({
 				<PopoverContent className="w-full p-0" align="start">
 					<Command>
 						<CommandInput
-							placeholder="Search athletes..."
+							placeholder="Search by name or email..."
 							value={searchQuery}
 							onValueChange={setSearchQuery}
 						/>
 						<CommandList>
-							<CommandEmpty>No athletes found.</CommandEmpty>
+							<CommandEmpty>{getEmptyMessage()}</CommandEmpty>
 							<CommandGroup>
-								{filteredAthletes.map((athlete) => (
+								{athletes.map((athlete) => (
 									<CommandItem
 										key={athlete.id}
-										value={athlete.id}
+										value={`${athlete.full_name} ${athlete.contact_email || ""} ${athlete.graduation_year || ""}`}
 										onSelect={() => {
 											onChange(athlete.id);
 											setOpen(false);

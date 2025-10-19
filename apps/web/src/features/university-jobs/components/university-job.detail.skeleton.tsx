@@ -18,7 +18,7 @@ export default function UniversityJobDetailSkeleton({
 				/>,
 			]}
 		>
-			<div className="space-y-6 p-6 animate-pulse">
+			<div className="animate-pulse space-y-6 p-6">
 				{/* Header skeleton */}
 				<div className="flex items-start justify-between">
 					<div className="flex items-start space-x-4">

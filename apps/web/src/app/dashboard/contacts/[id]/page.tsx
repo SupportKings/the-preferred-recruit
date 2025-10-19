@@ -1,11 +1,14 @@
 import { Suspense } from "react";
+
 import { notFound, redirect } from "next/navigation";
 
 import MainLayout from "@/components/layout/main-layout";
+
 import { getContact } from "@/features/contacts/actions/getContact";
 import ContactDetailSkeleton from "@/features/contacts/components/contact.detail.skeleton";
 import ContactDetailView from "@/features/contacts/components/contact.detail.view";
 import ContactDetailHeader from "@/features/contacts/layout/contact.detail.header";
+
 import { getUser } from "@/queries/getUser";
 
 import {

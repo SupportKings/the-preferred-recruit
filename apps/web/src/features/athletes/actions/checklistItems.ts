@@ -4,17 +4,15 @@ import { createClient } from "@/utils/supabase/server";
 
 import { getUser } from "@/queries/getUser";
 
-export async function createChecklistItem(
-	checklistItemData: {
-		checklist_id: string;
-		template_item_id?: string;
-		title: string;
-		description?: string;
-		sort_order?: number;
-		required?: boolean;
-		is_applicable?: boolean;
-	},
-) {
+export async function createChecklistItem(checklistItemData: {
+	checklist_id: string;
+	template_item_id?: string;
+	title: string;
+	description?: string;
+	sort_order?: number;
+	required?: boolean;
+	is_applicable?: boolean;
+}) {
 	const supabase = await createClient();
 	const user = await getUser();
 

@@ -56,7 +56,11 @@ export const createResponsibilitiesRowActions = (
 		id: string;
 		title: string;
 	}) => void,
-	setEditModal: (modal: { isOpen: boolean; type: string; data: unknown }) => void,
+	setEditModal: (modal: {
+		isOpen: boolean;
+		type: string;
+		data: unknown;
+	}) => void,
 ) => [
 	{
 		label: "Edit",

@@ -97,7 +97,7 @@ export function ManageReplyModal({
 				internal_notes: "",
 			});
 		}
-	}, [isEdit, reply, open]);
+	}, [isEdit, reply]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -162,7 +162,7 @@ export function ManageReplyModal({
 				</DialogHeader>
 
 				<form onSubmit={handleSubmit} className="space-y-4">
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="type">Reply Type *</Label>
 						<Select
 							value={formData.type}
@@ -182,7 +182,7 @@ export function ManageReplyModal({
 						</Select>
 					</div>
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="occurred_at">Occurred At *</Label>
 						<Input
 							id="occurred_at"
@@ -195,7 +195,7 @@ export function ManageReplyModal({
 						/>
 					</div>
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="summary">Summary</Label>
 						<Textarea
 							id="summary"
@@ -210,7 +210,7 @@ export function ManageReplyModal({
 
 					{!isEdit && (
 						<>
-							<div>
+							<div className="space-y-2">
 								<Label htmlFor="campaign_id">Campaign</Label>
 								<CampaignLookup
 									value={formData.campaign_id || ""}
@@ -221,7 +221,7 @@ export function ManageReplyModal({
 								/>
 							</div>
 
-							<div>
+							<div className="space-y-2">
 								<Label htmlFor="athlete_id">Athlete</Label>
 								<AthleteLookup
 									value={formData.athlete_id || ""}
@@ -234,7 +234,7 @@ export function ManageReplyModal({
 						</>
 					)}
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="internal_notes">Internal Notes</Label>
 						<Textarea
 							id="internal_notes"

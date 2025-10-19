@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import { Users } from "lucide-react";
 
 interface AthleteSalesEngagementProps {
@@ -9,7 +10,9 @@ interface AthleteSalesEngagementProps {
 	onCancel?: () => void;
 }
 
-export function AthleteSalesEngagement({ athlete }: AthleteSalesEngagementProps) {
+export function AthleteSalesEngagement({
+	athlete,
+}: AthleteSalesEngagementProps) {
 	return (
 		<Card>
 			<CardHeader>

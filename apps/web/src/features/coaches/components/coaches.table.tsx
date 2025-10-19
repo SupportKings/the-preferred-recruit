@@ -68,7 +68,12 @@ const coachTableColumns = [
 		enableColumnFilter: true,
 		enableSorting: true,
 		cell: ({ row }) => (
-			<div className="font-medium">{row.getValue("full_name") || "N/A"}</div>
+			<a
+				href={`/dashboard/coaches/${row.original.id}`}
+				className="font-medium text-primary hover:underline"
+			>
+				{row.getValue("full_name") || "N/A"}
+			</a>
 		),
 	}),
 	columnHelper.accessor("primary_specialty", {
@@ -102,10 +107,10 @@ const coachTableColumns = [
 				<div className="text-sm">
 					{displayEmail || "N/A"}
 					{workEmail && (
-						<span className="text-muted-foreground text-xs ml-1">(Work)</span>
+						<span className="ml-1 text-muted-foreground text-xs">(Work)</span>
 					)}
 					{!workEmail && personalEmail && (
-						<span className="text-muted-foreground text-xs ml-1">
+						<span className="ml-1 text-muted-foreground text-xs">
 							(Personal)
 						</span>
 					)}
@@ -328,16 +333,14 @@ function CoachesTableContent({
 			label: "View Details",
 			icon: EyeIcon,
 			onClick: (coach: CoachRow) => {
-				// Placeholder - implement navigation
-				console.log("View coach:", coach.id);
+				window.location.href = `/dashboard/coaches/${coach.id}`;
 			},
 		},
 		{
 			label: "Edit",
 			icon: EditIcon,
 			onClick: (coach: CoachRow) => {
-				// Placeholder - implement navigation
-				console.log("Edit coach:", coach.id);
+				window.location.href = `/dashboard/coaches/${coach.id}`;
 			},
 		},
 		{
@@ -345,8 +348,8 @@ function CoachesTableContent({
 			icon: TrashIcon,
 			variant: "destructive" as const,
 			onClick: (coach: CoachRow) => {
-				// Placeholder - implement delete
-				console.log("Delete coach:", coach.id);
+				// Will be handled via detail page
+				window.location.href = `/dashboard/coaches/${coach.id}`;
 			},
 		},
 	];

@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { Users } from "lucide-react";
-
 import { ManageCampaignLeadModal } from "../manage-campaign-lead-modal";
 
 interface NoCampaignLeadsProps {
@@ -17,7 +16,10 @@ export function NoCampaignLeads({ universityJobId }: NoCampaignLeadsProps) {
 						<Users className="h-5 w-5" />
 						Campaign Leads
 					</CardTitle>
-					<ManageCampaignLeadModal universityJobId={universityJobId} mode="add" />
+					<ManageCampaignLeadModal
+						universityJobId={universityJobId}
+						mode="add"
+					/>
 				</div>
 			</CardHeader>
 			<CardContent>

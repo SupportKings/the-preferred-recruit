@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import { MessageSquare } from "lucide-react";
 
 interface AthleteCommsDiscordProps {
@@ -41,13 +42,17 @@ export function AthleteCommsDiscord({ athlete }: AthleteCommsDiscordProps) {
 					<label className="font-medium text-muted-foreground text-sm">
 						Discord Channel ID
 					</label>
-					<p className="text-sm">{athlete.discord_channel_id || "Not provided"}</p>
+					<p className="text-sm">
+						{athlete.discord_channel_id || "Not provided"}
+					</p>
 				</div>
 				<div>
 					<label className="font-medium text-muted-foreground text-sm">
 						Discord Username
 					</label>
-					<p className="text-sm">{athlete.discord_username || "Not provided"}</p>
+					<p className="text-sm">
+						{athlete.discord_username || "Not provided"}
+					</p>
 				</div>
 			</CardContent>
 		</Card>

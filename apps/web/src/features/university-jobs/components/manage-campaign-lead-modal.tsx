@@ -97,7 +97,7 @@ export function ManageCampaignLeadModal({
 				internal_notes: "",
 			});
 		}
-	}, [isEdit, campaignLead, open]);
+	}, [isEdit, campaignLead]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -167,7 +167,7 @@ export function ManageCampaignLeadModal({
 				<form onSubmit={handleSubmit} className="space-y-4">
 					{!isEdit && (
 						<>
-							<div>
+							<div className="space-y-2">
 								<Label htmlFor="campaign_id">Campaign</Label>
 								<CampaignLookup
 									value={formData.campaign_id || ""}
@@ -178,7 +178,7 @@ export function ManageCampaignLeadModal({
 								/>
 							</div>
 
-							<div>
+							<div className="space-y-2">
 								<Label htmlFor="university_id">University</Label>
 								<UniversityLookup
 									value={formData.university_id || ""}
@@ -191,7 +191,7 @@ export function ManageCampaignLeadModal({
 						</>
 					)}
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="program_id">Program</Label>
 						<ProgramLookup
 							universityId={formData.university_id || ""}
@@ -204,7 +204,7 @@ export function ManageCampaignLeadModal({
 						/>
 					</div>
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="status">Lead Status</Label>
 						<Select
 							value={formData.status}
@@ -223,7 +223,7 @@ export function ManageCampaignLeadModal({
 						</Select>
 					</div>
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="include_reason">Include Reason</Label>
 						<Textarea
 							id="include_reason"
@@ -236,7 +236,7 @@ export function ManageCampaignLeadModal({
 						/>
 					</div>
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="internal_notes">Internal Notes</Label>
 						<Textarea
 							id="internal_notes"

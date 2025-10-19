@@ -107,13 +107,7 @@ export function useCoachesWithFaceted(
 			facetedColumns,
 		),
 		queryFn: () =>
-			getCoachesWithFaceted(
-				filters,
-				page,
-				pageSize,
-				sorting,
-				facetedColumns,
-			),
+			getCoachesWithFaceted(filters, page, pageSize, sorting, facetedColumns),
 		staleTime: 2 * 60 * 1000, // 2 minutes
 	});
 }

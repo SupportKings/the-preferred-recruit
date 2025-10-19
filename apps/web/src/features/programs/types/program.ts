@@ -20,7 +20,8 @@ const flexibleUrlSchema = z
 			}
 		},
 		{
-			message: "Please enter a valid URL (e.g., opskings.com or https://opskings.com)",
+			message:
+				"Please enter a valid URL (e.g., opskings.com or https://opskings.com)",
 		},
 	)
 	.optional()

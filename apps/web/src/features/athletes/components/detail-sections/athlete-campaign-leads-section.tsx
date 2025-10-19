@@ -11,9 +11,7 @@ import {
 	useReactTable,
 } from "@tanstack/react-table";
 import { Users2 } from "lucide-react";
-
 import { ManageCampaignLeadModal } from "../modals/manage-campaign-lead-modal";
-
 import {
 	createCampaignLeadColumns,
 	createCampaignLeadRowActions,

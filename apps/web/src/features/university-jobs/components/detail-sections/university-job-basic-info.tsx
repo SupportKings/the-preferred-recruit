@@ -11,11 +11,11 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 
-import { Edit3, Save, UserSquare2, X } from "lucide-react";
-
 import { CoachLookup } from "@/features/athletes/components/lookups/coach-lookup";
 import { ProgramLookup } from "@/features/athletes/components/lookups/program-lookup";
 import { UniversityLookup } from "@/features/athletes/components/lookups/university-lookup";
+
+import { Edit3, Save, UserSquare2, X } from "lucide-react";
 
 interface UniversityJobBasicInfoProps {
 	universityJob: {
@@ -24,6 +24,21 @@ interface UniversityJobBasicInfoProps {
 		program_scope: string | null;
 		university_id: string | null;
 		program_id: string | null;
+		coaches?: {
+			id: string;
+			full_name: string;
+			email?: string;
+		} | null;
+		universities?: {
+			id: string;
+			name: string;
+			city?: string;
+			state?: string;
+		} | null;
+		programs?: {
+			id: string;
+			gender: string;
+		} | null;
 	};
 	isEditing?: boolean;
 	onEditToggle?: () => void;
@@ -103,9 +118,7 @@ export function UniversityJobBasicInfo({
 			</CardHeader>
 			<CardContent className="space-y-4">
 				<div>
-					<label className="font-medium text-muted-foreground text-sm">
-						Coach
-					</label>
+					<p className="font-medium text-muted-foreground text-sm">Coach</p>
 					{isEditing ? (
 						<CoachLookup
 							value={formData.coach_id || ""}
@@ -115,13 +128,13 @@ export function UniversityJobBasicInfo({
 							label=""
 						/>
 					) : (
-						<p className="text-sm">{universityJob.coach_id || "Not assigned"}</p>
+						<p className="text-sm">
+							{universityJob.coaches?.full_name || "Not assigned"}
+						</p>
 					)}
 				</div>
 				<div>
-					<label className="font-medium text-muted-foreground text-sm">
-						Job Title
-					</label>
+					<p className="font-medium text-muted-foreground text-sm">Job Title</p>
 					{isEditing ? (
 						<Input
 							value={formData.job_title}
@@ -132,13 +145,15 @@ export function UniversityJobBasicInfo({
 							placeholder="e.g., Head Coach, Assistant Coach"
 						/>
 					) : (
-						<p className="text-sm">{universityJob.job_title || "Not provided"}</p>
+						<p className="text-sm">
+							{universityJob.job_title || "Not provided"}
+						</p>
 					)}
 				</div>
 				<div>
-					<label className="font-medium text-muted-foreground text-sm">
+					<p className="font-medium text-muted-foreground text-sm">
 						Program Scope
-					</label>
+					</p>
 					{isEditing ? (
 						<Select
 							value={formData.program_scope}
@@ -163,9 +178,9 @@ export function UniversityJobBasicInfo({
 					)}
 				</div>
 				<div>
-					<label className="font-medium text-muted-foreground text-sm">
+					<p className="font-medium text-muted-foreground text-sm">
 						University
-					</label>
+					</p>
 					{isEditing ? (
 						<UniversityLookup
 							value={formData.university_id || ""}
@@ -178,15 +193,28 @@ export function UniversityJobBasicInfo({
 							label=""
 						/>
 					) : (
-						<p className="text-sm">
-							{universityJob.university_id || "Not assigned"}
-						</p>
+						<div className="text-sm">
+							{universityJob.universities ? (
+								<div>
+									<p className="font-medium">
+										{universityJob.universities.name}
+									</p>
+									{universityJob.universities.city &&
+										universityJob.universities.state && (
+											<p className="text-muted-foreground text-xs">
+												{universityJob.universities.city},{" "}
+												{universityJob.universities.state}
+											</p>
+										)}
+								</div>
+							) : (
+								<p>Not assigned</p>
+							)}
+						</div>
 					)}
 				</div>
 				<div>
-					<label className="font-medium text-muted-foreground text-sm">
-						Program
-					</label>
+					<p className="font-medium text-muted-foreground text-sm">Program</p>
 					{isEditing ? (
 						<ProgramLookup
 							universityId={formData.university_id || ""}
@@ -198,7 +226,9 @@ export function UniversityJobBasicInfo({
 							disabled={!formData.university_id}
 						/>
 					) : (
-						<p className="text-sm">{universityJob.program_id || "Not assigned"}</p>
+						<p className="text-sm capitalize">
+							{universityJob.programs?.gender || "Not assigned"}
+						</p>
 					)}
 				</div>
 			</CardContent>

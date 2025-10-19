@@ -2,9 +2,9 @@ import { spawn } from "child_process";
 
 const asciiArt = `
   __  ____  ____  __ _  __  __ _   ___  ____ 
- /  \(  _ \/ ___)(  / )(  )(  ( \ / __)/ ___)
-(  O )) __/\___ \ )  (  )( /    /( (_ \\___ \
- \__/(__)  (____/(__\_)(__)\_)__) \___/(____/
+ /  (  _ / ___)(  / )(  )(  (  / __)/ ___)
+(  O )) __/___  )  (  )( /    /( (_ \\___ \
+ __/(__)  (____/(___)(__)_)__) ___/(____/
 `;
 
 // Colors for console output
@@ -43,16 +43,16 @@ showSplash();
 
 // Find available port for Next.js (Web apps use 3000+ range)
 async function findAvailablePort(startPort = 3000): Promise<number> {
-	const net = require('net');
-	
+	const net = require("net");
+
 	return new Promise((resolve) => {
 		const server = net.createServer();
-		
+
 		server.listen(startPort, () => {
 			server.close(() => resolve(startPort));
 		});
-		
-		server.on('error', () => {
+
+		server.on("error", () => {
 			// Port busy, try next one
 			resolve(findAvailablePort(startPort + 1));
 		});
@@ -62,7 +62,9 @@ async function findAvailablePort(startPort = 3000): Promise<number> {
 // Start Next.js dev server with dynamic port
 const webPort = await findAvailablePort();
 if (webPort !== 3000) {
-	console.log(`${colors.yellow}⚡ Port 3000 was busy, using port ${webPort} instead${colors.reset}`);
+	console.log(
+		`${colors.yellow}⚡ Port 3000 was busy, using port ${webPort} instead${colors.reset}`,
+	);
 }
 
 const nextProcess = spawn("bun", ["run", "next", "dev", `--port=${webPort}`], {

@@ -244,7 +244,7 @@ export async function getApplicationsWithFilters(
 					case "start_date":
 					case "offer_date":
 					case "commitment_date":
-					case "last_interaction_at":
+					case "last_interaction_at": {
 						// Date fields - support is/is not/is after/is before/is between/is on or after/is on or before
 						// Normalize date values to avoid timezone issues
 						const normalizedValues = values.map(normalizeDateValue);
@@ -276,6 +276,7 @@ export async function getApplicationsWithFilters(
 							}
 						}
 						break;
+					}
 				}
 			}
 		});
@@ -521,7 +522,11 @@ export async function getApplicationsFaceted(
 							if (operator === "is") {
 								query = query.eq(filterColumnId, normalizedQueryValues[0]);
 							} else if (operator === "is not") {
-								query = query.not(filterColumnId, "eq", normalizedQueryValues[0]);
+								query = query.not(
+									filterColumnId,
+									"eq",
+									normalizedQueryValues[0],
+								);
 							} else if (operator === "is after") {
 								query = query.gt(filterColumnId, normalizedQueryValues[0]);
 							} else if (operator === "is before") {

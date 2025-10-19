@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { ListTree } from "lucide-react";
-
 import { ManageEntryModal } from "../manage-entry-modal";
 
 interface NoEntriesProps {

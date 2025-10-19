@@ -11,9 +11,7 @@ import {
 	useReactTable,
 } from "@tanstack/react-table";
 import { MessageCircle } from "lucide-react";
-
 import { ManageReplyModal } from "../modals/manage-reply-modal";
-
 import {
 	createReplyColumns,
 	createReplyRowActions,
@@ -83,15 +81,15 @@ export function AthleteRepliesSection({
 				)}
 			</CardContent>
 
-		<ManageReplyModal
-			athleteId={athleteId}
-			reply={editModal.data}
-			mode="edit"
-			open={editModal.isOpen && editModal.type === "reply"}
-			onOpenChange={(open: boolean) =>
-				setEditModal((prev) => ({ ...prev, isOpen: open }))
-			}
-		/>
+			<ManageReplyModal
+				athleteId={athleteId}
+				reply={editModal.data}
+				mode="edit"
+				open={editModal.isOpen && editModal.type === "reply"}
+				onOpenChange={(open: boolean) =>
+					setEditModal((prev) => ({ ...prev, isOpen: open }))
+				}
+			/>
 		</Card>
 	);
 }

@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+
 import { getUser } from "@/queries/getUser";
 
 export async function deleteCoachResponsibility(responsibilityId: string) {
@@ -17,9 +18,7 @@ export async function deleteCoachResponsibility(responsibilityId: string) {
 		.eq("id", responsibilityId);
 
 	if (error) {
-		throw new Error(
-			`Failed to delete coach responsibility: ${error.message}`,
-		);
+		throw new Error(`Failed to delete coach responsibility: ${error.message}`);
 	}
 
 	return { success: true };
@@ -50,9 +49,7 @@ export async function createCoachResponsibility(
 		.single();
 
 	if (error) {
-		throw new Error(
-			`Failed to create coach responsibility: ${error.message}`,
-		);
+		throw new Error(`Failed to create coach responsibility: ${error.message}`);
 	}
 
 	return { success: true, data };
@@ -79,9 +76,7 @@ export async function updateCoachResponsibility(
 		.eq("id", responsibilityId);
 
 	if (error) {
-		throw new Error(
-			`Failed to update coach responsibility: ${error.message}`,
-		);
+		throw new Error(`Failed to update coach responsibility: ${error.message}`);
 	}
 
 	return { success: true };

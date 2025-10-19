@@ -8,7 +8,78 @@ export async function getCoach(id: string) {
 
 		const { data: coach, error } = await supabase
 			.from("coaches")
-			.select("*")
+			.select(
+				`
+				*,
+				university_jobs (
+					id,
+					job_title,
+					program_scope,
+					work_email,
+					work_phone,
+					start_date,
+					end_date,
+					internal_notes,
+					university_id,
+					program_id,
+					universities (
+						id,
+						name,
+						city,
+						region
+					),
+					programs (
+						id,
+						gender
+					)
+				),
+				campaign_leads (
+					id,
+					include_reason,
+					included_at,
+					status,
+					first_reply_at,
+					internal_notes,
+					campaign_id,
+					source_lead_list_id,
+					university_id,
+					program_id,
+					university_job_id,
+					application_id,
+					campaigns (
+						id,
+						name,
+						type,
+						status
+					),
+					school_lead_lists (
+						id,
+						name,
+						priority
+					),
+					universities (
+						id,
+						name,
+						city,
+						region
+					),
+					programs (
+						id,
+						gender
+					),
+					university_jobs (
+						id,
+						job_title,
+						work_email
+					),
+					athlete_applications (
+						id,
+						stage,
+						last_interaction_at
+					)
+				)
+			`,
+			)
 			.eq("id", id)
 			.single();
 
@@ -644,4 +715,75 @@ export async function prefetchCoachesWithFacetedServer(
 		sorting,
 		facetedColumns,
 	);
+}
+
+// Search coaches by name with optional university filter
+export async function searchCoaches(
+	searchQuery: string,
+	universityId?: string,
+	limit = 20,
+) {
+	try {
+		const supabase = await createClient();
+
+		console.log(
+			"[searchCoaches] Query:",
+			searchQuery,
+			"University:",
+			universityId,
+		);
+
+		let query;
+
+		// Filter by university if provided
+		if (universityId) {
+			// Need to join with university_jobs to filter by university
+			query = supabase
+				.from("coaches")
+				.select(
+					`
+					id,
+					full_name,
+					email,
+					university_jobs!inner(university_id)
+				`,
+				)
+				.eq("university_jobs.university_id", universityId)
+				.order("full_name");
+		} else {
+			query = supabase
+				.from("coaches")
+				.select("id, full_name, email")
+				.order("full_name");
+		}
+
+		// Filter by search query (name or email)
+		if (searchQuery && searchQuery.trim()) {
+			const search = searchQuery.trim();
+			query = query.or(`full_name.ilike.%${search}%,email.ilike.%${search}%`);
+		}
+
+		query = query.limit(limit);
+
+		const { data, error } = await query;
+
+		if (error) {
+			console.error("[searchCoaches] Error:", error);
+			return [];
+		}
+
+		console.log("[searchCoaches] Results:", data?.length || 0);
+
+		// Clean up the response if university_jobs was included
+		const coaches = data?.map((coach: any) => ({
+			id: coach.id,
+			full_name: coach.full_name,
+			email: coach.email,
+		}));
+
+		return coaches || [];
+	} catch (error) {
+		console.error("[searchCoaches] Unexpected error:", error);
+		return [];
+	}
 }

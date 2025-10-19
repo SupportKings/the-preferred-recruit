@@ -12,7 +12,10 @@ export default function AthleteDetailSkeleton({
 	return (
 		<MainLayout
 			headers={[
-				<AthleteDetailHeader key="athlete-detail-header" athleteId={athleteId} />,
+				<AthleteDetailHeader
+					key="athlete-detail-header"
+					athleteId={athleteId}
+				/>,
 			]}
 		>
 			<div className="animate-pulse space-y-6 p-6">

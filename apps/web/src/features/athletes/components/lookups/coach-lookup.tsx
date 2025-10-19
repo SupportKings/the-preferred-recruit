@@ -4,12 +4,9 @@ import { useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
-import { createClient } from "@/utils/supabase/client";
-
 import { Badge } from "@/components/ui/badge";
 import {
 	Command,
-	CommandEmpty,
 	CommandGroup,
 	CommandItem,
 	CommandList,
@@ -18,9 +15,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
 	Popover,
+	PopoverAnchor,
 	PopoverContent,
-	PopoverTrigger,
 } from "@/components/ui/popover";
+
+import { searchCoaches } from "@/features/coaches/actions/getCoach";
 
 import { Check, Loader2, Search, X } from "lucide-react";
 
@@ -49,58 +48,68 @@ export function CoachLookup({
 }: CoachLookupProps) {
 	const [open, setOpen] = useState(false);
 	const [coaches, setCoaches] = useState<Coach[]>([]);
-	const [loading, setLoading] = useState(true);
+	const [loading, setLoading] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
+	const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
+	const containerRef = useRef<HTMLDivElement>(null);
+	const debounceTimerRef = useRef<NodeJS.Timeout>();
 
+	// Fetch selected coach details when value changes
 	useEffect(() => {
-		const fetchCoaches = async () => {
-			setLoading(true);
-			const supabase = createClient();
-
-			let query = supabase
-				.from("coaches")
-				.select("id, full_name, email")
-				.order("full_name");
-
-			// Filter by university if provided
-			if (universityId) {
-				query = query.eq("university_id", universityId);
-			}
-
-			const { data, error } = await query;
-
-			if (error) {
-				console.error("Error fetching coaches:", error);
-				setLoading(false);
-				return;
-			}
-			if (data) {
-				console.log(
-					`Fetched ${data.length} coaches from database${universityId ? ` for university ${universityId}` : ""}`,
-				);
-				if (data.length === 0) {
-					console.warn(
-						`No coaches found${universityId ? ` for university ${universityId}` : ""}. Table may be empty.`,
-					);
+		const fetchSelectedCoach = async () => {
+			if (value && !selectedCoach) {
+				const results = await searchCoaches("", universityId, 1000);
+				const found = results.find((coach) => coach.id === value);
+				if (found) {
+					setSelectedCoach(found);
 				}
-				setCoaches(data as Coach[]);
+			} else if (!value) {
+				setSelectedCoach(null);
 			}
-			setLoading(false);
 		};
 
-		fetchCoaches();
-	}, [universityId]);
+		fetchSelectedCoach();
+	}, [value, universityId, selectedCoach]);
 
-	const selectedCoach = coaches.find((coach) => coach.id === value);
+	// Debounced search
+	useEffect(() => {
+		// Clear previous timer
+		if (debounceTimerRef.current) {
+			clearTimeout(debounceTimerRef.current);
+		}
 
-	const filteredCoaches = coaches.filter((coach) => {
-		const searchLower = searchQuery.toLowerCase();
-		return (
-			coach.full_name.toLowerCase().includes(searchLower) ||
-			coach.email?.toLowerCase().includes(searchLower)
-		);
-	});
+		// Don't search if query is empty or too short
+		if (!searchQuery || searchQuery.trim().length < 2) {
+			console.log("[CoachLookup] Query too short:", searchQuery);
+			// Only clear coaches if there was a search query before
+			if (searchQuery && searchQuery.trim().length > 0) {
+				setCoaches([]);
+			}
+			setLoading(false);
+			return;
+		}
+
+		console.log("[CoachLookup] Starting search for:", searchQuery);
+		// Set loading state immediately
+		setLoading(true);
+
+		// Debounce the search
+		debounceTimerRef.current = setTimeout(async () => {
+			console.log("[CoachLookup] Executing search for:", searchQuery);
+			const results = await searchCoaches(searchQuery, universityId);
+			console.log("[CoachLookup] Got results:", results.length);
+			setCoaches(results);
+			setLoading(false);
+		}, 300);
+
+		// Cleanup
+		return () => {
+			if (debounceTimerRef.current) {
+				clearTimeout(debounceTimerRef.current);
+			}
+		};
+	}, [searchQuery, universityId]);
 
 	const handleClear = (e: React.MouseEvent) => {
 		e.stopPropagation();
@@ -124,74 +133,80 @@ export function CoachLookup({
 				</Label>
 			)}
 			<Popover open={open} onOpenChange={setOpen}>
-				<div className="relative">
-					<div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-						{loading ? (
-							<Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-						) : (
-							<Search className="h-4 w-4 text-muted-foreground" />
-						)}
-					</div>
-					<PopoverTrigger asChild>
+				<PopoverAnchor asChild>
+					<div ref={containerRef} className="relative">
+						<div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+							{loading ? (
+								<Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+							) : (
+								<Search className="h-4 w-4 text-muted-foreground" />
+							)}
+						</div>
 						<Input
 							ref={inputRef}
 							type="text"
 							placeholder={
-								loading
-									? "Loading coaches..."
-									: selectedCoach
-										? ""
-										: "Search for a coach or job..."
+								selectedCoach && !searchQuery
+									? ""
+									: "Search for a coach by name..."
 							}
 							value={searchQuery}
 							onChange={(e) => {
 								setSearchQuery(e.target.value);
 								if (!open) setOpen(true);
 							}}
+							onClick={() => setOpen(true)}
 							onFocus={() => setOpen(true)}
-							disabled={disabled || loading}
+							disabled={disabled}
 							className={cn(
-								"pr-8 pl-9",
+								"cursor-pointer pr-8 pl-9",
 								selectedCoach && !searchQuery && "cursor-pointer",
 							)}
 						/>
-					</PopoverTrigger>
-					{selectedCoach && !searchQuery && (
-						<div className="pointer-events-none absolute inset-y-0 right-8 left-9 flex items-center">
-							<Badge variant="secondary" className="max-w-full truncate">
-								{selectedCoach.full_name}
-							</Badge>
-						</div>
-					)}
-					{value && (
-						<button
-							type="button"
-							onClick={handleClear}
-							className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
-							disabled={disabled}
-						>
-							<X className="h-4 w-4" />
-						</button>
-					)}
-				</div>
+						{selectedCoach && !searchQuery && (
+							<div className="pointer-events-none absolute inset-y-0 right-8 left-9 flex items-center">
+								<Badge variant="secondary" className="max-w-full truncate">
+									{selectedCoach.full_name}
+								</Badge>
+							</div>
+						)}
+						{value && (
+							<button
+								type="button"
+								onClick={handleClear}
+								className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
+								disabled={disabled}
+							>
+								<X className="h-4 w-4" />
+							</button>
+						)}
+					</div>
+				</PopoverAnchor>
 				<PopoverContent
 					className="w-[var(--radix-popover-trigger-width)] p-0"
 					align="start"
+					side="bottom"
+					sideOffset={4}
 					onOpenAutoFocus={(e) => {
 						e.preventDefault();
 						inputRef.current?.focus();
 					}}
+					style={{
+						width: containerRef.current?.offsetWidth
+							? `${containerRef.current.offsetWidth}px`
+							: undefined,
+					}}
 				>
 					<Command shouldFilter={false}>
-						<CommandList>
-							<CommandEmpty>
-								{searchQuery
-									? "No coaches found matching your search."
-									: "Start typing to search for coaches..."}
-							</CommandEmpty>
-							<CommandGroup>
-								{filteredCoaches.length > 0 &&
-									filteredCoaches.map((coach) => (
+						<CommandList className="max-h-[300px]">
+							{loading ? (
+								<div className="py-6 text-center text-muted-foreground text-sm">
+									<Loader2 className="mx-auto mb-2 h-6 w-6 animate-spin" />
+									Searching coaches...
+								</div>
+							) : coaches.length > 0 ? (
+								<CommandGroup>
+									{coaches.map((coach) => (
 										<CommandItem
 											key={coach.id}
 											value={coach.id}
@@ -214,7 +229,14 @@ export function CoachLookup({
 											</div>
 										</CommandItem>
 									))}
-							</CommandGroup>
+								</CommandGroup>
+							) : (
+								<div className="py-6 text-center text-muted-foreground text-sm">
+									{searchQuery && searchQuery.trim().length >= 2
+										? "No coaches found matching your search."
+										: "Type at least 2 characters to search for coaches..."}
+								</div>
+							)}
 						</CommandList>
 					</Command>
 				</PopoverContent>

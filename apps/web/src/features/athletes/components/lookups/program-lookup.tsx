@@ -38,6 +38,11 @@ interface Program {
 	gender: string;
 	university_id: string;
 	team_url?: string;
+	universities?: {
+		name: string;
+		city?: string;
+		state?: string;
+	};
 }
 
 export function ProgramLookup({
@@ -69,7 +74,9 @@ export function ProgramLookup({
 
 			const query = supabase
 				.from("programs")
-				.select("id, gender, team_url, university_id")
+				.select(
+					"id, gender, team_url, university_id, universities(name, city, state)",
+				)
 				.eq("university_id", universityId)
 				.eq("is_deleted", false)
 				.order("gender");
@@ -102,7 +109,12 @@ export function ProgramLookup({
 
 	const filteredPrograms = programs.filter((program) => {
 		const searchLower = searchQuery.toLowerCase();
-		return program.gender.toLowerCase().includes(searchLower);
+		return (
+			program.gender.toLowerCase().includes(searchLower) ||
+			program.universities?.name.toLowerCase().includes(searchLower) ||
+			program.universities?.city?.toLowerCase().includes(searchLower) ||
+			program.universities?.state?.toLowerCase().includes(searchLower)
+		);
 	});
 
 	return (
@@ -125,7 +137,11 @@ export function ProgramLookup({
 						{loading ? (
 							"Loading programs..."
 						) : selectedProgram ? (
-							<span className="capitalize">{selectedProgram.gender}</span>
+							<span className="capitalize">
+								{selectedProgram.gender}
+								{selectedProgram.universities?.name &&
+									` - ${selectedProgram.universities.name}`}
+							</span>
 						) : (
 							"Select program..."
 						)}
@@ -145,7 +161,7 @@ export function ProgramLookup({
 								{filteredPrograms.map((program) => (
 									<CommandItem
 										key={program.id}
-										value={program.gender}
+										value={`${program.gender} ${program.universities?.name || ""}`}
 										onSelect={() => {
 											onChange(program.id);
 											setOpen(false);
@@ -157,7 +173,19 @@ export function ProgramLookup({
 												value === program.id ? "opacity-100" : "opacity-0",
 											)}
 										/>
-										<span className="capitalize">{program.gender}</span>
+										<div className="flex flex-col">
+											<span className="font-medium capitalize">
+												{program.gender}
+											</span>
+											{program.universities && (
+												<span className="text-muted-foreground text-xs">
+													{program.universities.name}
+													{program.universities.city &&
+														program.universities.state &&
+														` • ${program.universities.city}, ${program.universities.state}`}
+												</span>
+											)}
+										</div>
 									</CommandItem>
 								))}
 							</CommandGroup>

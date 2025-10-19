@@ -9,7 +9,6 @@ import { createClient } from "@/utils/supabase/server";
 import { getUser } from "@/queries/getUser";
 
 import { returnValidationErrors } from "next-safe-action";
-
 import { programUpdateSchema } from "../types/program";
 
 export const updateProgramAction = actionClient

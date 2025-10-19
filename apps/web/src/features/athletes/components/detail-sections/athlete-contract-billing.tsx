@@ -1,4 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
 import { DollarSign } from "lucide-react";
 
 interface AthleteContractBillingProps {
@@ -9,7 +10,9 @@ interface AthleteContractBillingProps {
 	onCancel?: () => void;
 }
 
-export function AthleteContractBilling({ athlete }: AthleteContractBillingProps) {
+export function AthleteContractBilling({
+	athlete,
+}: AthleteContractBillingProps) {
 	return (
 		<Card>
 			<CardHeader>

@@ -107,7 +107,9 @@ export function UniversityJobOperations({
 							placeholder="work@university.edu"
 						/>
 					) : (
-						<p className="text-sm">{universityJob.work_email || "Not provided"}</p>
+						<p className="text-sm">
+							{universityJob.work_email || "Not provided"}
+						</p>
 					)}
 				</div>
 				<div>
@@ -125,7 +127,9 @@ export function UniversityJobOperations({
 							placeholder="(555) 123-4567"
 						/>
 					) : (
-						<p className="text-sm">{universityJob.work_phone || "Not provided"}</p>
+						<p className="text-sm">
+							{universityJob.work_phone || "Not provided"}
+						</p>
 					)}
 				</div>
 				<div>

@@ -56,7 +56,11 @@ export const createLeadListEntryColumns = () => {
 			cell: (info) => {
 				const gender = info.getValue();
 				if (!gender) return "N/A";
-				return gender === "men" ? "Men's" : gender === "women" ? "Women's" : gender;
+				return gender === "men"
+					? "Men's"
+					: gender === "women"
+						? "Women's"
+						: gender;
 			},
 		}),
 

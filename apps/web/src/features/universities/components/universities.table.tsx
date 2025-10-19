@@ -70,7 +70,7 @@ const universityTableColumns = [
 		cell: ({ row }) => (
 			<Link
 				href={`/dashboard/universities/${row.original.id}`}
-				className="font-medium  "
+				className="font-medium"
 			>
 				{row.getValue("name")}
 			</Link>

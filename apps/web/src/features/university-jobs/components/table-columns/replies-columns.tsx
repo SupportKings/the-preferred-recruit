@@ -67,61 +67,61 @@ export const createRepliesColumns = () => {
 		repliesColumnHelper.accessor("campaigns.name", {
 			header: "Campaign",
 			cell: (info) => {
-				const campaignId = info.row.original.campaigns?.id;
+				const campaign = info.row.original.campaigns;
 				const campaignName = info.getValue() || "-";
 
-				if (!campaignId || campaignName === "-") return campaignName;
+				if (!campaign || campaignName === "-") return campaignName;
 
 				return (
 					<Link
-						href={`/dashboard/campaigns/${campaignId}`}
+						href={`/dashboard/campaigns/${campaign.id}`}
 						className="text-primary underline-offset-4 hover:underline"
 					>
-						{campaignName}
+						<div className="flex flex-col">
+							<span>{campaignName}</span>
+							{campaign.type && (
+								<span className="text-muted-foreground text-xs capitalize">
+									{campaign.type}
+								</span>
+							)}
+						</div>
 					</Link>
 				);
 			},
-		}),
-		repliesColumnHelper.accessor("campaigns.type", {
-			header: "Campaign Type",
-			cell: (info) => (
-				<span className="capitalize">{info.getValue() || "-"}</span>
-			),
-		}),
-		repliesColumnHelper.accessor("athlete_applications.stage", {
-			header: "Application Stage",
-			cell: (info) => (
-				<StatusBadge className="capitalize">
-					{info.getValue() || "unknown"}
-				</StatusBadge>
-			),
 		}),
 		repliesColumnHelper.accessor("athletes.full_name", {
 			header: "Athlete",
 			cell: (info) => {
-				const athleteId = info.row.original.athletes?.id;
+				const athlete = info.row.original.athletes;
 				const athleteName = info.getValue() || "-";
 
-				if (!athleteId || athleteName === "-") return athleteName;
+				if (!athlete || athleteName === "-") return athleteName;
 
 				return (
 					<Link
-						href={`/dashboard/athletes/${athleteId}`}
+						href={`/dashboard/athletes/${athlete.id}`}
 						className="text-primary underline-offset-4 hover:underline"
 					>
-						{athleteName}
+						<div className="flex flex-col">
+							<span>{athleteName}</span>
+							{athlete.contact_email && (
+								<span className="text-muted-foreground text-xs">
+									{athlete.contact_email}
+								</span>
+							)}
+						</div>
 					</Link>
 				);
 			},
 		}),
-		repliesColumnHelper.accessor("athletes.contact_email", {
-			header: "Athlete Email",
+		repliesColumnHelper.accessor("internal_notes", {
+			header: "Internal Notes",
 			cell: (info) => {
-				const email = info.getValue();
-				if (!email) return "-";
+				const notes = info.getValue();
+				if (!notes) return "-";
 				return (
-					<span className="max-w-[200px] truncate" title={email}>
-						{email}
+					<span className="max-w-[200px] truncate" title={notes}>
+						{notes}
 					</span>
 				);
 			},

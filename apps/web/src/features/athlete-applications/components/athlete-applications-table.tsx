@@ -465,7 +465,7 @@ function ApplicationsTableContent({
 					emptyStateMessage="No applications found matching your filters"
 					emptyStateAction={
 						<Button size="sm" asChild>
-							<Link 					href="/dashboard/athlete-applications/applications/add">
+							<Link href="/dashboard/athlete-applications/applications/add">
 								<PlusIcon className="h-4 w-4" />
 								Add Application
 							</Link>

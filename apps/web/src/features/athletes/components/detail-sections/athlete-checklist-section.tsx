@@ -11,7 +11,6 @@ import {
 	useReactTable,
 } from "@tanstack/react-table";
 import { CheckSquare } from "lucide-react";
-
 import { ManageChecklistModal } from "../modals/manage-checklist-modal";
 import {
 	createChecklistColumns,

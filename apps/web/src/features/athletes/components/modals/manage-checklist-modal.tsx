@@ -16,9 +16,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-import { ChecklistLookup } from "../lookups/checklist-lookup";
-import { TemplateItemLookup } from "../lookups/template-item-lookup";
-
 import {
 	createChecklistItem,
 	updateChecklistItem,
@@ -28,6 +25,8 @@ import { athleteQueries } from "@/features/athletes/queries/useAthletes";
 import { useQueryClient } from "@tanstack/react-query";
 import { CheckSquare, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { ChecklistLookup } from "../lookups/checklist-lookup";
+import { TemplateItemLookup } from "../lookups/template-item-lookup";
 
 interface ManageChecklistModalProps {
 	athleteId: string;
@@ -76,6 +75,7 @@ export function ManageChecklistModal({
 				is_applicable: checklistItem.is_applicable ?? true,
 			});
 		} else if (!isEdit) {
+			// Create mode: only minimal fields per XML CreateForm spec
 			setFormData({
 				checklist_id: "",
 				template_item_id: "",
@@ -86,7 +86,7 @@ export function ManageChecklistModal({
 				is_applicable: true,
 			});
 		}
-	}, [isEdit, checklistItem, open]);
+	}, [isEdit, checklistItem]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -108,7 +108,9 @@ export function ManageChecklistModal({
 				await updateChecklistItem(checklistItem.id, {
 					title: formData.title,
 					description: formData.description,
-					sort_order: formData.sort_order ? Number.parseInt(formData.sort_order) : undefined,
+					sort_order: formData.sort_order
+						? Number.parseInt(formData.sort_order, 10)
+						: undefined,
 					required: formData.required,
 					is_applicable: formData.is_applicable,
 				});
@@ -119,7 +121,9 @@ export function ManageChecklistModal({
 					template_item_id: formData.template_item_id || undefined,
 					title: formData.title,
 					description: formData.description,
-					sort_order: formData.sort_order ? Number.parseInt(formData.sort_order) : undefined,
+					sort_order: formData.sort_order
+						? Number.parseInt(formData.sort_order, 10)
+						: undefined,
 					required: formData.required,
 					is_applicable: formData.is_applicable,
 				});
@@ -132,7 +136,10 @@ export function ManageChecklistModal({
 
 			setOpen(false);
 		} catch (error) {
-			console.error(`Error ${isEdit ? "updating" : "adding"} checklist item:`, error);
+			console.error(
+				`Error ${isEdit ? "updating" : "adding"} checklist item:`,
+				error,
+			);
 			toast.error(`Failed to ${isEdit ? "update" : "add"} checklist item`);
 		} finally {
 			setIsLoading(false);
@@ -165,31 +172,35 @@ export function ManageChecklistModal({
 				</DialogHeader>
 
 				<form onSubmit={handleSubmit} className="space-y-4">
+					{/* Checklist - Required */}
 					<ChecklistLookup
 						athleteId={athleteId}
 						value={formData.checklist_id}
 						onChange={(value) =>
 							setFormData({ ...formData, checklist_id: value })
 						}
-						label="Checklist"
+						label="Onboarding Checklist"
 						required
 					/>
 
+					{/* Template Item - Optional */}
 					<TemplateItemLookup
 						value={formData.template_item_id}
 						onChange={(value) =>
 							setFormData({ ...formData, template_item_id: value })
 						}
-						label="Template Item (Optional)"
+						label="Template Item"
 						required={false}
 					/>
 
-					{/* Title */}
+					{/* Title - Required */}
 					<div className="space-y-2">
-						<Label htmlFor="title">Title *</Label>
+						<Label htmlFor="title">
+							Title <span className="text-destructive">*</span>
+						</Label>
 						<Input
 							id="title"
-							placeholder="e.g., Upload Transcript"
+							placeholder="Action title for this checklist item"
 							value={formData.title}
 							onChange={(e) =>
 								setFormData({ ...formData, title: e.target.value })
@@ -198,58 +209,67 @@ export function ManageChecklistModal({
 						/>
 					</div>
 
-					{/* Description */}
-					<div className="space-y-2">
-						<Label htmlFor="description">Description</Label>
-						<Textarea
-							id="description"
-							placeholder="Details for completing the task"
-							value={formData.description}
-							onChange={(e) =>
-								setFormData({ ...formData, description: e.target.value })
-							}
-							rows={3}
-						/>
-					</div>
+					{/* Edit mode only fields - per XML spec, CreateForm excludes these */}
+					{isEdit && (
+						<>
+							{/* Description */}
+							<div className="space-y-2">
+								<Label htmlFor="description">Description</Label>
+								<Textarea
+									id="description"
+									placeholder="Details for completing the task"
+									value={formData.description}
+									onChange={(e) =>
+										setFormData({ ...formData, description: e.target.value })
+									}
+									rows={3}
+								/>
+							</div>
 
-					{/* Sort Order */}
-					<div className="space-y-2">
-						<Label htmlFor="sort_order">Sort Order</Label>
-						<Input
-							id="sort_order"
-							type="number"
-							placeholder="e.g., 1"
-							value={formData.sort_order}
-							onChange={(e) =>
-								setFormData({ ...formData, sort_order: e.target.value })
-							}
-						/>
-					</div>
+							{/* Sort Order */}
+							<div className="space-y-2">
+								<Label htmlFor="sort_order">Order</Label>
+								<Input
+									id="sort_order"
+									type="number"
+									placeholder="Ordering of the item within the checklist"
+									value={formData.sort_order}
+									onChange={(e) =>
+										setFormData({ ...formData, sort_order: e.target.value })
+									}
+								/>
+							</div>
 
-					{/* Checkboxes */}
-					<div className="space-y-2">
-						<div className="flex items-center space-x-2">
-							<Checkbox
-								id="required"
-								checked={formData.required}
-								onCheckedChange={(checked) =>
-									setFormData({ ...formData, required: !!checked })
-								}
-							/>
-							<Label htmlFor="required">Required</Label>
-						</div>
+							{/* Checkboxes */}
+							<div className="space-y-2">
+								<div className="flex items-center space-x-2">
+									<Checkbox
+										id="required"
+										checked={formData.required}
+										onCheckedChange={(checked) =>
+											setFormData({ ...formData, required: !!checked })
+										}
+									/>
+									<Label htmlFor="required" className="cursor-pointer">
+										Required?
+									</Label>
+								</div>
 
-						<div className="flex items-center space-x-2">
-							<Checkbox
-								id="is_applicable"
-								checked={formData.is_applicable}
-								onCheckedChange={(checked) =>
-									setFormData({ ...formData, is_applicable: !!checked })
-								}
-							/>
-							<Label htmlFor="is_applicable">Applicable</Label>
-						</div>
-					</div>
+								<div className="flex items-center space-x-2">
+									<Checkbox
+										id="is_applicable"
+										checked={formData.is_applicable}
+										onCheckedChange={(checked) =>
+											setFormData({ ...formData, is_applicable: !!checked })
+										}
+									/>
+									<Label htmlFor="is_applicable" className="cursor-pointer">
+										Applicable?
+									</Label>
+								</div>
+							</div>
+						</>
+					)}
 
 					<div className="flex justify-end gap-2 pt-4">
 						<Button

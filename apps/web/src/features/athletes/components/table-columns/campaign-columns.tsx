@@ -76,7 +76,9 @@ export const createCampaignColumns = () => {
 		// Status
 		campaignColumnHelper.accessor("status", {
 			header: "Status",
-			cell: (info) => <StatusBadge>{formatStatus(info.getValue())}</StatusBadge>,
+			cell: (info) => (
+				<StatusBadge>{formatStatus(info.getValue())}</StatusBadge>
+			),
 		}),
 
 		// Start Date

@@ -35,8 +35,10 @@ interface ChecklistLookupProps {
 
 interface Checklist {
 	id: string;
-	name: string;
-	description?: string;
+	internal_notes: string | null;
+	checklist_definition: {
+		name: string | null;
+	} | null;
 }
 
 export function ChecklistLookup({
@@ -59,8 +61,14 @@ export function ChecklistLookup({
 
 			let query = supabase
 				.from("checklists")
-				.select("id, name, description")
-				.order("name");
+				.select(
+					`
+					id,
+					internal_notes,
+					checklist_definition:checklist_definitions(name)
+				`,
+				)
+				.order("internal_notes");
 
 			// Filter by athlete if provided
 			if (athleteId) {
@@ -90,8 +98,10 @@ export function ChecklistLookup({
 	const filteredChecklists = checklists.filter((checklist) => {
 		const searchLower = searchQuery.toLowerCase();
 		return (
-			checklist.name.toLowerCase().includes(searchLower) ||
-			checklist.description?.toLowerCase().includes(searchLower)
+			checklist.checklist_definition?.name
+				?.toLowerCase()
+				.includes(searchLower) ||
+			checklist.internal_notes?.toLowerCase().includes(searchLower)
 		);
 	});
 
@@ -115,7 +125,7 @@ export function ChecklistLookup({
 						{loading
 							? "Loading checklists..."
 							: selectedChecklist
-								? selectedChecklist.name
+								? `${selectedChecklist.checklist_definition?.name || "Unnamed"} ${selectedChecklist.internal_notes ? `- ${selectedChecklist.internal_notes}` : ""}`
 								: "Select checklist..."}
 						<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 					</Button>
@@ -133,7 +143,7 @@ export function ChecklistLookup({
 								{filteredChecklists.map((checklist) => (
 									<CommandItem
 										key={checklist.id}
-										value={`${checklist.name} ${checklist.description || ""}`}
+										value={`${checklist.checklist_definition?.name || ""} ${checklist.internal_notes || ""}`}
 										onSelect={() => {
 											onChange(checklist.id);
 											setOpen(false);
@@ -146,10 +156,12 @@ export function ChecklistLookup({
 											)}
 										/>
 										<div className="flex flex-col">
-											<span>{checklist.name}</span>
-											{checklist.description && (
+											<span>
+												{checklist.checklist_definition?.name || "Unnamed"}
+											</span>
+											{checklist.internal_notes && (
 												<span className="text-muted-foreground text-xs">
-													{checklist.description}
+													{checklist.internal_notes}
 												</span>
 											)}
 										</div>

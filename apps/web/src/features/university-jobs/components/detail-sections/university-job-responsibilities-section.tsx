@@ -9,7 +9,6 @@ import {
 	useReactTable,
 } from "@tanstack/react-table";
 import { ListChecks } from "lucide-react";
-
 import { NoResponsibilities } from "../empty-states/no-responsibilities";
 import { ManageResponsibilityModal } from "../manage-responsibility-modal";
 import {

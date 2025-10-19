@@ -83,7 +83,10 @@ export async function deleteCampaign(campaignId: string) {
 		throw new Error("Authentication required");
 	}
 
-	const { error } = await supabase.from("campaigns").delete().eq("id", campaignId);
+	const { error } = await supabase
+		.from("campaigns")
+		.delete()
+		.eq("id", campaignId);
 
 	if (error) {
 		throw new Error(`Failed to delete campaign: ${error.message}`);

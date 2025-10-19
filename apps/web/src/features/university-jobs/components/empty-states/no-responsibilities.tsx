@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { ListChecks } from "lucide-react";
-
 import { ManageResponsibilityModal } from "../manage-responsibility-modal";
 
 interface NoResponsibilitiesProps {

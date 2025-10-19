@@ -1,5 +1,3 @@
-import { StatusBadge } from "@/components/ui/status-badge";
-
 import { createColumnHelper } from "@tanstack/react-table";
 import { format } from "date-fns";
 import { Edit, Trash2 } from "lucide-react";
@@ -51,9 +49,20 @@ export const createResultColumns = () => {
 		// Hand Timed
 		resultColumnHelper.accessor("hand_timed", {
 			header: "Hand Timed",
-			cell: (info) => (
-				<StatusBadge>{info.getValue() ? "Hand" : "FAT"}</StatusBadge>
-			),
+			cell: (info) => {
+				const isHandTimed = info.getValue();
+				return (
+					<span
+						className={`inline-flex h-7 items-center rounded-full px-3 font-medium text-xs ${
+							isHandTimed
+								? "bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400"
+								: "bg-gray-50 text-gray-700 dark:bg-gray-950/50 dark:text-gray-400"
+						}`}
+					>
+						{isHandTimed ? "Yes" : "No"}
+					</span>
+				);
+			},
 		}),
 
 		// Wind
@@ -68,9 +77,39 @@ export const createResultColumns = () => {
 		// Altitude
 		resultColumnHelper.accessor("altitude", {
 			header: "Altitude",
-			cell: (info) => (
-				<StatusBadge>{info.getValue() ? "Altitude" : "Sea Level"}</StatusBadge>
-			),
+			cell: (info) => {
+				const isAltitude = info.getValue();
+				return (
+					<span
+						className={`inline-flex h-7 items-center rounded-full px-3 font-medium text-xs ${
+							isAltitude
+								? "bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400"
+								: "bg-gray-50 text-gray-700 dark:bg-gray-950/50 dark:text-gray-400"
+						}`}
+					>
+						{isAltitude ? "Yes" : "No"}
+					</span>
+				);
+			},
+		}),
+
+		// Organized Event
+		resultColumnHelper.accessor("organized_event", {
+			header: "Organized Event",
+			cell: (info) => {
+				const isOrganized = info.getValue();
+				return (
+					<span
+						className={`inline-flex h-7 items-center rounded-full px-3 font-medium text-xs ${
+							isOrganized
+								? "bg-green-50 text-green-700 dark:bg-green-950/50 dark:text-green-400"
+								: "bg-gray-50 text-gray-700 dark:bg-gray-950/50 dark:text-gray-400"
+						}`}
+					>
+						{isOrganized ? "Yes" : "No"}
+					</span>
+				);
+			},
 		}),
 	];
 };

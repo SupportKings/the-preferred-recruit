@@ -1,17 +1,18 @@
 "use client";
 
 import { useState } from "react";
+
 import { useRouter } from "next/navigation";
+
+import * as Dialog from "@radix-ui/react-dialog";
 
 import { BackButton } from "@/components/ui/back-button";
 import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
-import * as Dialog from "@radix-ui/react-dialog";
 import { Trash2Icon, X } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "sonner";
-
 import { deleteUniversityJob } from "../actions/deleteUniversityJob";
 import { useUniversityJob } from "../queries/useUniversityJobs";
 
@@ -59,7 +60,9 @@ export default function UniversityJobDetailHeader({
 			parts.push(universityJob.universities.name);
 		}
 
-		return parts.length > 0 ? `${parts.join(" - ")} - Details` : "University Job Details";
+		return parts.length > 0
+			? `${parts.join(" - ")} - Details`
+			: "University Job Details";
 	};
 
 	return (
@@ -81,7 +84,7 @@ export default function UniversityJobDetailHeader({
 				</Dialog.Trigger>
 				<Dialog.Portal>
 					<Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
-					<Dialog.Content className="fixed top-1/2 left-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 transform rounded-lg bg-white p-6 shadow-lg">
+					<Dialog.Content className="-translate-x-1/2 -translate-y-1/2 fixed top-1/2 left-1/2 z-50 w-full max-w-md transform rounded-lg bg-white p-6 shadow-lg">
 						<Dialog.Title className="mb-4 font-semibold text-lg">
 							Delete University Job
 						</Dialog.Title>

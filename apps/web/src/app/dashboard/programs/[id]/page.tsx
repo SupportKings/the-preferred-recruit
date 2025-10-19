@@ -1,5 +1,6 @@
-import type { Metadata } from "next";
 import { Suspense } from "react";
+
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
 import MainLayout from "@/components/layout/main-layout";

@@ -11,9 +11,11 @@ import {
 	useReactTable,
 } from "@tanstack/react-table";
 import { Users } from "lucide-react";
-
 import { ManageContactModal } from "../manage-contact-modal";
-import { createContactColumns, createContactRowActions } from "../table-columns/contact-columns";
+import {
+	createContactColumns,
+	createContactRowActions,
+} from "../table-columns/contact-columns";
 
 interface AthleteContactsSectionProps {
 	athleteId: string;

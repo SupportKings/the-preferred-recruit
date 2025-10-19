@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
+
 import { getUser } from "@/queries/getUser";
 
 export async function deleteSchoolLeadListEntry(entryId: string) {

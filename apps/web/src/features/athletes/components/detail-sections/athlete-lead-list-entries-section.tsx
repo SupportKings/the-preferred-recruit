@@ -11,9 +11,7 @@ import {
 	useReactTable,
 } from "@tanstack/react-table";
 import { Database } from "lucide-react";
-
 import { ManageLeadListEntryModal } from "../modals/manage-lead-list-entry-modal";
-
 import {
 	createLeadListEntryColumns,
 	createLeadListEntryRowActions,

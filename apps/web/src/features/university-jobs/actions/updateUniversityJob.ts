@@ -7,7 +7,6 @@ import { actionClient } from "@/lib/safe-action";
 import { createClient } from "@/utils/supabase/server";
 
 import { returnValidationErrors } from "next-safe-action";
-
 import { universityJobUpdateSchema } from "../types/university-job";
 
 export const updateUniversityJobAction = actionClient

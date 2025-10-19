@@ -88,11 +88,11 @@ export default function UniversityJobDetailView({
 				updateData.coach_id = basicData.coach_id;
 				updateData.job_title = basicData.job_title;
 				updateData.program_scope = basicData.program_scope as
-				| "men"
-				| "women"
-				| "both"
-				| "n/a"
-				| null;
+					| "men"
+					| "women"
+					| "both"
+					| "n/a"
+					| null;
 				updateData.university_id = basicData.university_id;
 				updateData.program_id = basicData.program_id;
 			} else if (editState.section === "operations") {
@@ -257,6 +257,9 @@ export default function UniversityJobDetailView({
 						program_scope: universityJob.program_scope,
 						university_id: universityJob.university_id,
 						program_id: universityJob.program_id,
+						coaches: universityJob.coaches,
+						universities: universityJob.universities,
+						programs: universityJob.programs,
 					}}
 					isEditing={editState.isEditing && editState.section === "basic"}
 					onEditToggle={() => handleEditToggle("basic")}

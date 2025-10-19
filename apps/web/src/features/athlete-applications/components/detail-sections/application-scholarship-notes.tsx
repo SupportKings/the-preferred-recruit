@@ -1,9 +1,10 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState } from "react";
+
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-import { useState } from "react";
 import { DollarSign, Edit3, Save, X } from "lucide-react";
 
 interface ApplicationScholarshipNotesProps {
@@ -27,7 +28,8 @@ export function ApplicationScholarshipNotes({
 	onCancel,
 }: ApplicationScholarshipNotesProps) {
 	const [formData, setFormData] = useState({
-		scholarship_amount_per_year: application.scholarship_amount_per_year?.toString() || "",
+		scholarship_amount_per_year:
+			application.scholarship_amount_per_year?.toString() || "",
 		scholarship_percent: application.scholarship_percent?.toString() || "",
 		offer_notes: application.offer_notes || "",
 		internal_notes: application.internal_notes || "",
@@ -50,7 +52,8 @@ export function ApplicationScholarshipNotes({
 	const handleCancel = () => {
 		// Reset form data to original values
 		setFormData({
-			scholarship_amount_per_year: application.scholarship_amount_per_year?.toString() || "",
+			scholarship_amount_per_year:
+				application.scholarship_amount_per_year?.toString() || "",
 			scholarship_percent: application.scholarship_percent?.toString() || "",
 			offer_notes: application.offer_notes || "",
 			internal_notes: application.internal_notes || "",
@@ -159,14 +162,17 @@ export function ApplicationScholarshipNotes({
 						<Textarea
 							value={formData.offer_notes}
 							onChange={(e) =>
-								setFormData((prev) => ({ ...prev, offer_notes: e.target.value }))
+								setFormData((prev) => ({
+									...prev,
+									offer_notes: e.target.value,
+								}))
 							}
 							placeholder="Notes about the offer (verbal, conditions, dates)"
 							className="mt-1"
 							rows={3}
 						/>
 					) : (
-						<p className="text-sm whitespace-pre-wrap">
+						<p className="whitespace-pre-wrap text-sm">
 							{application.offer_notes || "Not provided"}
 						</p>
 					)}
@@ -189,7 +195,7 @@ export function ApplicationScholarshipNotes({
 							rows={3}
 						/>
 					) : (
-						<p className="text-sm whitespace-pre-wrap">
+						<p className="whitespace-pre-wrap text-sm">
 							{application.internal_notes || "Not provided"}
 						</p>
 					)}

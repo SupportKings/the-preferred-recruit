@@ -126,7 +126,7 @@ export function CreateUniversityJobModal({
 
 				<form onSubmit={handleSubmit} className="space-y-4">
 					<div className="grid gap-4 md:grid-cols-2">
-						<div>
+						<div className="space-y-2">
 							<Label>Coach</Label>
 							<CoachLookup
 								value={formData.coach_id || ""}
@@ -135,12 +135,12 @@ export function CreateUniversityJobModal({
 								}
 								label=""
 							/>
-							<p className="mt-1 text-muted-foreground text-xs">
+							<p className="text-muted-foreground text-xs">
 								Assign a coach to this role
 							</p>
 						</div>
 
-						<div>
+						<div className="space-y-2">
 							<Label>Job Title</Label>
 							<Input
 								value={formData.job_title}
@@ -149,14 +149,14 @@ export function CreateUniversityJobModal({
 								}
 								placeholder="e.g., Head Coach, Assistant Coach"
 							/>
-							<p className="mt-1 text-muted-foreground text-xs">
+							<p className="text-muted-foreground text-xs">
 								Role title (e.g., Assistant Coach)
 							</p>
 						</div>
 					</div>
 
 					<div className="grid gap-4 md:grid-cols-2">
-						<div>
+						<div className="space-y-2">
 							<Label>Program</Label>
 							<ProgramLookup
 								universityId={universityId}
@@ -166,12 +166,12 @@ export function CreateUniversityJobModal({
 								}
 								label=""
 							/>
-							<p className="mt-1 text-muted-foreground text-xs">
+							<p className="text-muted-foreground text-xs">
 								Tie to a specific program, if applicable
 							</p>
 						</div>
 
-						<div>
+						<div className="space-y-2">
 							<Label>Program Scope</Label>
 							<Select
 								value={formData.program_scope}
@@ -189,14 +189,14 @@ export function CreateUniversityJobModal({
 									<SelectItem value="n/a">N/A</SelectItem>
 								</SelectContent>
 							</Select>
-							<p className="mt-1 text-muted-foreground text-xs">
+							<p className="text-muted-foreground text-xs">
 								Scope of responsibility (men, women, both, n/a)
 							</p>
 						</div>
 					</div>
 
 					<div className="grid gap-4 md:grid-cols-2">
-						<div>
+						<div className="space-y-2">
 							<Label>Work Email</Label>
 							<Input
 								type="email"
@@ -206,12 +206,12 @@ export function CreateUniversityJobModal({
 								}
 								placeholder="work@university.edu"
 							/>
-							<p className="mt-1 text-muted-foreground text-xs">
+							<p className="text-muted-foreground text-xs">
 								Email used for this role
 							</p>
 						</div>
 
-						<div>
+						<div className="space-y-2">
 							<Label>Work Phone</Label>
 							<Input
 								type="tel"
@@ -221,14 +221,14 @@ export function CreateUniversityJobModal({
 								}
 								placeholder="(555) 123-4567"
 							/>
-							<p className="mt-1 text-muted-foreground text-xs">
+							<p className="text-muted-foreground text-xs">
 								Phone used for this role
 							</p>
 						</div>
 					</div>
 
 					<div className="grid gap-4 md:grid-cols-2">
-						<div>
+						<div className="space-y-2">
 							<Label>Start Date</Label>
 							<DatePicker
 								value={formData.start_date}
@@ -237,12 +237,12 @@ export function CreateUniversityJobModal({
 								}
 								placeholder="Select start date"
 							/>
-							<p className="mt-1 text-muted-foreground text-xs">
+							<p className="text-muted-foreground text-xs">
 								When this job starts
 							</p>
 						</div>
 
-						<div>
+						<div className="space-y-2">
 							<Label>End Date</Label>
 							<DatePicker
 								value={formData.end_date}
@@ -251,13 +251,13 @@ export function CreateUniversityJobModal({
 								}
 								placeholder="Select end date"
 							/>
-							<p className="mt-1 text-muted-foreground text-xs">
+							<p className="text-muted-foreground text-xs">
 								When this job ends
 							</p>
 						</div>
 					</div>
 
-					<div>
+					<div className="space-y-2">
 						<Label>Internal Notes</Label>
 						<Textarea
 							value={formData.internal_notes}
@@ -267,7 +267,7 @@ export function CreateUniversityJobModal({
 							placeholder="Notes specific to this job/role..."
 							rows={3}
 						/>
-						<p className="mt-1 text-muted-foreground text-xs">
+						<p className="text-muted-foreground text-xs">
 							Notes specific to this job/role
 						</p>
 					</div>

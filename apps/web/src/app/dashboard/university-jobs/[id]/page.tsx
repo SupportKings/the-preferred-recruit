@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+
 import { notFound, redirect } from "next/navigation";
 
 import MainLayout from "@/components/layout/main-layout";
@@ -11,9 +12,9 @@ import UniversityJobDetailHeader from "@/features/university-jobs/layout/univers
 import { getUser } from "@/queries/getUser";
 
 import {
+	dehydrate,
 	HydrationBoundary,
 	QueryClient,
-	dehydrate,
 } from "@tanstack/react-query";
 
 interface UniversityJobDetailPageProps {

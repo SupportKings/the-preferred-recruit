@@ -11,7 +11,6 @@ import {
 	useReactTable,
 } from "@tanstack/react-table";
 import { GraduationCap } from "lucide-react";
-
 import { ManageApplicationModal } from "../modals/manage-application-modal";
 import {
 	createApplicationColumns,
@@ -83,14 +82,14 @@ export function AthleteApplicationsSection({
 			</CardContent>
 
 			<ManageApplicationModal
-			athleteId={athleteId}
-			application={editModal.data}
-			mode="edit"
-			open={editModal.isOpen && editModal.type === "application"}
-			onOpenChange={(open: boolean) =>
-				setEditModal((prev) => ({ ...prev, isOpen: open }))
-			}
-		/>
+				athleteId={athleteId}
+				application={editModal.data}
+				mode="edit"
+				open={editModal.isOpen && editModal.type === "application"}
+				onOpenChange={(open: boolean) =>
+					setEditModal((prev) => ({ ...prev, isOpen: open }))
+				}
+			/>
 		</Card>
 	);
 }

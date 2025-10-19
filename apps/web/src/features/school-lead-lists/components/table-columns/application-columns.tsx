@@ -59,7 +59,9 @@ export const createApplicationColumns = () => {
 				return (
 					<div className="flex flex-col">
 						<span>{info.getValue() || "Unknown"}</span>
-						{city && <span className="text-muted-foreground text-xs">{city}</span>}
+						{city && (
+							<span className="text-muted-foreground text-xs">{city}</span>
+						)}
 					</div>
 				);
 			},

@@ -4,8 +4,8 @@ import { revalidatePath } from "next/cache";
 
 import { actionClient } from "@/lib/safe-action";
 
-import { createClient } from "@/utils/supabase/server";
 import type { TablesInsert } from "@/utils/supabase/database.types";
+import { createClient } from "@/utils/supabase/server";
 
 import { clientCreateSchema } from "@/features/clients/types/client";
 

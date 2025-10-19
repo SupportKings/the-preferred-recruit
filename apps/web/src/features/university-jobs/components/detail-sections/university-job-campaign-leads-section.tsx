@@ -9,7 +9,6 @@ import {
 	useReactTable,
 } from "@tanstack/react-table";
 import { Users } from "lucide-react";
-
 import { NoCampaignLeads } from "../empty-states/no-campaign-leads";
 import { ManageCampaignLeadModal } from "../manage-campaign-lead-modal";
 import {

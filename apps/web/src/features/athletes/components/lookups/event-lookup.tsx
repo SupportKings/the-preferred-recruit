@@ -30,13 +30,14 @@ interface EventLookupProps {
 	label?: string;
 	required?: boolean;
 	disabled?: boolean;
+	eventGroup?: string | null;
 }
 
 interface Event {
 	id: string;
 	name: string;
-	sport?: string;
-	gender?: string;
+	event_group?: string;
+	code?: string;
 }
 
 export function EventLookup({
@@ -45,6 +46,7 @@ export function EventLookup({
 	label = "Event",
 	required = false,
 	disabled = false,
+	eventGroup,
 }: EventLookupProps) {
 	const [open, setOpen] = useState(false);
 	const [events, setEvents] = useState<Event[]>([]);
@@ -56,10 +58,17 @@ export function EventLookup({
 			setLoading(true);
 			const supabase = createClient();
 
-			const { data, error } = await supabase
+			let query = supabase
 				.from("events")
-				.select("id, name, sport, gender")
+				.select("id, name, event_group, code")
 				.order("name");
+
+			// Filter by event_group if provided
+			if (eventGroup) {
+				query = query.eq("event_group", eventGroup);
+			}
+
+			const { data, error } = await query;
 
 			if (error) {
 				console.error("Error fetching events:", error);
@@ -67,14 +76,16 @@ export function EventLookup({
 				return;
 			}
 			if (data) {
-				console.log(`Fetched ${data.length} events`);
+				console.log(
+					`Fetched ${data.length} events${eventGroup ? ` for ${eventGroup}` : ""}`,
+				);
 				setEvents(data as Event[]);
 			}
 			setLoading(false);
 		};
 
 		fetchEvents();
-	}, []);
+	}, [eventGroup]);
 
 	const selectedEvent = events.find((event) => event.id === value);
 
@@ -82,8 +93,8 @@ export function EventLookup({
 		const searchLower = searchQuery.toLowerCase();
 		return (
 			event.name.toLowerCase().includes(searchLower) ||
-			event.sport?.toLowerCase().includes(searchLower) ||
-			event.gender?.toLowerCase().includes(searchLower)
+			event.code?.toLowerCase().includes(searchLower) ||
+			event.event_group?.toLowerCase().includes(searchLower)
 		);
 	});
 
@@ -107,7 +118,7 @@ export function EventLookup({
 						{loading
 							? "Loading events..."
 							: selectedEvent
-								? `${selectedEvent.name}${selectedEvent.sport ? ` (${selectedEvent.sport})` : ""}`
+								? `${selectedEvent.name}${selectedEvent.code ? ` (${selectedEvent.code})` : ""}`
 								: "Select event..."}
 						<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
 					</Button>
@@ -125,7 +136,7 @@ export function EventLookup({
 								{filteredEvents.map((event) => (
 									<CommandItem
 										key={event.id}
-										value={`${event.name} ${event.sport || ""} ${event.gender || ""}`}
+										value={`${event.name} ${event.code || ""} ${event.event_group || ""}`}
 										onSelect={() => {
 											onChange(event.id);
 											setOpen(false);
@@ -139,9 +150,9 @@ export function EventLookup({
 										/>
 										<div className="flex flex-col">
 											<span>{event.name}</span>
-											{(event.sport || event.gender) && (
+											{(event.code || event.event_group) && (
 												<span className="text-muted-foreground text-xs">
-													{[event.sport, event.gender]
+													{[event.code, event.event_group]
 														.filter(Boolean)
 														.join(" • ")}
 												</span>

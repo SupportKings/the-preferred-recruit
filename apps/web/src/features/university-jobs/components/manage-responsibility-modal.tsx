@@ -83,10 +83,16 @@ export function ManageResponsibilityModal({
 				internal_notes: "",
 			});
 		}
-	}, [isEdit, responsibility, open]);
+	}, [isEdit, responsibility]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
+
+		// Validate that event_group is selected
+		if (!formData.event_group) {
+			toast.error("Please select an event group");
+			return;
+		}
 
 		setIsLoading(true);
 
@@ -146,14 +152,18 @@ export function ManageResponsibilityModal({
 				</DialogHeader>
 
 				<form onSubmit={handleSubmit} className="space-y-4">
-					<div>
-						<Label htmlFor="event_group">Event Group</Label>
+					<div className="space-y-2">
+						<Label htmlFor="event_group">
+							Event Group <span className="text-destructive">*</span>
+						</Label>
 						<Select
-							value={formData.event_group || "none"}
+							value={formData.event_group || ""}
 							onValueChange={(value) =>
 								setFormData({
 									...formData,
-									event_group: value === "none" ? null : value,
+									event_group: value,
+									// Reset event_id when event_group changes
+									event_id: null,
 								})
 							}
 						>
@@ -161,9 +171,6 @@ export function ManageResponsibilityModal({
 								<SelectValue placeholder="Select event group" />
 							</SelectTrigger>
 							<SelectContent>
-								<SelectItem value="none" disabled>
-									Select event group
-								</SelectItem>
 								<SelectItem value="sprints">Sprints</SelectItem>
 								<SelectItem value="hurdles">Hurdles</SelectItem>
 								<SelectItem value="distance">Distance</SelectItem>
@@ -175,7 +182,7 @@ export function ManageResponsibilityModal({
 						</Select>
 					</div>
 
-					<div>
+					<div className="space-y-2">
 						<Label htmlFor="event_id">Specific Event (Optional)</Label>
 						<EventLookup
 							value={formData.event_id || ""}
@@ -183,13 +190,19 @@ export function ManageResponsibilityModal({
 								setFormData({ ...formData, event_id: value || null })
 							}
 							label=""
+							eventGroup={formData.event_group}
+							disabled={!formData.event_group}
 						/>
+						{!formData.event_group && (
+							<p className="mt-1 text-muted-foreground text-xs">
+								Select an event group first to see available events
+							</p>
+						)}
 					</div>
 
-					<div>
-						<Label htmlFor="internal_notes">Internal Notes</Label>
+					<div className="space-y-2">
+						<Label>Internal Notes</Label>
 						<Textarea
-							id="internal_notes"
 							placeholder="Notes about this responsibility..."
 							value={formData.internal_notes}
 							onChange={(e) =>

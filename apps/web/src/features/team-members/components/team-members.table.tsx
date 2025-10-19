@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 import type { Database } from "@/utils/supabase/database.types";
 
@@ -144,6 +145,7 @@ function TeamMembersTableContent({
 	filters: any;
 	setFilters: any;
 }) {
+	const router = useRouter();
 	const _queryClient = useQueryClient();
 	const [currentPage, setCurrentPage] = useState(0);
 	const [sorting, setSorting] = useState<any[]>([]);
@@ -221,16 +223,14 @@ function TeamMembersTableContent({
 			label: "View Details",
 			icon: EyeIcon,
 			onClick: (teamMember: TeamMemberRow) => {
-				// Placeholder - no action yet
-				console.log("View team member:", teamMember.id);
+				router.push(`/dashboard/team-members/${teamMember.id}`);
 			},
 		},
 		{
 			label: "Edit",
 			icon: EditIcon,
 			onClick: (teamMember: TeamMemberRow) => {
-				// Placeholder - no action yet
-				console.log("Edit team member:", teamMember.id);
+				router.push(`/dashboard/team-members/${teamMember.id}`);
 			},
 		},
 		{
@@ -238,8 +238,7 @@ function TeamMembersTableContent({
 			icon: TrashIcon,
 			variant: "destructive" as const,
 			onClick: (teamMember: TeamMemberRow) => {
-				// Placeholder - no action yet
-				console.log("Delete team member:", teamMember.id);
+				router.push(`/dashboard/team-members/${teamMember.id}`);
 			},
 		},
 	];

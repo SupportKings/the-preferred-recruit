@@ -17,8 +17,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
-import { EventLookup } from "../lookups/event-lookup";
-
 import {
 	createAthleteResult,
 	updateAthleteResult,
@@ -29,6 +27,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { Plus, Trophy } from "lucide-react";
 import { toast } from "sonner";
+import { EventLookup } from "../lookups/event-lookup";
 
 interface ManageResultModalProps {
 	athleteId: string;
@@ -236,7 +235,9 @@ export function ManageResultModal({
 							id="wind"
 							placeholder="e.g., +2.0"
 							value={formData.wind}
-							onChange={(e) => setFormData({ ...formData, wind: e.target.value })}
+							onChange={(e) =>
+								setFormData({ ...formData, wind: e.target.value })
+							}
 						/>
 					</div>
 

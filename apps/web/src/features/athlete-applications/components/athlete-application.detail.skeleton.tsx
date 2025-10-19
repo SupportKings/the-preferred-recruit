@@ -1,4 +1,5 @@
 import MainLayout from "@/components/layout/main-layout";
+
 import AthleteApplicationDetailHeader from "../layout/athlete-application.detail.header";
 
 interface AthleteApplicationDetailSkeletonProps {

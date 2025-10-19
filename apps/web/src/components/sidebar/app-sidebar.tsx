@@ -31,8 +31,8 @@ import {
 	DollarSign,
 	FileText,
 	FocusIcon,
-	GraduationCap,
 	GoalIcon,
+	GraduationCap,
 	InboxIcon,
 	MessageSquare,
 	Package,
@@ -41,8 +41,8 @@ import {
 	ShieldCheckIcon,
 	Star,
 	Tag,
-	Users,
 	UserCircle,
+	Users,
 } from "lucide-react";
 import AppBranding from "./app-branding";
 import { NavMain } from "./nav-main";
