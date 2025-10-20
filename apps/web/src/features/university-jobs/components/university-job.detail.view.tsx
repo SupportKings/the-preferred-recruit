@@ -257,9 +257,27 @@ export default function UniversityJobDetailView({
 						program_scope: universityJob.program_scope,
 						university_id: universityJob.university_id,
 						program_id: universityJob.program_id,
-						coaches: universityJob.coaches,
-						universities: universityJob.universities,
-						programs: universityJob.programs,
+						coaches: universityJob.coaches
+							? {
+									id: universityJob.coaches.id,
+									full_name: universityJob.coaches.full_name || "Unknown Coach",
+									email: universityJob.coaches.email || undefined,
+								}
+							: null,
+						universities: universityJob.universities
+							? {
+									id: universityJob.universities.id,
+									name: universityJob.universities.name || "Unknown University",
+									city: universityJob.universities.city || undefined,
+									state: universityJob.universities.state || undefined,
+								}
+							: null,
+						programs: universityJob.programs
+							? {
+									id: universityJob.programs.id,
+									gender: universityJob.programs.gender || "Unknown",
+								}
+							: null,
 					}}
 					isEditing={editState.isEditing && editState.section === "basic"}
 					onEditToggle={() => handleEditToggle("basic")}

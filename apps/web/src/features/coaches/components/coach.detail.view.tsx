@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import { BallKnowledgeSection } from "@/features/ball-knowledge/components/ball-knowledge-section";
 import { deleteCampaignLead } from "@/features/campaigns/actions/relations/deleteCampaignLead";
 import { deleteUniversityJob } from "@/features/university-jobs/actions/deleteUniversityJob";
 
@@ -51,7 +52,21 @@ export default function CoachDetailView({ coachId }: CoachDetailViewProps) {
 		}
 	};
 
-	const handleSave = async (data: Record<string, unknown>) => {
+	const handleSave = async (
+		data:
+			| {
+					full_name: string;
+					primary_specialty: string;
+					internal_notes: string;
+			  }
+			| {
+					email: string;
+					phone: string;
+					twitter_profile: string;
+					linkedin_profile: string;
+					instagram_profile: string;
+			  },
+	) => {
 		try {
 			// Transform form data to match the updateCoachSchema format
 			const updateData: Record<string, unknown> = {
@@ -59,12 +74,12 @@ export default function CoachDetailView({ coachId }: CoachDetailViewProps) {
 			};
 
 			// Only include fields from the section being edited
-			if (editState.section === "identity") {
+			if (editState.section === "identity" && "full_name" in data) {
 				// Identity & Role fields
 				updateData.full_name = data.full_name;
 				updateData.primary_specialty = data.primary_specialty || null;
 				updateData.internal_notes = data.internal_notes || null;
-			} else if (editState.section === "contact") {
+			} else if (editState.section === "contact" && "email" in data) {
 				// Contact & Social fields
 				updateData.email = data.email || null;
 				updateData.phone = data.phone || null;
@@ -74,7 +89,7 @@ export default function CoachDetailView({ coachId }: CoachDetailViewProps) {
 			}
 
 			// Call the update action
-			const result = await updateCoachAction(updateData);
+			const result = await updateCoachAction(updateData as Parameters<typeof updateCoachAction>[0]);
 
 			if (result?.validationErrors) {
 				// Handle validation errors
@@ -227,7 +242,9 @@ export default function CoachDetailView({ coachId }: CoachDetailViewProps) {
 					}}
 					isEditing={editState.isEditing && editState.section === "identity"}
 					onEditToggle={() => handleEditToggle("identity")}
-					onSave={handleSave}
+					onSave={(data) => {
+						void handleSave(data);
+					}}
 					onCancel={handleCancel}
 				/>
 				<CoachContactSocial
@@ -240,16 +257,19 @@ export default function CoachDetailView({ coachId }: CoachDetailViewProps) {
 					}}
 					isEditing={editState.isEditing && editState.section === "contact"}
 					onEditToggle={() => handleEditToggle("contact")}
-					onSave={handleSave}
+					onSave={(data) => {
+						void handleSave(data);
+					}}
 					onCancel={handleCancel}
 				/>
 			</div>
 
 			{/* Relationship Tabs */}
 			<Tabs defaultValue="university_jobs" className="w-full">
-				<TabsList className="grid w-full grid-cols-2">
+				<TabsList className="grid w-full grid-cols-3">
 					<TabsTrigger value="university_jobs">University Jobs</TabsTrigger>
 					<TabsTrigger value="campaign_leads">Campaign Leads</TabsTrigger>
+					<TabsTrigger value="ball_knowledge">Ball Knowledge</TabsTrigger>
 				</TabsList>
 
 				<TabsContent value="university_jobs">
@@ -265,6 +285,14 @@ export default function CoachDetailView({ coachId }: CoachDetailViewProps) {
 						coachId={coachId}
 						campaignLeads={coach.campaign_leads || []}
 						setDeleteModal={setDeleteModal}
+					/>
+				</TabsContent>
+
+				<TabsContent value="ball_knowledge">
+					<BallKnowledgeSection
+						entityType="coach"
+						entityId={coachId}
+						defaultAboutCoachId={coachId}
 					/>
 				</TabsContent>
 			</Tabs>

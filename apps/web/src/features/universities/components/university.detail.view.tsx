@@ -229,7 +229,7 @@ export default function UniversityDetailView({
 						Campaign Leads ({university.campaign_leads?.length || 0})
 					</TabsTrigger>
 					<TabsTrigger value="knowledge">
-						Intel ({university.ball_knowledge?.length || 0})
+						Ball Knowledge ({university.ball_knowledge?.length || 0})
 					</TabsTrigger>
 				</TabsList>
 
@@ -295,15 +295,7 @@ export default function UniversityDetailView({
 				</TabsContent>
 
 				<TabsContent value="knowledge" className="mt-4">
-					<BallKnowledgeTab
-						knowledge={university.ball_knowledge || []}
-						universityId={universityId}
-						onRefresh={() =>
-							queryClient.invalidateQueries({
-								queryKey: ["universities", "detail", universityId],
-							})
-						}
-					/>
+					<BallKnowledgeTab universityId={universityId} />
 				</TabsContent>
 			</Tabs>
 

@@ -53,7 +53,7 @@ export function CoachLookup({
 	const [selectedCoach, setSelectedCoach] = useState<Coach | null>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const containerRef = useRef<HTMLDivElement>(null);
-	const debounceTimerRef = useRef<NodeJS.Timeout>();
+	const debounceTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
 	// Fetch selected coach details when value changes
 	useEffect(() => {

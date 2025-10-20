@@ -2,7 +2,6 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DialogTrigger } from "@/components/ui/dialog";
 
 import { BriefcaseIcon, Plus } from "lucide-react";
 import { ManageUniversityJobModal } from "../modals/manage-university-job-modal";
@@ -27,12 +26,10 @@ export function NoUniversityJobs({ coachId }: NoUniversityJobsProps) {
 						open={createModalOpen}
 						onOpenChange={setCreateModalOpen}
 					>
-						<DialogTrigger asChild>
-							<Button size="sm" variant="outline">
-								<Plus className="mr-2 h-4 w-4" />
-								Add Job
-							</Button>
-						</DialogTrigger>
+						<Button size="sm" variant="outline">
+							<Plus className="mr-2 h-4 w-4" />
+							Add Job
+						</Button>
 					</ManageUniversityJobModal>
 				</div>
 			</CardHeader>

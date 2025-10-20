@@ -73,7 +73,7 @@ export const createUniversityJobsColumns = (
 					info.getValue() || info.row.original.programs?.gender;
 				const programId =
 					info.row.original.program_id || info.row.original.programs?.id;
-				const formattedProgram = formatProgramGender(programGender);
+				const formattedProgram = formatProgramGender(programGender ?? null);
 
 				if (!programId) {
 					return <span>{formattedProgram}</span>;

@@ -2,7 +2,6 @@ import { useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { DialogTrigger } from "@/components/ui/dialog";
 
 import { Plus, TargetIcon } from "lucide-react";
 import { ManageCampaignLeadModal } from "../modals/manage-campaign-lead-modal";
@@ -27,12 +26,10 @@ export function NoCampaignLeads({ coachId }: NoCampaignLeadsProps) {
 						open={createModalOpen}
 						onOpenChange={setCreateModalOpen}
 					>
-						<DialogTrigger asChild>
-							<Button size="sm" variant="outline">
-								<Plus className="mr-2 h-4 w-4" />
-								Add Lead
-							</Button>
-						</DialogTrigger>
+						<Button size="sm" variant="outline">
+							<Plus className="mr-2 h-4 w-4" />
+							Add Lead
+						</Button>
 					</ManageCampaignLeadModal>
 				</div>
 			</CardHeader>

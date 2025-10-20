@@ -46,25 +46,19 @@ export default function TeamMemberDetailView({
 		internal_notes: string;
 	}) => {
 		try {
-			// Transform form data to match the updateTeamMemberAction format
-			const updateData: {
-				id: string;
-				name?: string;
-				job_title?: string;
-				timezone?: string;
-				internal_notes?: string;
-			} = {
-				id: teamMemberId,
-			};
-
-			// Only include fields from the section being edited
-			if (editState.section === "basic") {
-				// Basic info fields
-				updateData.name = data.name;
-				updateData.job_title = data.job_title || "";
-				updateData.timezone = data.timezone || "";
-				updateData.internal_notes = data.internal_notes || "";
+			// Only process if we're editing the basic section
+			if (editState.section !== "basic") {
+				return;
 			}
+
+			// Transform form data to match the updateTeamMemberAction format
+			const updateData = {
+				id: teamMemberId,
+				name: data.name,
+				job_title: data.job_title || "",
+				timezone: data.timezone || "",
+				internal_notes: data.internal_notes || "",
+			};
 
 			// Call the update action
 			const result = await updateTeamMemberAction(updateData);

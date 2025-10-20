@@ -1,5 +1,3 @@
-import { useRouter } from "next/navigation";
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UniversalDataTable } from "@/components/universal-data-table/universal-data-table";
 
@@ -52,8 +50,6 @@ export function TeamMemberAthletesSection({
 	teamMemberId,
 	athletes,
 }: TeamMemberAthletesSectionProps) {
-	const router = useRouter();
-
 	// Create column helper
 	const athleteColumnHelper = createColumnHelper<AthleteRow>();
 
@@ -148,9 +144,6 @@ export function TeamMemberAthletesSection({
 				<UniversalDataTable
 					table={athletesTable}
 					emptyStateMessage="No athletes found for this team member"
-					onRowClick={(athlete: AthleteRow) => {
-						router.push(`/dashboard/athletes/${athlete.id}`);
-					}}
 				/>
 			</CardContent>
 		</Card>

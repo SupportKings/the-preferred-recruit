@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import { BallKnowledgeSection } from "@/features/ball-knowledge/components/ball-knowledge-section";
 import { updateProgramAction } from "@/features/programs/actions/updateProgram";
 import { useProgram } from "@/features/programs/queries/usePrograms";
 
@@ -124,13 +125,14 @@ export default function ProgramDetailView({
 
 			{/* Relationship Tabs */}
 			<Tabs defaultValue="events" className="w-full">
-				<TabsList className="grid w-full grid-cols-2">
+				<TabsList className="grid w-full grid-cols-3">
 					<TabsTrigger value="events">
 						Program Events ({program.program_events?.length || 0})
 					</TabsTrigger>
 					<TabsTrigger value="coaches">
 						Assigned Coaches ({program.university_jobs?.length || 0})
 					</TabsTrigger>
+					<TabsTrigger value="ball_knowledge">Ball Knowledge</TabsTrigger>
 				</TabsList>
 
 				<TabsContent value="events" className="mt-4">
@@ -155,6 +157,14 @@ export default function ProgramDetailView({
 								queryKey: ["programs", "detail", programId],
 							})
 						}
+					/>
+				</TabsContent>
+
+				<TabsContent value="ball_knowledge" className="mt-4">
+					<BallKnowledgeSection
+						entityType="program"
+						entityId={programId}
+						defaultAboutProgramId={programId}
 					/>
 				</TabsContent>
 			</Tabs>
