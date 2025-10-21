@@ -17,7 +17,8 @@ export async function getUniversity(id: string) {
 					team_url,
 					team_instagram,
 					team_twitter,
-					internal_notes
+					internal_notes,
+					is_deleted
 				),
 				university_jobs (
 					id,
@@ -145,6 +146,13 @@ export async function getUniversity(id: string) {
 		if (error) {
 			console.error("Error fetching university:", error);
 			return null;
+		}
+
+		// Filter out soft-deleted programs
+		if (university?.programs) {
+			university.programs = university.programs.filter(
+				(program: { is_deleted: boolean }) => !program.is_deleted,
+			);
 		}
 
 		return university;

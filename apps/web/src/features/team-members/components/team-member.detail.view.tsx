@@ -51,9 +51,16 @@ export default function TeamMemberDetailView({
 				return;
 			}
 
+			// Ensure we have the email from the current team member
+			if (!teamMember?.email) {
+				toast.error("Cannot update team member: email is missing");
+				return;
+			}
+
 			// Transform form data to match the updateTeamMemberAction format
 			const updateData = {
 				id: teamMemberId,
+				email: teamMember.email,
 				name: data.name,
 				job_title: data.job_title || "",
 				timezone: data.timezone || "",

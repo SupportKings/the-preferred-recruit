@@ -8,6 +8,30 @@ import { createClient } from "@/utils/supabase/server";
 
 import { z } from "zod";
 
+// Create schema for athlete applications
+const createAthleteApplicationSchema = z.object({
+	// Parties & Target
+	athlete_id: z.string().uuid(),
+	university_id: z.string().uuid(),
+	program_id: z.string().uuid(),
+	// Stage & Timing
+	stage: z
+		.enum(["intro", "ongoing", "visit", "offer", "committed", "dropped"])
+		.default("intro"),
+	start_date: z.string().nullable().optional(),
+	offer_date: z.string().nullable().optional(),
+	commitment_date: z.string().nullable().optional(),
+	// Origin & Attribution
+	origin_lead_list_id: z.string().uuid().nullable().optional(),
+	origin_lead_list_priority: z.number().nullable().optional(),
+	origin_campaign_id: z.string().uuid().nullable().optional(),
+	// Scholarship & Notes
+	scholarship_amount_per_year: z.number().nullable().optional(),
+	scholarship_percent: z.number().nullable().optional(),
+	offer_notes: z.string().nullable().optional(),
+	internal_notes: z.string().nullable().optional(),
+});
+
 // Update schema for athlete applications
 const updateAthleteApplicationSchema = z.object({
 	id: z.string().uuid(),
@@ -98,6 +122,49 @@ export const updateAthleteApplication = actionClient
 			return {
 				success: false,
 				error: "Failed to update application. Please try again.",
+			};
+		}
+	});
+
+export const createAthleteApplication = actionClient
+	.schema(createAthleteApplicationSchema)
+	.action(async ({ parsedInput }) => {
+		try {
+			const supabase = await createClient();
+
+			// Create the application
+			const { data: created, error: createError } = await supabase
+				.from("athlete_applications")
+				.insert({
+					...parsedInput,
+					created_at: new Date().toISOString(),
+					updated_at: new Date().toISOString(),
+				})
+				.select()
+				.single();
+
+			if (createError) {
+				console.error("Error creating application:", createError);
+				return {
+					success: false,
+					error: "Failed to create application. Please try again.",
+				};
+			}
+
+			// Revalidate relevant paths
+			revalidatePath("/dashboard/athlete-applications");
+			revalidatePath(`/dashboard/athletes/${parsedInput.athlete_id}`);
+			revalidatePath(`/dashboard/universities/${parsedInput.university_id}`);
+
+			return {
+				success: true,
+				data: created,
+			};
+		} catch (error) {
+			console.error("Unexpected error in createAthleteApplication:", error);
+			return {
+				success: false,
+				error: "Failed to create application. Please try again.",
 			};
 		}
 	});

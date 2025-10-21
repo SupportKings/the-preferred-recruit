@@ -47,22 +47,20 @@ export function TeamMemberForm({
 	const { execute } = useAction(createTeamMemberAction, {
 		onSuccess: (result) => {
 			if (result.data?.success) {
-				toast.success("Team member created successfully");
+				toast.success(result.data.success);
 				queryClient.invalidateQueries({ queryKey: ["team-members"] });
 
 				if (onSuccess) {
 					onSuccess();
 				} else {
 					// Navigate to team member details page
-					const teamMemberId = result.data?.data?.id;
+					const teamMemberId = result.data?.teamMember?.id;
 					if (teamMemberId) {
 						router.push(`/dashboard/team-members/${teamMemberId}`);
 					} else {
 						router.push("/dashboard/team-members");
 					}
 				}
-			} else if (result.data?.error) {
-				toast.error(result.data.error);
 			}
 		},
 		onError: ({ error }) => {
@@ -73,6 +71,7 @@ export function TeamMemberForm({
 	const form = useForm({
 		defaultValues: {
 			name: initialData?.name || "",
+			email: initialData?.email || "",
 			job_title: initialData?.job_title || "",
 			timezone: initialData?.timezone || "",
 			internal_notes: initialData?.internal_notes || "",
@@ -161,6 +160,49 @@ export function TeamMemberForm({
 										{field.state.meta.errors[0]}
 									</p>
 								)}
+							</div>
+						)}
+					</form.Field>
+
+					{/* Email */}
+					<form.Field
+						name="email"
+						validators={{
+							onBlur: ({ value }) => {
+								if (!value || value.trim().length === 0) {
+									return "Email is required";
+								}
+								// Basic email validation
+								const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+								if (!emailRegex.test(value)) {
+									return "Invalid email address";
+								}
+								return undefined;
+							},
+						}}
+					>
+						{(field) => (
+							<div className="space-y-2">
+								<Label htmlFor={field.name}>
+									Email <span className="text-destructive">*</span>
+								</Label>
+								<Input
+									id={field.name}
+									name={field.name}
+									type="email"
+									value={field.state.value}
+									onBlur={field.handleBlur}
+									onChange={(e) => field.handleChange(e.target.value)}
+									placeholder="john.doe@example.com"
+								/>
+								{field.state.meta.errors.length > 0 && (
+									<p className="text-destructive text-sm">
+										{field.state.meta.errors[0]}
+									</p>
+								)}
+								<p className="text-muted-foreground text-xs">
+									An invitation email will be sent to this address
+								</p>
 							</div>
 						)}
 					</form.Field>

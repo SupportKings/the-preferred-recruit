@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import Link from "next/link";
 
 import type { Tables } from "@/utils/supabase/database.types";
@@ -18,8 +20,9 @@ import {
 import { updateAthleteApplication } from "@/features/athlete-applications/actions/updateAthleteApplication";
 
 import { format } from "date-fns";
-import { ExternalLink, Eye, FileText, Plus } from "lucide-react";
+import { Edit2, ExternalLink, Eye, FileText } from "lucide-react";
 import { toast } from "sonner";
+import { ManageApplicationModal } from "../shared/manage-application-modal";
 import { InlineStageCell } from "./inline-stage-cell";
 
 type AthleteApplication = Tables<"athlete_applications"> & {
@@ -48,6 +51,14 @@ export function AthleteApplicationsTab({
 	universityId,
 	onRefresh,
 }: AthleteApplicationsTabProps) {
+	const [editModal, setEditModal] = useState<{
+		isOpen: boolean;
+		data: AthleteApplication | null;
+	}>({
+		isOpen: false,
+		data: null,
+	});
+
 	const handleInlineEdit = async (
 		applicationId: string,
 		field: string,
@@ -82,14 +93,11 @@ export function AthleteApplicationsTab({
 						<FileText className="h-5 w-5" />
 						Athlete Applications
 					</CardTitle>
-					<Button variant="outline" size="sm" className="gap-2" asChild>
-						<Link
-							href={`/dashboard/athlete-applications/new?university_id=${universityId}`}
-						>
-							<Plus className="h-4 w-4" />
-							Add Application
-						</Link>
-					</Button>
+					<ManageApplicationModal
+						universityId={universityId}
+						mode="add"
+						onSuccess={onRefresh}
+					/>
 				</div>
 			</CardHeader>
 			<CardContent>
@@ -115,7 +123,7 @@ export function AthleteApplicationsTab({
 									<TableHead>Scholarship/Year</TableHead>
 									<TableHead>Scholarship %</TableHead>
 									<TableHead>Internal Notes</TableHead>
-									<TableHead className="w-[80px]">Actions</TableHead>
+									<TableHead className="w-[120px]">Actions</TableHead>
 								</TableRow>
 							</TableHeader>
 							<TableBody>
@@ -221,13 +229,27 @@ export function AthleteApplicationsTab({
 											</div>
 										</TableCell>
 										<TableCell>
-											<Button variant="ghost" size="sm" asChild>
+											<div className="flex gap-1">
 												<Link
 													href={`/dashboard/athlete-applications/${app.id}`}
 												>
-													<Eye className="h-4 w-4" />
+													<Button variant="ghost" size="sm">
+														<Eye className="h-4 w-4" />
+													</Button>
 												</Link>
-											</Button>
+												<Button
+													variant="ghost"
+													size="sm"
+													onClick={() =>
+														setEditModal({
+															isOpen: true,
+															data: app,
+														})
+													}
+												>
+													<Edit2 className="h-4 w-4" />
+												</Button>
+											</div>
 										</TableCell>
 									</TableRow>
 								))}
@@ -236,6 +258,20 @@ export function AthleteApplicationsTab({
 					</div>
 				)}
 			</CardContent>
+
+			{/* Edit Modal */}
+			<ManageApplicationModal
+				universityId={universityId}
+				application={
+					editModal.data as Tables<"athlete_applications"> | undefined
+				}
+				mode="edit"
+				open={editModal.isOpen}
+				onOpenChange={(open: boolean) =>
+					setEditModal((prev) => ({ ...prev, isOpen: open }))
+				}
+				onSuccess={onRefresh}
+			/>
 		</Card>
 	);
 }

@@ -118,6 +118,9 @@ export const teamMemberFormSchema = z.object({
 	// Single name field for better UX (will be split on submit)
 	name: validationUtils.name,
 
+	// Email for user account creation and invitation
+	email: z.string().email("Invalid email address"),
+
 	// Job information
 	job_title: z.string().optional().default(""),
 

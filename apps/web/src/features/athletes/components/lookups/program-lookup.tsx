@@ -117,6 +117,11 @@ export function ProgramLookup({
 		);
 	});
 
+	// Deduplicate programs by ID (in case of duplicate data)
+	const uniquePrograms = Array.from(
+		new Map(filteredPrograms.map((program) => [program.id, program])).values(),
+	);
+
 	return (
 		<div className="space-y-2">
 			{label && (
@@ -158,10 +163,10 @@ export function ProgramLookup({
 						<CommandList>
 							<CommandEmpty>No program found.</CommandEmpty>
 							<CommandGroup>
-								{filteredPrograms.map((program) => (
+								{uniquePrograms.map((program) => (
 									<CommandItem
 										key={program.id}
-										value={`${program.gender} ${program.universities?.name || ""}`}
+										value={`${program.id}-${program.gender}-${program.universities?.name || ""}`}
 										onSelect={() => {
 											onChange(program.id);
 											setOpen(false);
