@@ -29,6 +29,13 @@ export const deleteProgramAction = actionClient
 
 			const supabase = await createClient();
 
+			// Get team member ID for the current user
+			const { data: teamMember } = await (supabase as any)
+				.from("team_members")
+				.select("id")
+				.eq("user_id", user.user.id)
+				.maybeSingle();
+
 			// Get program to find university_id for revalidation
 			const { data: program } = await (supabase as any)
 				.from("programs")
@@ -49,7 +56,7 @@ export const deleteProgramAction = actionClient
 				.update({
 					is_deleted: true,
 					deleted_at: new Date().toISOString(),
-					deleted_by: user.user.id,
+					deleted_by: teamMember?.id || null,
 				})
 				.eq("id", parsedInput.id);
 

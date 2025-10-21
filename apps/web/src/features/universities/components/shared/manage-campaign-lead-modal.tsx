@@ -194,6 +194,7 @@ export function ManageCampaignLeadModal({
 					/>
 
 					<UniversityJobLookup
+						universityId={universityId}
 						value={formData.university_job_id}
 						onChange={(value) =>
 							setFormData({ ...formData, university_job_id: value })

@@ -43,6 +43,7 @@ export const deleteUniversityJob = actionClient
 
 			revalidatePath("/dashboard/university-jobs");
 			revalidatePath("/dashboard/coaches");
+			revalidatePath("/dashboard/universities");
 			revalidatePath("/dashboard");
 
 			return { success: true };

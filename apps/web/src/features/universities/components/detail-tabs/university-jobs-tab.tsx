@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+
 import Link from "next/link";
 
 import type { Tables } from "@/utils/supabase/database.types";
@@ -15,8 +17,10 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 
+import { deleteUniversityJob } from "@/features/university-jobs/actions/deleteUniversityJob";
 import { updateUniversityJobAction } from "@/features/university-jobs/actions/updateUniversityJob";
 import { CreateUniversityJobModal } from "@/features/university-jobs/components/create-university-job-modal";
+import { DeleteConfirmModal } from "@/features/university-jobs/components/shared/delete-confirm-modal";
 
 import { format } from "date-fns";
 import { Briefcase, ExternalLink, Eye, Trash2 } from "lucide-react";
@@ -49,13 +53,26 @@ export function UniversityJobsTab({
 	universityId,
 	onRefresh,
 }: UniversityJobsTabProps) {
-	const handleDelete = async (_jobId: string) => {
-		if (!confirm("Are you sure you want to delete this job?")) return;
+	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+	const [jobToDelete, setJobToDelete] = useState<string | null>(null);
+
+	const handleDeleteClick = (jobId: string) => {
+		setJobToDelete(jobId);
+		setDeleteModalOpen(true);
+	};
+
+	const handleDeleteConfirm = async () => {
+		if (!jobToDelete) return;
 
 		try {
-			// TODO: Implement delete action
-			toast.success("Job deleted successfully");
-			onRefresh();
+			const result = await deleteUniversityJob({ id: jobToDelete });
+
+			if (result?.data?.success) {
+				toast.success("Job deleted successfully");
+				onRefresh();
+			} else {
+				toast.error(result?.data?.error || "Failed to delete job");
+			}
 		} catch (error) {
 			console.error("Error deleting job:", error);
 			toast.error("Failed to delete job");
@@ -233,7 +250,7 @@ export function UniversityJobsTab({
 												<Button
 													variant="ghost"
 													size="sm"
-													onClick={() => handleDelete(job.id)}
+													onClick={() => handleDeleteClick(job.id)}
 												>
 													<Trash2 className="h-4 w-4 text-red-600" />
 												</Button>
@@ -246,6 +263,13 @@ export function UniversityJobsTab({
 					</div>
 				)}
 			</CardContent>
+			<DeleteConfirmModal
+				isOpen={deleteModalOpen}
+				onOpenChange={setDeleteModalOpen}
+				onConfirm={handleDeleteConfirm}
+				title="Delete University Job"
+				description="Are you sure you want to delete this coaching position? This action cannot be undone."
+			/>
 		</Card>
 	);
 }

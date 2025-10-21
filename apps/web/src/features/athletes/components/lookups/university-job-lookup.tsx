@@ -122,6 +122,7 @@ export function UniversityJobLookup({
 	const selectedJob = universityJobs.find((job) => job.id === value);
 
 	const filteredJobs = universityJobs.filter((job) => {
+		// Show all jobs if no search query
 		if (!searchQuery) return true;
 
 		const searchLower = searchQuery.toLowerCase();
@@ -304,11 +305,9 @@ export function UniversityJobLookup({
 								</div>
 							) : filteredJobs.length === 0 ? (
 								<CommandEmpty>
-									{searchQuery
-										? "No jobs found matching your search."
-										: universityJobs.length === 0
-											? "No university jobs available. Please add some first."
-											: "Start typing to search for jobs..."}
+									{universityJobs.length === 0
+										? "No university jobs available. Please add some first."
+										: "No jobs found matching your search."}
 								</CommandEmpty>
 							) : (
 								<CommandGroup>
