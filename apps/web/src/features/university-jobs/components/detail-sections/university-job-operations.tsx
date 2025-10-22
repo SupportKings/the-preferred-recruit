@@ -1,7 +1,10 @@
 import { useState } from "react";
 
+import { formatLocalDate } from "@/lib/date-utils";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -137,19 +140,17 @@ export function UniversityJobOperations({
 						Start Date
 					</label>
 					{isEditing ? (
-						<Input
-							type="date"
+						<DatePicker
 							value={formData.start_date}
-							onChange={(e) =>
-								setFormData((prev) => ({ ...prev, start_date: e.target.value }))
+							onChange={(value) =>
+								setFormData((prev) => ({ ...prev, start_date: value }))
 							}
+							placeholder="Select start date"
 							className="mt-1"
 						/>
 					) : (
 						<p className="text-sm">
-							{universityJob.start_date
-								? new Date(universityJob.start_date).toLocaleDateString()
-								: "Not set"}
+							{formatLocalDate(universityJob.start_date)}
 						</p>
 					)}
 				</div>
@@ -158,20 +159,16 @@ export function UniversityJobOperations({
 						End Date
 					</label>
 					{isEditing ? (
-						<Input
-							type="date"
+						<DatePicker
 							value={formData.end_date}
-							onChange={(e) =>
-								setFormData((prev) => ({ ...prev, end_date: e.target.value }))
+							onChange={(value) =>
+								setFormData((prev) => ({ ...prev, end_date: value }))
 							}
+							placeholder="Select end date"
 							className="mt-1"
 						/>
 					) : (
-						<p className="text-sm">
-							{universityJob.end_date
-								? new Date(universityJob.end_date).toLocaleDateString()
-								: "Not set"}
-						</p>
+						<p className="text-sm">{formatLocalDate(universityJob.end_date)}</p>
 					)}
 				</div>
 				<div>

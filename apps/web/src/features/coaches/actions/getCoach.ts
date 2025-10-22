@@ -81,6 +81,8 @@ export async function getCoach(id: string) {
 			`,
 			)
 			.eq("id", id)
+			.eq("university_jobs.is_deleted", false)
+			.eq("campaign_leads.university_jobs.is_deleted", false)
 			.single();
 
 		if (error) {
@@ -115,6 +117,7 @@ export async function getAllCoaches() {
 				)
 			`,
 			)
+			.eq("university_jobs.is_deleted", false)
 			.order("full_name", { ascending: true });
 
 		if (error) {

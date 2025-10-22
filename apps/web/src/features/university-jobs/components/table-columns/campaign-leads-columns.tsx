@@ -1,19 +1,11 @@
 import Link from "next/link";
 
+import { formatTimestamp } from "@/lib/date-utils";
+
 import { StatusBadge } from "@/components/ui/status-badge";
 
 import { createColumnHelper } from "@tanstack/react-table";
-import { format } from "date-fns";
 import { Edit, Trash2 } from "lucide-react";
-
-const formatDate = (dateString: string | null) => {
-	if (!dateString) return "Not set";
-	try {
-		return format(new Date(dateString), "MMM dd, yyyy");
-	} catch {
-		return "Invalid date";
-	}
-};
 
 export const createCampaignLeadsColumns = () => {
 	const campaignLeadsColumnHelper = createColumnHelper<{
@@ -44,9 +36,10 @@ export const createCampaignLeadsColumns = () => {
 			header: "Campaign",
 			cell: (info) => {
 				const campaignId = info.row.original.campaigns?.id;
-				const campaignName = info.getValue() || "Unknown Campaign";
+				const campaignName = info.getValue();
 
-				if (!campaignId) return campaignName;
+				// If no campaign is linked, show "-"
+				if (!campaignId || !campaignName) return "-";
 
 				return (
 					<Link
@@ -115,7 +108,8 @@ export const createCampaignLeadsColumns = () => {
 		}),
 		campaignLeadsColumnHelper.accessor("first_reply_at", {
 			header: "First Reply At",
-			cell: (info) => formatDate(info.getValue()),
+			cell: (info) =>
+				formatTimestamp(info.getValue(), "MMM dd, yyyy", "Not set"),
 		}),
 		campaignLeadsColumnHelper.accessor("include_reason", {
 			header: "Include Reason",

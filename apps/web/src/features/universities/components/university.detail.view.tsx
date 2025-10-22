@@ -6,6 +6,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { deleteCampaignLead } from "@/features/athletes/actions/campaignLeads";
+import { useBallKnowledge } from "@/features/ball-knowledge/queries/useBallKnowledge";
 import { updateUniversity } from "@/features/universities/actions/updateUniversity";
 import { useUniversity } from "@/features/universities/queries/useUniversities";
 
@@ -32,6 +33,12 @@ export default function UniversityDetailView({
 	universityId,
 }: UniversityDetailViewProps) {
 	const { data: university, isLoading, error } = useUniversity(universityId);
+	const { data: ballKnowledgeData } = useBallKnowledge({
+		entityType: "university",
+		entityId: universityId,
+		page: 1,
+		pageSize: 1, // We only need the count
+	});
 	const queryClient = useQueryClient();
 
 	// Delete modal state
@@ -229,7 +236,7 @@ export default function UniversityDetailView({
 						Campaign Leads ({university.campaign_leads?.length || 0})
 					</TabsTrigger>
 					<TabsTrigger value="knowledge">
-						Ball Knowledge ({university.ball_knowledge?.length || 0})
+						Ball Knowledge ({ballKnowledgeData?.totalCount || 0})
 					</TabsTrigger>
 				</TabsList>
 

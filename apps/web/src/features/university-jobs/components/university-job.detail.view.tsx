@@ -22,6 +22,7 @@ import { UniversityJobRepliesSection } from "./detail-sections/university-job-re
 import { UniversityJobResponsibilitiesSection } from "./detail-sections/university-job-responsibilities-section";
 import { UniversityJobSystemInfo } from "./detail-sections/university-job-system-info";
 import { DeleteConfirmModal } from "./shared/delete-confirm-modal";
+import { UniversityJobNotFound } from "./university-job-not-found";
 
 interface UniversityJobDetailViewProps {
 	universityJobId: string;
@@ -194,7 +195,11 @@ export default function UniversityJobDetailView({
 	};
 
 	if (isLoading) return <div>Loading...</div>;
-	if (error || !universityJob) return <div>Error loading university job</div>;
+	if (error || !universityJob) {
+		return (
+			<UniversityJobNotFound message="This university job could not be found. It may have been deleted or does not exist." />
+		);
+	}
 
 	const getDisplayName = () => {
 		const parts = [];

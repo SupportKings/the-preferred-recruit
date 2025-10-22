@@ -141,6 +141,9 @@ export async function getUniversity(id: string) {
 			`,
 			)
 			.eq("id", id)
+			.eq("university_jobs.is_deleted", false)
+			.eq("campaign_leads.university_jobs.is_deleted", false)
+			.eq("ball_knowledge.is_deleted", false)
 			.single();
 
 		if (error) {
