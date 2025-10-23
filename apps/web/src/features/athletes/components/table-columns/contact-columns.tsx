@@ -17,7 +17,7 @@ import { updateAthleteContact } from "@/features/contacts/actions/relations/cont
 
 import { createColumnHelper } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Eye, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 const formatDate = (dateString: string | null) => {
@@ -188,6 +188,13 @@ export const createContactRowActions = (
 	setDeleteModal: any,
 	setEditModal: any,
 ) => [
+	{
+		label: "View",
+		icon: Eye,
+		onClick: (contact: any) => {
+			window.location.href = `/dashboard/contacts/${contact.contact?.id}`;
+		},
+	},
 	{
 		label: "Edit",
 		icon: Edit,

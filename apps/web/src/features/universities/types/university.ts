@@ -52,6 +52,8 @@ export const universityCreateSchema = z.object({
 	size_of_city: universityValidation.size_of_city,
 	state: universityValidation.state,
 	region: universityValidation.region,
+	conferenceId: z.string().uuid().optional().nullable(),
+	divisionId: z.string().uuid().optional().nullable(),
 	average_gpa: universityValidation.average_gpa,
 	sat_ebrw_25th: universityValidation.sat_ebrw_25th,
 	sat_ebrw_75th: universityValidation.sat_ebrw_75th,

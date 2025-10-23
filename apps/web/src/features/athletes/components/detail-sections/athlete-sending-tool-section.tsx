@@ -97,6 +97,7 @@ export function AthleteSendingToolSection({
 					<UniversalDataTable
 						table={listTable}
 						rowActions={listRowActions}
+						inlineActions={true}
 						emptyStateMessage="No sending tool lead lists found"
 						totalCount={sendingToolLeadLists.length}
 					/>

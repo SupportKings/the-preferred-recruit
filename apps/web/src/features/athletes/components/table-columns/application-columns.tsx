@@ -4,7 +4,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 
 import { createColumnHelper } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Eye, Trash2 } from "lucide-react";
 
 const formatDate = (dateString: string | null) => {
 	if (!dateString) return "Not set";
@@ -34,6 +34,12 @@ const formatStage = (stage: string | null | undefined): string => {
 export const createApplicationColumns = () => {
 	const applicationColumnHelper = createColumnHelper<any>();
 	return [
+		// Priority
+		applicationColumnHelper.accessor("origin_lead_list_priority", {
+			header: "Priority",
+			cell: (info) => info.getValue() ?? "N/A",
+		}),
+
 		// University Name with acceptance rate - clickable
 		applicationColumnHelper.accessor("university.name", {
 			header: "University",
@@ -125,6 +131,14 @@ export const createApplicationRowActions = (
 	setDeleteModal: any,
 	setEditModal: any,
 ) => [
+	{
+		label: "View",
+		icon: Eye,
+		onClick: (application: any) => {
+			// Navigate to application detail page
+			window.location.href = `/dashboard/athlete-applications/${application.id}`;
+		},
+	},
 	{
 		label: "Edit",
 		icon: Edit,

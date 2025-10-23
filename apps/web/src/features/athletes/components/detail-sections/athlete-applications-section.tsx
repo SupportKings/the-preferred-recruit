@@ -49,6 +49,14 @@ export function AthleteApplicationsSection({
 		columns: applicationColumns,
 		getCoreRowModel: getCoreRowModel(),
 		getSortedRowModel: getSortedRowModel(),
+		initialState: {
+			sorting: [
+				{
+					id: "origin_lead_list_priority",
+					desc: false, // ascending order (1, 2, 3...)
+				},
+			],
+		},
 	});
 
 	return (
@@ -75,6 +83,7 @@ export function AthleteApplicationsSection({
 					<UniversalDataTable
 						table={applicationTable}
 						rowActions={applicationRowActions}
+						inlineActions={true}
 						emptyStateMessage="No applications found for this athlete"
 						totalCount={applications.length}
 					/>

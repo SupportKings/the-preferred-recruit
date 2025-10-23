@@ -28,9 +28,15 @@ import {
 
 import { City, State } from "country-state-city";
 import { Check, ChevronsUpDown, Edit3, MapPin, Save, X } from "lucide-react";
+import { ConferenceLookup } from "../lookups/conference-lookup";
+import { DivisionLookup } from "../lookups/division-lookup";
 
 interface UniversityLocationSectionProps {
 	university: Tables<"universities">;
+	currentConferenceId?: string | null;
+	currentConferenceName?: string | null;
+	currentDivisionId?: string | null;
+	currentDivisionName?: string | null;
 	isEditing?: boolean;
 	onEditToggle?: () => void;
 	onSave?: (data: Record<string, unknown>) => void;
@@ -39,6 +45,10 @@ interface UniversityLocationSectionProps {
 
 export function UniversityLocationSection({
 	university,
+	currentConferenceId,
+	currentConferenceName,
+	currentDivisionId,
+	currentDivisionName,
 	isEditing = false,
 	onEditToggle,
 	onSave,
@@ -61,8 +71,8 @@ export function UniversityLocationSection({
 		state: initialStateCode,
 		region: university.region || "",
 		size_of_city: university.size_of_city || "",
-		conference_raw: university.conference_raw || "",
-		division_raw: university.division_raw || "",
+		conferenceId: currentConferenceId || "",
+		divisionId: currentDivisionId || "",
 	});
 
 	const [stateComboOpen, setStateComboOpen] = useState(false);
@@ -92,8 +102,8 @@ export function UniversityLocationSection({
 			state: resetStateCode,
 			region: university.region || "",
 			size_of_city: university.size_of_city || "",
-			conference_raw: university.conference_raw || "",
-			division_raw: university.division_raw || "",
+			conferenceId: currentConferenceId || "",
+			divisionId: currentDivisionId || "",
 		});
 		onCancel?.();
 	};
@@ -309,47 +319,37 @@ export function UniversityLocationSection({
 					)}
 				</div>
 				<div>
-					<label className="font-medium text-muted-foreground text-sm">
-						Conference (Raw)
-					</label>
+					<p className="font-medium text-muted-foreground text-sm">
+						Conference
+					</p>
 					{isEditing ? (
-						<Input
-							value={formData.conference_raw}
-							onChange={(e) =>
-								setFormData((prev) => ({
-									...prev,
-									conference_raw: e.target.value,
-								}))
-							}
-							placeholder="Athletics conference"
-							className="mt-1"
-						/>
+						<div className="mt-1">
+							<ConferenceLookup
+								value={formData.conferenceId}
+								onChange={(value) =>
+									setFormData((prev) => ({ ...prev, conferenceId: value }))
+								}
+								label=""
+							/>
+						</div>
 					) : (
-						<p className="text-sm">
-							{university.conference_raw || "Not provided"}
-						</p>
+						<p className="text-sm">{currentConferenceName || "Not assigned"}</p>
 					)}
 				</div>
 				<div>
-					<label className="font-medium text-muted-foreground text-sm">
-						Division (Raw)
-					</label>
+					<p className="font-medium text-muted-foreground text-sm">Division</p>
 					{isEditing ? (
-						<Input
-							value={formData.division_raw}
-							onChange={(e) =>
-								setFormData((prev) => ({
-									...prev,
-									division_raw: e.target.value,
-								}))
-							}
-							placeholder="NCAA/NAIA division"
-							className="mt-1"
-						/>
+						<div className="mt-1">
+							<DivisionLookup
+								value={formData.divisionId}
+								onChange={(value) =>
+									setFormData((prev) => ({ ...prev, divisionId: value }))
+								}
+								label=""
+							/>
+						</div>
 					) : (
-						<p className="text-sm">
-							{university.division_raw || "Not provided"}
-						</p>
+						<p className="text-sm">{currentDivisionName || "Not assigned"}</p>
 					)}
 				</div>
 			</CardContent>

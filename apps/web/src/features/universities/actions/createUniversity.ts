@@ -44,10 +44,13 @@ export const createUniversityAction = actionClient
 				};
 			}
 
+			// Extract conference and division IDs
+			const { conferenceId, divisionId, ...universityData } = parsedInput;
+
 			// Insert university - Postgres should auto-generate the id via gen_random_uuid()
 			const { data: university, error: insertError } = await (supabase as any)
 				.from("universities")
-				.insert([parsedInput])
+				.insert([universityData])
 				.select()
 				.single();
 
@@ -57,6 +60,40 @@ export const createUniversityAction = actionClient
 					success: false,
 					error: `Failed to create university: ${insertError.message}`,
 				};
+			}
+
+			// Insert conference if provided
+			if (conferenceId) {
+				const { error: conferenceError } = await supabase
+					.from("university_conferences")
+					.insert({
+						university_id: university.id,
+						conference_id: conferenceId,
+						start_date: new Date().toISOString(),
+						end_date: null,
+					});
+
+				if (conferenceError) {
+					console.error("Error adding conference:", conferenceError);
+					// Don't fail the whole operation, just log
+				}
+			}
+
+			// Insert division if provided
+			if (divisionId) {
+				const { error: divisionError } = await supabase
+					.from("university_divisions")
+					.insert({
+						university_id: university.id,
+						division_id: divisionId,
+						start_date: new Date().toISOString(),
+						end_date: null,
+					});
+
+				if (divisionError) {
+					console.error("Error adding division:", divisionError);
+					// Don't fail the whole operation, just log
+				}
 			}
 
 			// Revalidate paths

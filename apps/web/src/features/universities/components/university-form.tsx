@@ -36,6 +36,8 @@ import {
 	publicPrivateOptions,
 	type UniversityFormData,
 } from "../types/university";
+import { ConferenceLookup } from "./lookups/conference-lookup";
+import { DivisionLookup } from "./lookups/division-lookup";
 
 interface UniversityFormProps {
 	mode?: "create" | "edit";
@@ -115,6 +117,8 @@ export function UniversityForm({
 					initialData.state
 				: "",
 			region: initialData?.region || "",
+			conferenceId: "",
+			divisionId: "",
 			average_gpa: initialData?.average_gpa || "",
 			sat_ebrw_25th: initialData?.sat_ebrw_25th || "",
 			sat_ebrw_75th: initialData?.sat_ebrw_75th || "",
@@ -147,6 +151,8 @@ export function UniversityForm({
 					size_of_city: value.size_of_city || null,
 					state: value.state || null,
 					region: value.region || null,
+					conferenceId: value.conferenceId || null,
+					divisionId: value.divisionId || null,
 					average_gpa: value.average_gpa ? Number(value.average_gpa) : null,
 					sat_ebrw_25th: value.sat_ebrw_25th
 						? Number(value.sat_ebrw_25th)
@@ -520,6 +526,30 @@ export function UniversityForm({
 									onChange={(e) => field.handleChange(e.target.value)}
 									onBlur={field.handleBlur}
 									placeholder="West Coast, USA"
+								/>
+							</div>
+						)}
+					</form.Field>
+
+					<form.Field name="conferenceId">
+						{(field) => (
+							<div className="space-y-2">
+								<ConferenceLookup
+									value={field.state.value}
+									onChange={field.handleChange}
+									label="Conference"
+								/>
+							</div>
+						)}
+					</form.Field>
+
+					<form.Field name="divisionId">
+						{(field) => (
+							<div className="space-y-2">
+								<DivisionLookup
+									value={field.state.value}
+									onChange={field.handleChange}
+									label="Division"
 								/>
 							</div>
 						)}

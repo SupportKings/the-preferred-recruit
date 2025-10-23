@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { deleteCampaignLead } from "@/features/athletes/actions/campaignLeads";
 import { useBallKnowledge } from "@/features/ball-knowledge/queries/useBallKnowledge";
 import { updateUniversity } from "@/features/universities/actions/updateUniversity";
+import { updateUniversityAthletics } from "@/features/universities/actions/updateUniversityAthletics";
 import { useUniversity } from "@/features/universities/queries/useUniversities";
 
 import { useQueryClient } from "@tanstack/react-query";
@@ -73,6 +74,24 @@ export default function UniversityDetailView({
 		},
 	);
 
+	// Update university athletics action
+	const { execute: executeAthleticsUpdate, isExecuting: isUpdatingAthletics } =
+		useAction(updateUniversityAthletics, {
+			onSuccess: () => {
+				toast.success("Athletics information updated successfully");
+				setEditState({ isEditing: false, section: null });
+				queryClient.invalidateQueries({
+					queryKey: ["universities", "detail", universityId],
+				});
+			},
+			onError: (err) => {
+				console.error("Error updating athletics:", err);
+				toast.error(
+					"Failed to update athletics information. Please try again.",
+				);
+			},
+		});
+
 	const handleEditToggle = (
 		section: "institution" | "location" | "academics",
 	) => {
@@ -86,8 +105,20 @@ export default function UniversityDetailView({
 	};
 
 	const handleSave = async (data: Record<string, unknown>) => {
+		// Extract conference and division IDs if present (for location section)
+		const { conferenceId, divisionId, ...universityData } = data;
+
+		// If conference or division changed, update athletics
+		if (conferenceId !== undefined || divisionId !== undefined) {
+			executeAthleticsUpdate({
+				universityId,
+				conferenceId: conferenceId as string | null,
+				divisionId: divisionId as string | null,
+			});
+		}
+
 		// Convert string numbers to actual numbers for numeric fields
-		const processedData: Record<string, unknown> = { ...data };
+		const processedData: Record<string, unknown> = { ...universityData };
 
 		// Convert empty strings to null
 		Object.keys(processedData).forEach((key) => {
@@ -123,10 +154,13 @@ export default function UniversityDetailView({
 			}
 		});
 
-		executeUpdate({
-			id: universityId,
-			...processedData,
-		});
+		// Only update university if there are non-athletics fields
+		if (Object.keys(processedData).length > 0) {
+			executeUpdate({
+				id: universityId,
+				...processedData,
+			});
+		}
 	};
 
 	const handleCancel = () => {
@@ -166,6 +200,14 @@ export default function UniversityDetailView({
 		.toUpperCase()
 		.slice(0, 2);
 
+	// Extract current conference and division
+	const currentConference = (university.university_conferences as any)?.find(
+		(uc: any) => uc.end_date === null,
+	);
+	const currentDivision = (university.university_divisions as any)?.find(
+		(ud: any) => ud.end_date === null,
+	);
+
 	return (
 		<div className="space-y-6 p-6">
 			{/* Header Section */}
@@ -200,6 +242,10 @@ export default function UniversityDetailView({
 				/>
 				<UniversityLocationSection
 					university={university}
+					currentConferenceId={currentConference?.conference_id}
+					currentConferenceName={currentConference?.conferences?.name}
+					currentDivisionId={currentDivision?.division_id}
+					currentDivisionName={currentDivision?.divisions?.name}
 					isEditing={editState.isEditing && editState.section === "location"}
 					onEditToggle={() => handleEditToggle("location")}
 					onSave={handleSave}

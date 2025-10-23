@@ -75,6 +75,7 @@ export function AthleteCampaignsSection({
 					<UniversalDataTable
 						table={campaignTable}
 						rowActions={campaignRowActions}
+						inlineActions={true}
 						emptyStateMessage="No campaigns found for this athlete"
 						totalCount={campaigns.length}
 					/>

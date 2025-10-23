@@ -11,6 +11,26 @@ export async function getUniversity(id: string) {
 			.select(
 				`
 				*,
+				university_conferences!left (
+					id,
+					conference_id,
+					start_date,
+					end_date,
+					conferences (
+						id,
+						name
+					)
+				),
+				university_divisions!left (
+					id,
+					division_id,
+					start_date,
+					end_date,
+					divisions (
+						id,
+						name
+					)
+				),
 				programs (
 					id,
 					gender,
@@ -172,6 +192,7 @@ export async function getAllUniversities() {
 		const { data: universities, error } = await supabase
 			.from("universities")
 			.select("*")
+			.eq("is_deleted", false)
 			.order("name", { ascending: true });
 
 		if (error) {
@@ -197,14 +218,46 @@ export async function getUniversitiesWithFilters(
 
 		let query: any = supabase
 			.from("universities")
-			.select("*", { count: "exact" });
+			.select(
+				`
+				*,
+				university_conferences!left (
+					conference_id,
+					end_date,
+					conferences (
+						id,
+						name
+					)
+				),
+				university_divisions!left (
+					division_id,
+					end_date,
+					divisions (
+						id,
+						name
+					)
+				)
+			`,
+				{ count: "exact" },
+			)
+			.eq("is_deleted", false);
 
 		// Apply filters with proper operator support
+		// Note: current_conference and current_division are computed fields and cannot be filtered at query level
+		// They are filtered post-processing after data is returned
 		filters.forEach((filter) => {
 			if (filter.values && filter.values.length > 0) {
 				const values = filter.values;
 				const operator = filter.operator || "is";
 				const columnId = filter.columnId;
+
+				// Skip computed fields (they will be filtered post-query)
+				if (
+					columnId === "current_conference" ||
+					columnId === "current_division"
+				) {
+					return;
+				}
 
 				// Apply filter based on column type and operator
 				switch (columnId) {
@@ -266,7 +319,69 @@ export async function getUniversitiesWithFilters(
 			return { data: [], count: 0 };
 		}
 
-		return { data: data || [], count: count || 0 };
+		// Process data to filter current conferences and divisions (end_date is null)
+		let processedData = data?.map((university: any) => {
+			const currentConference = university.university_conferences?.find(
+				(uc: any) => uc.end_date === null,
+			);
+			const currentDivision = university.university_divisions?.find(
+				(ud: any) => ud.end_date === null,
+			);
+
+			return {
+				...university,
+				current_conference: currentConference?.conferences?.name || null,
+				current_division: currentDivision?.divisions?.name || null,
+			};
+		});
+
+		// Apply client-side filtering for current_conference and current_division
+		filters.forEach((filter) => {
+			if (filter.values && filter.values.length > 0) {
+				const values = filter.values;
+				const operator = filter.operator || "is";
+				const columnId = filter.columnId;
+
+				if (columnId === "current_conference") {
+					if (operator === "is" || operator === "contains") {
+						processedData = processedData?.filter((university: any) => {
+							const value = university.current_conference;
+							return values.some((filterValue: string) =>
+								value?.toLowerCase().includes(filterValue.toLowerCase()),
+							);
+						});
+					} else if (operator === "is not" || operator === "does not contain") {
+						processedData = processedData?.filter((university: any) => {
+							const value = university.current_conference;
+							return !values.some((filterValue: string) =>
+								value?.toLowerCase().includes(filterValue.toLowerCase()),
+							);
+						});
+					}
+				} else if (columnId === "current_division") {
+					if (operator === "is" || operator === "contains") {
+						processedData = processedData?.filter((university: any) => {
+							const value = university.current_division;
+							return values.some((filterValue: string) =>
+								value?.toLowerCase().includes(filterValue.toLowerCase()),
+							);
+						});
+					} else if (operator === "is not" || operator === "does not contain") {
+						processedData = processedData?.filter((university: any) => {
+							const value = university.current_division;
+							return !values.some((filterValue: string) =>
+								value?.toLowerCase().includes(filterValue.toLowerCase()),
+							);
+						});
+					}
+				}
+			}
+		});
+
+		// Update count after client-side filtering
+		const finalCount = processedData?.length || 0;
+
+		return { data: processedData || [], count: finalCount };
 	} catch (error) {
 		console.error("Unexpected error in getUniversitiesWithFilters:", error);
 		return { data: [], count: 0 };
@@ -298,13 +413,167 @@ export async function getUniversitiesWithFaceted(
 		// Fetch faceted counts for each column in parallel
 		await Promise.all(
 			facetedColumns.map(async (columnId) => {
+				// Handle computed fields (conference/division) differently
+				if (
+					columnId === "current_conference" ||
+					columnId === "current_division"
+				) {
+					// For computed fields, we need to fetch all universities and compute values
+					let facetQuery: any = supabase
+						.from("universities")
+						.select(
+							`
+							*,
+							university_conferences!left (
+								conference_id,
+								end_date,
+								conferences (
+									id,
+									name
+								)
+							),
+							university_divisions!left (
+								division_id,
+								end_date,
+								divisions (
+									id,
+									name
+								)
+							)
+						`,
+						)
+						.eq("is_deleted", false);
+
+					// Apply non-computed filters
+					filters
+						.filter(
+							(filter) =>
+								filter.columnId !== columnId &&
+								filter.columnId !== "current_conference" &&
+								filter.columnId !== "current_division",
+						)
+						.forEach((filter) => {
+							if (filter.values && filter.values.length > 0) {
+								const values = filter.values;
+								const operator = filter.operator || "is";
+								const filterColumnId = filter.columnId;
+
+								// Apply same operator logic as main query (only non-computed fields)
+								switch (filterColumnId) {
+									case "name":
+									case "city":
+									case "state":
+									case "type_public_private":
+										if (operator === "contains") {
+											facetQuery = facetQuery.ilike(
+												filterColumnId,
+												`%${values[0]}%`,
+											);
+										} else if (operator === "does not contain") {
+											facetQuery = facetQuery.not(
+												filterColumnId,
+												"ilike",
+												`%${values[0]}%`,
+											);
+										}
+										break;
+
+									case "total_yearly_cost":
+									case "undergraduate_enrollment":
+										if (operator === "is") {
+											facetQuery = facetQuery.eq(
+												filterColumnId,
+												Number(values[0]),
+											);
+										} else if (operator === "is not") {
+											facetQuery = facetQuery.not(
+												filterColumnId,
+												"eq",
+												Number(values[0]),
+											);
+										} else if (operator === "greater than") {
+											facetQuery = facetQuery.gt(
+												filterColumnId,
+												Number(values[0]),
+											);
+										} else if (operator === "less than") {
+											facetQuery = facetQuery.lt(
+												filterColumnId,
+												Number(values[0]),
+											);
+										}
+										break;
+
+									case "email_blocked":
+										if (operator === "is") {
+											facetQuery = facetQuery.eq(
+												filterColumnId,
+												values[0] === "true",
+											);
+										} else if (operator === "is not") {
+											facetQuery = facetQuery.not(
+												filterColumnId,
+												"eq",
+												values[0] === "true",
+											);
+										}
+										break;
+								}
+							}
+						});
+
+					const { data: facetData, error: facetError } = await facetQuery;
+
+					if (facetError) {
+						console.error(
+							`Error fetching faceted data for ${columnId}:`,
+							facetError,
+						);
+						facetedData[columnId] = new Map();
+						return;
+					}
+
+					// Process and count computed values
+					const facetMap = new Map<string, number>();
+					facetData?.forEach((university: any) => {
+						let value: string | null = null;
+
+						if (columnId === "current_conference") {
+							const currentConference = university.university_conferences?.find(
+								(uc: any) => uc.end_date === null,
+							);
+							value = currentConference?.conferences?.name || null;
+						} else if (columnId === "current_division") {
+							const currentDivision = university.university_divisions?.find(
+								(ud: any) => ud.end_date === null,
+							);
+							value = currentDivision?.divisions?.name || null;
+						}
+
+						if (value !== null && value !== undefined) {
+							const key = String(value);
+							facetMap.set(key, (facetMap.get(key) || 0) + 1);
+						}
+					});
+
+					facetedData[columnId] = facetMap;
+					return;
+				}
+
+				// Regular column faceting
 				let facetQuery: any = supabase
 					.from("universities")
-					.select(columnId, { count: "exact" });
+					.select(columnId, { count: "exact" })
+					.eq("is_deleted", false);
 
-				// Apply existing filters (excluding the column we're faceting)
+				// Apply existing filters (excluding the column we're faceting and computed columns)
 				filters
-					.filter((filter) => filter.columnId !== columnId)
+					.filter(
+						(filter) =>
+							filter.columnId !== columnId &&
+							filter.columnId !== "current_conference" &&
+							filter.columnId !== "current_division",
+					)
 					.forEach((filter) => {
 						if (filter.values && filter.values.length > 0) {
 							const values = filter.values;
@@ -424,7 +693,8 @@ export async function getUniversitiesFaceted(
 
 		let query: any = supabase
 			.from("universities")
-			.select(columnId, { count: "exact" });
+			.select(columnId, { count: "exact" })
+			.eq("is_deleted", false);
 
 		// Apply existing filters (excluding the column we're faceting)
 		filters

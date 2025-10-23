@@ -75,6 +75,7 @@ export function AthleteResultsSection({
 					<UniversalDataTable
 						table={resultTable}
 						rowActions={resultRowActions}
+						inlineActions={true}
 						emptyStateMessage="No results found for this athlete"
 						totalCount={results.length}
 					/>

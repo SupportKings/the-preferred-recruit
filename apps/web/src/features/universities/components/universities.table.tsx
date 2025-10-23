@@ -20,6 +20,7 @@ import { UniversalDataTable } from "@/components/universal-data-table/universal-
 import { UniversalDataTableWrapper } from "@/components/universal-data-table/universal-data-table-wrapper";
 import { createUniversalColumnHelper } from "@/components/universal-data-table/utils/column-helpers";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { createColumnHelper } from "@tanstack/react-table";
 import {
 	Building2Icon,
@@ -32,9 +33,15 @@ import {
 	PlusIcon,
 	TrashIcon,
 } from "lucide-react";
+import { toast } from "sonner";
+import { deleteUniversity } from "../actions/deleteUniversity";
 import { useUniversitiesWithFaceted } from "../queries/useUniversities";
+import { DeleteUniversityModal } from "./modals/delete-university-modal";
 
-type UniversityRow = Database["public"]["Tables"]["universities"]["Row"];
+type UniversityRow = Database["public"]["Tables"]["universities"]["Row"] & {
+	current_conference?: string | null;
+	current_division?: string | null;
+};
 
 const columnHelper = createColumnHelper<UniversityRow>();
 
@@ -89,6 +96,26 @@ const universityTableColumns = [
 		enableColumnFilter: true,
 		enableSorting: true,
 		cell: ({ row }) => <div className="text-sm">{row.getValue("state")}</div>,
+	}),
+	columnHelper.accessor("current_conference", {
+		id: "current_conference",
+		header: "Conference",
+		enableColumnFilter: true,
+		enableSorting: true,
+		cell: ({ row }) => {
+			const conference = row.getValue<string>("current_conference");
+			return <div className="text-sm">{conference || "N/A"}</div>;
+		},
+	}),
+	columnHelper.accessor("current_division", {
+		id: "current_division",
+		header: "Division",
+		enableColumnFilter: true,
+		enableSorting: true,
+		cell: ({ row }) => {
+			const division = row.getValue<string>("current_division");
+			return <div className="text-sm">{division || "N/A"}</div>;
+		},
 	}),
 	columnHelper.accessor("type_public_private", {
 		id: "type_public_private",
@@ -164,6 +191,16 @@ const universityFilterConfig = [
 		.icon(MapPinIcon)
 		.build(),
 	universalColumnHelper
+		.option("current_conference")
+		.displayName("Conference")
+		.icon(Building2Icon)
+		.build(),
+	universalColumnHelper
+		.option("current_division")
+		.displayName("Division")
+		.icon(Building2Icon)
+		.build(),
+	universalColumnHelper
 		.option("type_public_private")
 		.displayName("Type")
 		.icon(Building2Icon)
@@ -193,6 +230,9 @@ function UniversitiesTableContent({
 	setFilters: any;
 }) {
 	const router = useRouter();
+	const queryClient = useQueryClient();
+	const [universityToDelete, setUniversityToDelete] =
+		useState<UniversityRow | null>(null);
 	const [currentPage, setCurrentPage] = useState(0);
 	const [sorting, setSorting] = useState<any[]>([]);
 
@@ -212,7 +252,13 @@ function UniversitiesTableContent({
 		currentPage,
 		25,
 		sorting,
-		["state", "type_public_private", "email_blocked"], // columns to get faceted data for
+		[
+			"state",
+			"current_conference",
+			"current_division",
+			"type_public_private",
+			"email_blocked",
+		], // columns to get faceted data for
 	);
 
 	// Extract data from combined result
@@ -224,6 +270,10 @@ function UniversitiesTableContent({
 		: { data: [], count: 0 };
 
 	const stateFaceted = universitiesWithFaceted?.facetedData?.state;
+	const conferenceFaceted =
+		universitiesWithFaceted?.facetedData?.current_conference;
+	const divisionFaceted =
+		universitiesWithFaceted?.facetedData?.current_division;
 	const typeFaceted = universitiesWithFaceted?.facetedData?.type_public_private;
 	const emailBlockedFaceted =
 		universitiesWithFaceted?.facetedData?.email_blocked;
@@ -234,6 +284,24 @@ function UniversitiesTableContent({
 				value: state,
 				label: state,
 			}))
+		: [];
+
+	const conferenceOptions = conferenceFaceted
+		? Array.from(conferenceFaceted.keys())
+				.filter((conf) => conf !== "null")
+				.map((conference) => ({
+					value: conference,
+					label: conference,
+				}))
+		: [];
+
+	const divisionOptions = divisionFaceted
+		? Array.from(divisionFaceted.keys())
+				.filter((div) => div !== "null")
+				.map((division) => ({
+					value: division,
+					label: division,
+				}))
 		: [];
 
 	const typeOptions = typeFaceted
@@ -267,6 +335,22 @@ function UniversitiesTableContent({
 				.icon(MapPinIcon)
 				.build(),
 			options: stateOptions,
+		},
+		{
+			...universalColumnHelper
+				.option("current_conference")
+				.displayName("Conference")
+				.icon(Building2Icon)
+				.build(),
+			options: conferenceOptions,
+		},
+		{
+			...universalColumnHelper
+				.option("current_division")
+				.displayName("Division")
+				.icon(Building2Icon)
+				.build(),
+			options: divisionOptions,
 		},
 		{
 			...universalColumnHelper
@@ -316,8 +400,7 @@ function UniversitiesTableContent({
 			icon: TrashIcon,
 			variant: "destructive" as const,
 			onClick: (university: UniversityRow) => {
-				// Placeholder - implement delete
-				console.log("Delete university:", university.id);
+				setUniversityToDelete(university);
 			},
 		},
 	];
@@ -332,6 +415,8 @@ function UniversitiesTableContent({
 			onFiltersChange: setFilters,
 			faceted: {
 				state: stateFaceted,
+				current_conference: conferenceFaceted,
+				current_division: divisionFaceted,
 				type_public_private: typeFaceted,
 				email_blocked: emailBlockedFaceted,
 			},
@@ -401,6 +486,40 @@ function UniversitiesTableContent({
 							</Link>
 						</Button>
 					}
+				/>
+			)}
+
+			{universityToDelete && (
+				<DeleteUniversityModal
+					isOpen={!!universityToDelete}
+					onOpenChange={(open) => !open && setUniversityToDelete(null)}
+					universityName={universityToDelete.name || undefined}
+					onConfirm={async () => {
+						const universityId = universityToDelete.id;
+						const universityName = universityToDelete.name;
+
+						if (!universityId) {
+							toast.error("University ID is missing");
+							throw new Error("University ID is missing");
+						}
+
+						try {
+							await deleteUniversity({ id: universityId });
+
+							// Refresh the table after successful deletion
+							queryClient.invalidateQueries({ queryKey: ["universities"] });
+							setUniversityToDelete(null);
+
+							// Show success toast
+							toast.success(`${universityName} has been deleted successfully`);
+						} catch (error) {
+							// Show error toast
+							toast.error(
+								`Failed to delete ${universityName}. Please try again.`,
+							);
+							throw error;
+						}
+					}}
 				/>
 			)}
 		</div>

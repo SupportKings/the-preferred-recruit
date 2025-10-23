@@ -75,6 +75,7 @@ export function AthleteLeadListsSection({
 					<UniversalDataTable
 						table={leadListTable}
 						rowActions={leadListRowActions}
+						inlineActions={true}
 						emptyStateMessage="No lead lists found for this athlete"
 						totalCount={leadLists.length}
 					/>

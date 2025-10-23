@@ -199,7 +199,7 @@ export type Database = {
           is_deleted: boolean | null
           location: string | null
           organized_event: boolean | null
-          performance_mark: number | null
+          performance_mark: string | null
           wind: number | null
         }
         Insert: {
@@ -215,7 +215,7 @@ export type Database = {
           is_deleted?: boolean | null
           location?: string | null
           organized_event?: boolean | null
-          performance_mark?: number | null
+          performance_mark?: string | null
           wind?: number | null
         }
         Update: {
@@ -231,7 +231,7 @@ export type Database = {
           is_deleted?: boolean | null
           location?: string | null
           organized_event?: boolean | null
-          performance_mark?: number | null
+          performance_mark?: string | null
           wind?: number | null
         }
         Relationships: [
@@ -576,7 +576,6 @@ export type Database = {
           application_id: string | null
           campaign_id: string | null
           coach_id: string | null
-          created_at: string | null
           deleted_at: string | null
           deleted_by: string | null
           first_reply_at: string | null
@@ -597,7 +596,6 @@ export type Database = {
           application_id?: string | null
           campaign_id?: string | null
           coach_id?: string | null
-          created_at?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           first_reply_at?: string | null
@@ -618,7 +616,6 @@ export type Database = {
           application_id?: string | null
           campaign_id?: string | null
           coach_id?: string | null
-          created_at?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           first_reply_at?: string | null
@@ -1372,7 +1369,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           domain_url?: string | null
-          id: string
+          id?: string
           internal_notes?: string | null
           is_deleted?: boolean | null
           status_option_id?: number | null

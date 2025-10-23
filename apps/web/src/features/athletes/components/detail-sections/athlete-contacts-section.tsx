@@ -75,6 +75,7 @@ export function AthleteContactsSection({
 					<UniversalDataTable
 						table={contactTable}
 						rowActions={contactRowActions}
+						inlineActions={true}
 						emptyStateMessage="No contacts found for this athlete"
 						totalCount={contactAthletes.length}
 					/>

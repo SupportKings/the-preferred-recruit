@@ -4,7 +4,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 
 import { createColumnHelper } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Eye, Trash2 } from "lucide-react";
 
 const formatDate = (dateString: string | null) => {
 	if (!dateString) return "Not set";
@@ -111,6 +111,13 @@ export const createCampaignRowActions = (
 	setDeleteModal: any,
 	setEditModal: any,
 ) => [
+	{
+		label: "View",
+		icon: Eye,
+		onClick: (campaign: any) => {
+			window.location.href = `/dashboard/campaigns/${campaign.id}`;
+		},
+	},
 	{
 		label: "Edit",
 		icon: Edit,

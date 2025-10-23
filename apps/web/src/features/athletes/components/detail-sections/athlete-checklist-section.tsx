@@ -80,6 +80,7 @@ export function AthleteChecklistSection({
 					<UniversalDataTable
 						table={checklistTable}
 						rowActions={checklistRowActions}
+						inlineActions={true}
 						emptyStateMessage="No checklist items found"
 						totalCount={checklistItems.length}
 					/>
