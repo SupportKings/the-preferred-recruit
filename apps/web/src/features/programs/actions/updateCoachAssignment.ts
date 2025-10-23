@@ -13,7 +13,8 @@ import { z } from "zod";
 
 const programScopeEnum = z.enum(["men", "women", "both", "n/a"]);
 
-const assignCoachSchema = z.object({
+const updateCoachAssignmentSchema = z.object({
+	id: z.string().uuid(),
 	program_id: z.string().uuid(),
 	university_id: z.string().uuid(),
 	coach_id: z.string().uuid(),
@@ -32,33 +33,36 @@ const assignCoachSchema = z.object({
 	internal_notes: z.string().optional().nullable(),
 });
 
-export const assignCoachToProgramAction = actionClient
-	.schema(assignCoachSchema)
+export const updateCoachAssignmentAction = actionClient
+	.schema(updateCoachAssignmentSchema)
 	.action(async ({ parsedInput }) => {
 		const user = await getUser();
 		if (!user) {
-			return returnValidationErrors(assignCoachSchema, {
-				_errors: ["You must be logged in to assign a coach"],
+			return returnValidationErrors(updateCoachAssignmentSchema, {
+				_errors: ["You must be logged in to update coach assignment"],
 			});
 		}
 
 		const supabase = await createClient();
 
-		const { data: job, error: insertError } = await (supabase as any)
+		const { id, program_id, university_id, ...updateData } = parsedInput;
+
+		const { data: job, error: updateError } = await (supabase as any)
 			.from("university_jobs")
-			.insert([parsedInput])
+			.update(updateData)
+			.eq("id", id)
 			.select()
 			.single();
 
-		if (insertError) {
-			console.error("Error assigning coach:", insertError);
-			return returnValidationErrors(assignCoachSchema, {
-				_errors: [`Failed to assign coach: ${insertError.message}`],
+		if (updateError) {
+			console.error("Error updating coach assignment:", updateError);
+			return returnValidationErrors(updateCoachAssignmentSchema, {
+				_errors: [`Failed to update coach assignment: ${updateError.message}`],
 			});
 		}
 
-		revalidatePath(`/dashboard/programs/${parsedInput.program_id}`);
-		revalidatePath(`/dashboard/universities/${parsedInput.university_id}`);
+		revalidatePath(`/dashboard/programs/${program_id}`);
+		revalidatePath(`/dashboard/universities/${university_id}`);
 
 		return {
 			success: true,

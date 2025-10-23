@@ -1,6 +1,10 @@
 "use client";
 
+import { useState } from "react";
+
 import Link from "next/link";
+
+import { formatLocalDate } from "@/lib/date-utils";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -13,8 +17,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 
-import { format } from "date-fns";
-import { Trash2, Users } from "lucide-react";
+import { ExternalLink, Pencil, Trash2, Users } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "sonner";
 import { removeCoachFromProgramAction } from "../../actions/removeCoachFromProgram";
@@ -33,6 +36,9 @@ export function AssignedCoachesTab({
 	universityId,
 	onRefresh,
 }: AssignedCoachesTabProps) {
+	const [editingJob, setEditingJob] = useState<any>(null);
+	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
 	const { execute: executeRemove, isExecuting: isRemoving } = useAction(
 		removeCoachFromProgramAction,
 		{
@@ -49,13 +55,20 @@ export function AssignedCoachesTab({
 		},
 	);
 
+	const handleEditClick = (job: any) => {
+		setEditingJob(job);
+		setIsEditModalOpen(true);
+	};
+
+	const handleEditSuccess = () => {
+		setEditingJob(null);
+		setIsEditModalOpen(false);
+		onRefresh();
+	};
+
 	const formatDate = (dateString: string | null) => {
 		if (!dateString) return "Not set";
-		try {
-			return format(new Date(dateString), "MMM dd, yyyy");
-		} catch {
-			return "Invalid date";
-		}
+		return formatLocalDate(dateString, "MMM dd, yyyy");
 	};
 
 	if (jobs.length === 0) {
@@ -123,7 +136,17 @@ export function AssignedCoachesTab({
 							{jobs.map((job) => (
 								<TableRow key={job.id}>
 									<TableCell className="font-medium">
-										{job.coaches?.full_name || "Unknown Coach"}
+										{job.coaches?.id ? (
+											<Link
+												href={`/dashboard/coaches/${job.coaches.id}`}
+												className="flex items-center gap-1 hover:underline"
+											>
+												{job.coaches.full_name}
+												<ExternalLink className="h-3 w-3" />
+											</Link>
+										) : (
+											"Unknown Coach"
+										)}
 									</TableCell>
 									<TableCell className="capitalize">
 										{job.coaches?.primary_specialty || "-"}
@@ -133,9 +156,10 @@ export function AssignedCoachesTab({
 										{job.universities?.name ? (
 											<Link
 												href={`/dashboard/universities/${job.universities.id}`}
-												className="text-blue-600 hover:underline"
+												className="flex items-center gap-1 hover:underline"
 											>
 												{job.universities.name}
+												<ExternalLink className="h-3 w-3" />
 											</Link>
 										) : (
 											"-"
@@ -148,7 +172,7 @@ export function AssignedCoachesTab({
 										{job.work_email ? (
 											<a
 												href={`mailto:${job.work_email}`}
-												className="text-blue-600 hover:underline"
+												className="hover:underline"
 											>
 												{job.work_email}
 											</a>
@@ -160,19 +184,28 @@ export function AssignedCoachesTab({
 									<TableCell>{formatDate(job.start_date)}</TableCell>
 									<TableCell>{formatDate(job.end_date)}</TableCell>
 									<TableCell>
-										<Button
-											variant="ghost"
-											size="sm"
-											onClick={() =>
-												executeRemove({
-													id: job.id,
-													program_id: programId,
-												})
-											}
-											disabled={isRemoving}
-										>
-											<Trash2 className="h-4 w-4 text-red-600" />
-										</Button>
+										<div className="flex items-center gap-1">
+											<Button
+												variant="ghost"
+												size="sm"
+												onClick={() => handleEditClick(job)}
+											>
+												<Pencil className="h-4 w-4" />
+											</Button>
+											<Button
+												variant="ghost"
+												size="sm"
+												onClick={() =>
+													executeRemove({
+														id: job.id,
+														program_id: programId,
+													})
+												}
+												disabled={isRemoving}
+											>
+												<Trash2 className="h-4 w-4 text-red-600" />
+											</Button>
+										</div>
 									</TableCell>
 								</TableRow>
 							))}
@@ -180,6 +213,21 @@ export function AssignedCoachesTab({
 					</Table>
 				</div>
 			</CardContent>
+			{editingJob && (
+				<ManageProgramCoachModal
+					programId={programId}
+					universityId={universityId}
+					coachAssignment={editingJob}
+					open={isEditModalOpen}
+					onOpenChange={(open) => {
+						setIsEditModalOpen(open);
+						if (!open) {
+							setEditingJob(null);
+						}
+					}}
+					onSuccess={handleEditSuccess}
+				/>
+			)}
 		</Card>
 	);
 }

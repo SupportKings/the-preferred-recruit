@@ -1,11 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-import { cn } from "@/lib/utils";
+import { useCallback, useEffect, useId, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
 	Dialog,
 	DialogContent,
@@ -17,11 +15,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@/components/ui/popover";
-import {
 	Select,
 	SelectContent,
 	SelectItem,
@@ -30,17 +23,28 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
-import { useCoaches } from "@/features/coaches/queries/useCoaches";
+import { CoachLookup } from "@/features/athletes/components/lookups/coach-lookup";
 
-import { format } from "date-fns";
-import { CalendarIcon, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "sonner";
 import { assignCoachToProgramAction } from "../actions/assignCoachToProgram";
+import { updateCoachAssignmentAction } from "../actions/updateCoachAssignment";
 
 interface ManageProgramCoachModalProps {
 	programId: string;
 	universityId: string;
+	coachAssignment?: {
+		id: string;
+		coach_id: string;
+		job_title: string | null;
+		program_scope: string | null;
+		work_email: string | null;
+		work_phone: string | null;
+		start_date: string | null;
+		end_date: string | null;
+		internal_notes: string | null;
+	} | null;
 	onSuccess?: () => void;
 	open?: boolean;
 	onOpenChange?: (open: boolean) => void;
@@ -49,58 +53,109 @@ interface ManageProgramCoachModalProps {
 export function ManageProgramCoachModal({
 	programId,
 	universityId,
+	coachAssignment,
 	onSuccess,
 	open: controlledOpen,
 	onOpenChange,
 }: ManageProgramCoachModalProps) {
+	const isEditMode = !!coachAssignment;
 	const [internalOpen, setInternalOpen] = useState(false);
 	const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
 	const setOpen = onOpenChange || setInternalOpen;
 
-	const [coachId, setCoachId] = useState("");
-	const [jobTitle, setJobTitle] = useState("");
-	const [programScope, setProgramScope] = useState<string>("");
-	const [workEmail, setWorkEmail] = useState("");
-	const [workPhone, setWorkPhone] = useState("");
-	const [startDate, setStartDate] = useState<Date | undefined>();
-	const [endDate, setEndDate] = useState<Date | undefined>();
-	const [internalNotes, setInternalNotes] = useState("");
+	const [coachId, setCoachId] = useState(coachAssignment?.coach_id || "");
+	const [jobTitle, setJobTitle] = useState(coachAssignment?.job_title || "");
+	const [programScope, setProgramScope] = useState<string>(
+		coachAssignment?.program_scope || "",
+	);
+	const [workEmail, setWorkEmail] = useState(coachAssignment?.work_email || "");
+	const [workPhone, setWorkPhone] = useState(coachAssignment?.work_phone || "");
+	const [startDate, setStartDate] = useState<string>(
+		coachAssignment?.start_date || "",
+	);
+	const [endDate, setEndDate] = useState<string>(
+		coachAssignment?.end_date || "",
+	);
+	const [internalNotes, setInternalNotes] = useState(
+		coachAssignment?.internal_notes || "",
+	);
 
-	const { data: coaches, isLoading: isLoadingCoaches } = useCoaches();
+	const jobTitleId = useId();
+	const workEmailId = useId();
+	const workPhoneId = useId();
+	const internalNotesId = useId();
 
-	const {
-		execute: executeAssign,
-		isExecuting: isAssigning,
-		result: assignResult,
-	} = useAction(assignCoachToProgramAction, {
-		onSuccess: (result) => {
-			if (result?.data?.success) {
-				toast.success("Coach assigned to program successfully!");
-				setOpen(false);
-				onSuccess?.();
-			}
-		},
-		onError: (err) => {
-			console.error("Error assigning coach:", err);
-
-			const validationErrors = err.error?.validationErrors;
-			if (validationErrors) {
-				if (validationErrors.coach_id?._errors?.[0]) {
-					toast.error(validationErrors.coach_id._errors[0]);
-				} else if (validationErrors.work_email?._errors?.[0]) {
-					toast.error(`Work Email: ${validationErrors.work_email._errors[0]}`);
-				} else if (validationErrors._errors?.[0]) {
-					toast.error(validationErrors._errors[0]);
-				} else {
-					toast.error("Validation error. Please check your inputs.");
+	const { execute: executeAssign, isExecuting: isAssigning } = useAction(
+		assignCoachToProgramAction,
+		{
+			onSuccess: (result) => {
+				if (result?.data?.success) {
+					toast.success("Coach assigned to program successfully!");
+					setOpen(false);
+					onSuccess?.();
 				}
-			} else {
-				const errorMessage =
-					err.error?.serverError || "Failed to assign coach. Please try again.";
-				toast.error(errorMessage);
-			}
+			},
+			onError: (err) => {
+				console.error("Error assigning coach:", err);
+
+				const validationErrors = err.error?.validationErrors;
+				if (validationErrors) {
+					if (validationErrors.coach_id?._errors?.[0]) {
+						toast.error(validationErrors.coach_id._errors[0]);
+					} else if (validationErrors.work_email?._errors?.[0]) {
+						toast.error(
+							`Work Email: ${validationErrors.work_email._errors[0]}`,
+						);
+					} else if (validationErrors._errors?.[0]) {
+						toast.error(validationErrors._errors[0]);
+					} else {
+						toast.error("Validation error. Please check your inputs.");
+					}
+				} else {
+					const errorMessage =
+						err.error?.serverError ||
+						"Failed to assign coach. Please try again.";
+					toast.error(errorMessage);
+				}
+			},
 		},
-	});
+	);
+
+	const { execute: executeUpdate, isExecuting: isUpdating } = useAction(
+		updateCoachAssignmentAction,
+		{
+			onSuccess: (result) => {
+				if (result?.data?.success) {
+					toast.success("Coach assignment updated successfully!");
+					setOpen(false);
+					onSuccess?.();
+				}
+			},
+			onError: (err) => {
+				console.error("Error updating coach assignment:", err);
+
+				const validationErrors = err.error?.validationErrors;
+				if (validationErrors) {
+					if (validationErrors.coach_id?._errors?.[0]) {
+						toast.error(validationErrors.coach_id._errors[0]);
+					} else if (validationErrors.work_email?._errors?.[0]) {
+						toast.error(
+							`Work Email: ${validationErrors.work_email._errors[0]}`,
+						);
+					} else if (validationErrors._errors?.[0]) {
+						toast.error(validationErrors._errors[0]);
+					} else {
+						toast.error("Validation error. Please check your inputs.");
+					}
+				} else {
+					const errorMessage =
+						err.error?.serverError ||
+						"Failed to update coach assignment. Please try again.";
+					toast.error(errorMessage);
+				}
+			},
+		},
+	);
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
@@ -110,30 +165,48 @@ export function ManageProgramCoachModal({
 			return;
 		}
 
-		executeAssign({
-			program_id: programId,
-			university_id: universityId,
-			coach_id: coachId,
-			job_title: jobTitle || null,
-			program_scope: (programScope as "mens" | "womens" | "both") || null,
-			work_email: workEmail || null,
-			work_phone: workPhone || null,
-			start_date: startDate ? startDate.toISOString() : null,
-			end_date: endDate ? endDate.toISOString() : null,
-			internal_notes: internalNotes || null,
-		});
+		if (isEditMode && coachAssignment) {
+			executeUpdate({
+				id: coachAssignment.id,
+				program_id: programId,
+				university_id: universityId,
+				coach_id: coachId,
+				job_title: jobTitle || null,
+				program_scope:
+					(programScope as "men" | "women" | "both" | "n/a") || null,
+				work_email: workEmail || null,
+				work_phone: workPhone || null,
+				start_date: startDate || null,
+				end_date: endDate || null,
+				internal_notes: internalNotes || null,
+			});
+		} else {
+			executeAssign({
+				program_id: programId,
+				university_id: universityId,
+				coach_id: coachId,
+				job_title: jobTitle || null,
+				program_scope:
+					(programScope as "men" | "women" | "both" | "n/a") || null,
+				work_email: workEmail || null,
+				work_phone: workPhone || null,
+				start_date: startDate || null,
+				end_date: endDate || null,
+				internal_notes: internalNotes || null,
+			});
+		}
 	};
 
-	const resetForm = () => {
+	const resetForm = useCallback(() => {
 		setCoachId("");
 		setJobTitle("");
 		setProgramScope("");
 		setWorkEmail("");
 		setWorkPhone("");
-		setStartDate(undefined);
-		setEndDate(undefined);
+		setStartDate("");
+		setEndDate("");
 		setInternalNotes("");
-	};
+	}, []);
 
 	useEffect(() => {
 		if (!open) {
@@ -141,59 +214,44 @@ export function ManageProgramCoachModal({
 		}
 	}, [open, resetForm]);
 
+	const isLoading = isAssigning || isUpdating;
+
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
-			<DialogTrigger>
-				<Button size="sm">
-					<Plus className="mr-2 h-4 w-4" />
-					Add Coach
-				</Button>
-			</DialogTrigger>
+			{!isEditMode && (
+				<DialogTrigger>
+					<Button size="sm">
+						<Plus className="mr-2 h-4 w-4" />
+						Add Coach
+					</Button>
+				</DialogTrigger>
+			)}
 			<DialogContent className="max-w-2xl">
 				<DialogHeader>
-					<DialogTitle>Assign Coach to Program</DialogTitle>
+					<DialogTitle>
+						{isEditMode ? "Edit Coach Assignment" : "Assign Coach to Program"}
+					</DialogTitle>
 					<DialogDescription>
-						Assign a coach to this program and specify their role details
+						{isEditMode
+							? "Update coach assignment details for this program"
+							: "Assign a coach to this program and specify their role details"}
 					</DialogDescription>
 				</DialogHeader>
 
 				<form onSubmit={handleSubmit} className="space-y-4">
-					<div className="space-y-2">
-						<Label htmlFor="coach_id">
-							Coach <span className="text-red-500">*</span>
-						</Label>
-						<Select value={coachId} onValueChange={setCoachId}>
-							<SelectTrigger>
-								<SelectValue placeholder="Select a coach" />
-							</SelectTrigger>
-							<SelectContent>
-								{isLoadingCoaches ? (
-									<SelectItem value="loading" disabled>
-										Loading coaches...
-									</SelectItem>
-								) : coaches && coaches.length > 0 ? (
-									coaches.map((coach: any) => (
-										<SelectItem key={coach.id} value={coach.id}>
-											{coach.full_name}
-											{coach.primary_specialty
-												? ` - ${coach.primary_specialty}`
-												: ""}
-										</SelectItem>
-									))
-								) : (
-									<SelectItem value="no-coaches" disabled>
-										No coaches available
-									</SelectItem>
-								)}
-							</SelectContent>
-						</Select>
-					</div>
+					<CoachLookup
+						universityId={universityId}
+						value={coachId}
+						onChange={setCoachId}
+						label="Coach"
+						required
+					/>
 
 					<div className="grid gap-4 md:grid-cols-2">
 						<div className="space-y-2">
-							<Label htmlFor="job_title">Job Title</Label>
+							<Label htmlFor={jobTitleId}>Job Title</Label>
 							<Input
-								id="job_title"
+								id={jobTitleId}
 								value={jobTitle}
 								onChange={(e) => setJobTitle(e.target.value)}
 								placeholder="e.g., Head Coach, Assistant Coach"
@@ -207,9 +265,10 @@ export function ManageProgramCoachModal({
 									<SelectValue placeholder="Select scope" />
 								</SelectTrigger>
 								<SelectContent>
-									<SelectItem value="mens">Men's</SelectItem>
-									<SelectItem value="womens">Women's</SelectItem>
+									<SelectItem value="men">Men's</SelectItem>
+									<SelectItem value="women">Women's</SelectItem>
 									<SelectItem value="both">Both</SelectItem>
+									<SelectItem value="n/a">N/A</SelectItem>
 								</SelectContent>
 							</Select>
 						</div>
@@ -217,9 +276,9 @@ export function ManageProgramCoachModal({
 
 					<div className="grid gap-4 md:grid-cols-2">
 						<div className="space-y-2">
-							<Label htmlFor="work_email">Work Email</Label>
+							<Label htmlFor={workEmailId}>Work Email</Label>
 							<Input
-								id="work_email"
+								id={workEmailId}
 								type="email"
 								value={workEmail}
 								onChange={(e) => setWorkEmail(e.target.value)}
@@ -228,9 +287,9 @@ export function ManageProgramCoachModal({
 						</div>
 
 						<div className="space-y-2">
-							<Label htmlFor="work_phone">Work Phone</Label>
+							<Label htmlFor={workPhoneId}>Work Phone</Label>
 							<Input
-								id="work_phone"
+								id={workPhoneId}
 								value={workPhone}
 								onChange={(e) => setWorkPhone(e.target.value)}
 								placeholder="(555) 123-4567"
@@ -241,61 +300,27 @@ export function ManageProgramCoachModal({
 					<div className="grid gap-4 md:grid-cols-2">
 						<div className="space-y-2">
 							<Label>Start Date</Label>
-							<Popover>
-								<PopoverTrigger asChild>
-									<Button
-										variant="outline"
-										className={cn(
-											"w-full justify-start text-left font-normal",
-											!startDate && "text-muted-foreground",
-										)}
-									>
-										<CalendarIcon className="mr-2 h-4 w-4" />
-										{startDate ? format(startDate, "PPP") : "Pick a date"}
-									</Button>
-								</PopoverTrigger>
-								<PopoverContent className="w-auto p-0">
-									<Calendar
-										mode="single"
-										selected={startDate}
-										onSelect={setStartDate}
-										initialFocus
-									/>
-								</PopoverContent>
-							</Popover>
+							<DatePicker
+								value={startDate}
+								onChange={setStartDate}
+								placeholder="Pick a date"
+							/>
 						</div>
 
 						<div className="space-y-2">
 							<Label>End Date</Label>
-							<Popover>
-								<PopoverTrigger asChild>
-									<Button
-										variant="outline"
-										className={cn(
-											"w-full justify-start text-left font-normal",
-											!endDate && "text-muted-foreground",
-										)}
-									>
-										<CalendarIcon className="mr-2 h-4 w-4" />
-										{endDate ? format(endDate, "PPP") : "Pick a date"}
-									</Button>
-								</PopoverTrigger>
-								<PopoverContent className="w-auto p-0">
-									<Calendar
-										mode="single"
-										selected={endDate}
-										onSelect={setEndDate}
-										initialFocus
-									/>
-								</PopoverContent>
-							</Popover>
+							<DatePicker
+								value={endDate}
+								onChange={setEndDate}
+								placeholder="Pick a date"
+							/>
 						</div>
 					</div>
 
 					<div className="space-y-2">
-						<Label htmlFor="internal_notes">Internal Notes</Label>
+						<Label htmlFor={internalNotesId}>Internal Notes</Label>
 						<Textarea
-							id="internal_notes"
+							id={internalNotesId}
 							value={internalNotes}
 							onChange={(e) => setInternalNotes(e.target.value)}
 							placeholder="Add any notes about this assignment..."
@@ -308,12 +333,18 @@ export function ManageProgramCoachModal({
 							type="button"
 							variant="outline"
 							onClick={() => setOpen(false)}
-							disabled={isAssigning}
+							disabled={isLoading}
 						>
 							Cancel
 						</Button>
-						<Button type="submit" disabled={isAssigning || !coachId}>
-							{isAssigning ? "Assigning..." : "Assign Coach"}
+						<Button type="submit" disabled={isLoading || !coachId}>
+							{isLoading
+								? isEditMode
+									? "Updating..."
+									: "Assigning..."
+								: isEditMode
+									? "Update Assignment"
+									: "Assign Coach"}
 						</Button>
 					</div>
 				</form>

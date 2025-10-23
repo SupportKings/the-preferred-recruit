@@ -1,5 +1,9 @@
 "use client";
 
+import { useState } from "react";
+
+import { formatLocalDate } from "@/lib/date-utils";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -11,8 +15,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 
-import { format } from "date-fns";
-import { Calendar, Trash2 } from "lucide-react";
+import { Calendar, Pencil, Trash2 } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "sonner";
 import { deleteProgramEventAction } from "../../actions/deleteProgramEvent";
@@ -29,6 +32,9 @@ export function ProgramEventsTab({
 	programId,
 	onRefresh,
 }: ProgramEventsTabProps) {
+	const [editingEvent, setEditingEvent] = useState<any>(null);
+	const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
 	const { execute: executeDelete, isExecuting: isDeleting } = useAction(
 		deleteProgramEventAction,
 		{
@@ -45,13 +51,20 @@ export function ProgramEventsTab({
 		},
 	);
 
+	const handleEditClick = (event: any) => {
+		setEditingEvent(event);
+		setIsEditModalOpen(true);
+	};
+
+	const handleEditSuccess = () => {
+		setEditingEvent(null);
+		setIsEditModalOpen(false);
+		onRefresh();
+	};
+
 	const formatDate = (dateString: string | null) => {
 		if (!dateString) return "Not set";
-		try {
-			return format(new Date(dateString), "MMM dd, yyyy");
-		} catch {
-			return "Invalid date";
-		}
+		return formatLocalDate(dateString, "MMM dd, yyyy");
 	};
 
 	if (events.length === 0) {
@@ -138,19 +151,28 @@ export function ProgramEventsTab({
 										{event.internal_notes || "-"}
 									</TableCell>
 									<TableCell>
-										<Button
-											variant="ghost"
-											size="sm"
-											onClick={() =>
-												executeDelete({
-													id: event.id,
-													program_id: programId,
-												})
-											}
-											disabled={isDeleting}
-										>
-											<Trash2 className="h-4 w-4 text-red-600" />
-										</Button>
+										<div className="flex items-center gap-1">
+											<Button
+												variant="ghost"
+												size="sm"
+												onClick={() => handleEditClick(event)}
+											>
+												<Pencil className="h-4 w-4" />
+											</Button>
+											<Button
+												variant="ghost"
+												size="sm"
+												onClick={() =>
+													executeDelete({
+														id: event.id,
+														program_id: programId,
+													})
+												}
+												disabled={isDeleting}
+											>
+												<Trash2 className="h-4 w-4 text-red-600" />
+											</Button>
+										</div>
 									</TableCell>
 								</TableRow>
 							))}
@@ -158,6 +180,20 @@ export function ProgramEventsTab({
 					</Table>
 				</div>
 			</CardContent>
+			{editingEvent && (
+				<ManageProgramEventModal
+					programId={programId}
+					programEvent={editingEvent}
+					open={isEditModalOpen}
+					onOpenChange={(open) => {
+						setIsEditModalOpen(open);
+						if (!open) {
+							setEditingEvent(null);
+						}
+					}}
+					onSuccess={handleEditSuccess}
+				/>
+			)}
 		</Card>
 	);
 }

@@ -164,6 +164,7 @@ export default function ProgramDetailView({
 					<BallKnowledgeSection
 						entityType="program"
 						entityId={programId}
+						defaultAboutUniversityId={program?.university_id}
 						defaultAboutProgramId={programId}
 					/>
 				</TabsContent>

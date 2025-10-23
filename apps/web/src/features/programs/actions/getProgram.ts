@@ -90,6 +90,7 @@ export async function getProgram(programId: string) {
 		)
 		.eq("id", programId)
 		.eq("is_deleted", false)
+		.eq("program_events.is_deleted", false)
 		.eq("university_jobs.is_deleted", false)
 		.single();
 
