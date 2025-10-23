@@ -38,6 +38,7 @@ export async function createCampaignLead(data: {
 			status: data.status || "pending",
 			first_reply_date: data.first_reply_date,
 			internal_notes: data.internal_notes,
+			included_at: new Date().toISOString(),
 		})
 		.select()
 		.single();

@@ -82,6 +82,7 @@ export async function getCoach(id: string) {
 			)
 			.eq("id", id)
 			.eq("university_jobs.is_deleted", false)
+			.eq("campaign_leads.is_deleted", false)
 			.eq("campaign_leads.university_jobs.is_deleted", false)
 			.single();
 

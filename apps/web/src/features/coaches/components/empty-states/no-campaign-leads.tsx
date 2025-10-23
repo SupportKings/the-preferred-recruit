@@ -23,6 +23,7 @@ export function NoCampaignLeads({ coachId }: NoCampaignLeadsProps) {
 					</CardTitle>
 					<ManageCampaignLeadModal
 						coachId={coachId}
+						mode="create"
 						open={createModalOpen}
 						onOpenChange={setCreateModalOpen}
 					>

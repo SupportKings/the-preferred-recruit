@@ -217,27 +217,12 @@ export default function UniversityDetailView({
 			{/* Relationship Tabs */}
 			<Tabs defaultValue="programs" className="w-full">
 				<TabsList className="grid w-full grid-cols-6">
-					<TabsTrigger value="programs">
-						Programs ({university.programs?.length || 0})
-					</TabsTrigger>
-					<TabsTrigger value="jobs">
-						University Jobs (Coaches) ({university.university_jobs?.length || 0}
-						)
-					</TabsTrigger>
-					<TabsTrigger value="applications">
-						Athlete Applications ({university.athlete_applications?.length || 0}
-						)
-					</TabsTrigger>
-					<TabsTrigger value="leads">
-						Lead List Entries (
-						{university.school_lead_list_entries?.length || 0})
-					</TabsTrigger>
-					<TabsTrigger value="campaigns">
-						Campaign Leads ({university.campaign_leads?.length || 0})
-					</TabsTrigger>
-					<TabsTrigger value="knowledge">
-						Ball Knowledge ({ballKnowledgeData?.totalCount || 0})
-					</TabsTrigger>
+					<TabsTrigger value="programs">Programs</TabsTrigger>
+					<TabsTrigger value="jobs">University Jobs/Coaches</TabsTrigger>
+					<TabsTrigger value="applications">Athlete Applications</TabsTrigger>
+					<TabsTrigger value="leads">Lead List Entries</TabsTrigger>
+					<TabsTrigger value="campaigns">Campaign Leads</TabsTrigger>
+					<TabsTrigger value="knowledge">Ball Knowledge</TabsTrigger>
 				</TabsList>
 
 				<TabsContent value="programs" className="mt-4">

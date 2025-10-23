@@ -81,15 +81,17 @@ export default function CoachDetailView({ coachId }: CoachDetailViewProps) {
 				updateData.internal_notes = data.internal_notes || null;
 			} else if (editState.section === "contact" && "email" in data) {
 				// Contact & Social fields
-				updateData.email = data.email || null;
-				updateData.phone = data.phone || null;
-				updateData.twitter_profile = data.twitter_profile || null;
-				updateData.linkedin_profile = data.linkedin_profile || null;
-				updateData.instagram_profile = data.instagram_profile || null;
+				updateData.email = data.email || "";
+				updateData.phone = data.phone || "";
+				updateData.twitter_profile = data.twitter_profile || "";
+				updateData.linkedin_profile = data.linkedin_profile || "";
+				updateData.instagram_profile = data.instagram_profile || "";
 			}
 
 			// Call the update action
-			const result = await updateCoachAction(updateData as Parameters<typeof updateCoachAction>[0]);
+			const result = await updateCoachAction(
+				updateData as Parameters<typeof updateCoachAction>[0],
+			);
 
 			if (result?.validationErrors) {
 				// Handle validation errors

@@ -2,8 +2,6 @@
 
 import { type ReactNode, useState } from "react";
 
-import { useRouter } from "next/navigation";
-
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
@@ -12,6 +10,7 @@ import {
 	DialogDescription,
 	DialogHeader,
 	DialogTitle,
+	DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -51,7 +50,6 @@ export function ManageUniversityJobModal({
 
 	const [isLoading, setIsLoading] = useState(false);
 	const queryClient = useQueryClient();
-	const router = useRouter();
 
 	const [formData, setFormData] = useState({
 		university_id: "",
@@ -130,12 +128,20 @@ export function ManageUniversityJobModal({
 					queryKey: coachQueries.detail(coachId),
 				});
 
-				setOpen(false);
+				// Reset form
+				setFormData({
+					university_id: "",
+					program_id: "",
+					program_scope: "n/a",
+					job_title: "",
+					work_email: "",
+					work_phone: "",
+					start_date: "",
+					end_date: "",
+					internal_notes: "",
+				});
 
-				// Navigate to the newly created university job detail page
-				router.push(
-					`/dashboard/university-jobs/${result.data.data.universityJob.id}`,
-				);
+				setOpen(false);
 			} else {
 				toast.error("Failed to create university job");
 			}
@@ -149,7 +155,7 @@ export function ManageUniversityJobModal({
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
-			{children}
+			<DialogTrigger>{children}</DialogTrigger>
 			<DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
 				<DialogHeader>
 					<DialogTitle>Add University Job</DialogTitle>

@@ -31,6 +31,14 @@ export function CoachCampaignLeadsSection({
 	setDeleteModal,
 }: CoachCampaignLeadsSectionProps) {
 	const [createModalOpen, setCreateModalOpen] = useState(false);
+	const [editModal, setEditModal] = useState<{
+		isOpen: boolean;
+		lead: any;
+	}>({ isOpen: false, lead: null });
+
+	const handleEdit = (lead: any) => {
+		setEditModal({ isOpen: true, lead });
+	};
 
 	const handleDelete = (lead: any) => {
 		setDeleteModal({
@@ -41,7 +49,7 @@ export function CoachCampaignLeadsSection({
 		});
 	};
 
-	const leadColumns = createCampaignLeadsColumns(handleDelete);
+	const leadColumns = createCampaignLeadsColumns(handleEdit, handleDelete);
 
 	const leadTable = useReactTable({
 		data: campaignLeads || [],
@@ -65,6 +73,7 @@ export function CoachCampaignLeadsSection({
 						</CardTitle>
 						<ManageCampaignLeadModal
 							coachId={coachId}
+							mode="create"
 							open={createModalOpen}
 							onOpenChange={setCreateModalOpen}
 						>
@@ -82,6 +91,17 @@ export function CoachCampaignLeadsSection({
 					/>
 				</CardContent>
 			</Card>
+
+			{/* Edit Modal */}
+			{editModal.lead && (
+				<ManageCampaignLeadModal
+					coachId={coachId}
+					mode="edit"
+					campaignLead={editModal.lead}
+					open={editModal.isOpen}
+					onOpenChange={(open) => setEditModal({ ...editModal, isOpen: open })}
+				/>
+			)}
 		</>
 	);
 }

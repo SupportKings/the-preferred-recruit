@@ -2,7 +2,7 @@ import { StatusBadge } from "@/components/ui/status-badge";
 
 import { createColumnHelper } from "@tanstack/react-table";
 import { format } from "date-fns";
-import { ExternalLink, Trash2 } from "lucide-react";
+import { ExternalLink, Pencil, Trash2 } from "lucide-react";
 
 const formatDate = (dateString: string | null) => {
 	if (!dateString) return "Not set";
@@ -50,6 +50,7 @@ type CampaignLeadRow = {
 };
 
 export const createCampaignLeadsColumns = (
+	onEdit?: (lead: CampaignLeadRow) => void,
 	onDelete?: (lead: CampaignLeadRow) => void,
 ) => {
 	const columnHelper = createColumnHelper<CampaignLeadRow>();
@@ -144,23 +145,40 @@ export const createCampaignLeadsColumns = (
 		}),
 	];
 
-	if (onDelete) {
+	if (onEdit || onDelete) {
 		columns.push(
 			columnHelper.display({
 				id: "actions",
 				header: "",
 				cell: (info) => (
-					<button
-						type="button"
-						onClick={(e) => {
-							e.stopPropagation();
-							onDelete(info.row.original);
-						}}
-						className="text-destructive hover:text-destructive/80"
-						aria-label="Delete"
-					>
-						<Trash2 className="h-4 w-4" />
-					</button>
+					<div className="flex items-center gap-2">
+						{onEdit && (
+							<button
+								type="button"
+								onClick={(e) => {
+									e.stopPropagation();
+									onEdit(info.row.original);
+								}}
+								className="text-muted-foreground hover:text-foreground"
+								aria-label="Edit"
+							>
+								<Pencil className="h-4 w-4" />
+							</button>
+						)}
+						{onDelete && (
+							<button
+								type="button"
+								onClick={(e) => {
+									e.stopPropagation();
+									onDelete(info.row.original);
+								}}
+								className="text-destructive hover:text-destructive/80"
+								aria-label="Delete"
+							>
+								<Trash2 className="h-4 w-4" />
+							</button>
+						)}
+					</div>
 				),
 			}),
 		);

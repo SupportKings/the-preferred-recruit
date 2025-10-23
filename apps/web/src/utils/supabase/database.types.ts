@@ -576,6 +576,7 @@ export type Database = {
           application_id: string | null
           campaign_id: string | null
           coach_id: string | null
+          created_at: string | null
           deleted_at: string | null
           deleted_by: string | null
           first_reply_at: string | null
@@ -596,6 +597,7 @@ export type Database = {
           application_id?: string | null
           campaign_id?: string | null
           coach_id?: string | null
+          created_at?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           first_reply_at?: string | null
@@ -616,6 +618,7 @@ export type Database = {
           application_id?: string | null
           campaign_id?: string | null
           coach_id?: string | null
+          created_at?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           first_reply_at?: string | null
@@ -2767,30 +2770,6 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      citext: {
-        Args: { "": boolean } | { "": string } | { "": unknown }
-        Returns: string
-      }
-      citext_hash: {
-        Args: { "": string }
-        Returns: number
-      }
-      citextin: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      citextout: {
-        Args: { "": string }
-        Returns: unknown
-      }
-      citextrecv: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      citextsend: {
-        Args: { "": string }
-        Returns: string
-      }
       get_ball_knowledge_for_coach: {
         Args: {
           p_coach_id: string

@@ -1,8 +1,6 @@
 "use client";
 
-import { type ReactNode, useState } from "react";
-
-import { useRouter } from "next/navigation";
+import { type ReactNode, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -11,6 +9,7 @@ import {
 	DialogDescription,
 	DialogHeader,
 	DialogTitle,
+	DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -23,7 +22,10 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
-import { createCampaignLead } from "@/features/athletes/actions/campaignLeads";
+import {
+	createCampaignLead,
+	updateCampaignLead,
+} from "@/features/athletes/actions/campaignLeads";
 import { CampaignLookup } from "@/features/athletes/components/lookups/campaign-lookup";
 import { ProgramLookup } from "@/features/athletes/components/lookups/program-lookup";
 import { UniversityJobLookup } from "@/features/athletes/components/lookups/university-job-lookup";
@@ -35,6 +37,17 @@ import { coachQueries } from "../../queries/useCoaches";
 
 interface ManageCampaignLeadModalProps {
 	coachId: string;
+	mode?: "create" | "edit";
+	campaignLead?: {
+		id: string;
+		status?: string | null;
+		include_reason?: string | null;
+		internal_notes?: string | null;
+		university_job_id?: string | null;
+		campaign_id?: string | null;
+		university_id?: string | null;
+		program_id?: string | null;
+	};
 	children?: ReactNode;
 	open?: boolean;
 	onOpenChange?: (open: boolean) => void;
@@ -42,6 +55,8 @@ interface ManageCampaignLeadModalProps {
 
 export function ManageCampaignLeadModal({
 	coachId,
+	mode = "create",
+	campaignLead,
 	children,
 	open: externalOpen,
 	onOpenChange: externalOnOpenChange,
@@ -52,68 +67,118 @@ export function ManageCampaignLeadModal({
 
 	const [isLoading, setIsLoading] = useState(false);
 	const queryClient = useQueryClient();
-	const router = useRouter();
 
 	const [formData, setFormData] = useState({
-		campaign_id: "",
-		university_id: "",
-		program_id: "",
-		university_job_id: "",
+		campaign_id: campaignLead?.campaign_id || "",
+		university_id: campaignLead?.university_id || "",
+		program_id: campaignLead?.program_id || "",
+		university_job_id: campaignLead?.university_job_id || "",
 		source_lead_list_id: "",
-		include_reason: "",
-		status: "pending",
-		internal_notes: "",
+		include_reason: campaignLead?.include_reason || "",
+		status: campaignLead?.status || "pending",
+		internal_notes: campaignLead?.internal_notes || "",
 	});
+
+	// Update form data when campaignLead changes (for edit mode)
+	useEffect(() => {
+		if (mode === "edit" && campaignLead) {
+			setFormData({
+				campaign_id: campaignLead.campaign_id || "",
+				university_id: campaignLead.university_id || "",
+				program_id: campaignLead.program_id || "",
+				university_job_id: campaignLead.university_job_id || "",
+				source_lead_list_id: "",
+				include_reason: campaignLead.include_reason || "",
+				status: campaignLead.status || "pending",
+				internal_notes: campaignLead.internal_notes || "",
+			});
+		}
+	}, [mode, campaignLead]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
-		if (!formData.campaign_id) {
-			toast.error("Campaign is required");
-			return;
-		}
+		if (mode === "create") {
+			if (!formData.campaign_id) {
+				toast.error("Campaign is required");
+				return;
+			}
 
-		if (!formData.university_id) {
-			toast.error("University is required");
-			return;
+			if (!formData.university_id) {
+				toast.error("University is required");
+				return;
+			}
 		}
 
 		setIsLoading(true);
 
 		try {
-			const result = await createCampaignLead({
-				coach_id: coachId,
-				campaign_id: formData.campaign_id,
-				university_id: formData.university_id,
-				program_id: formData.program_id || undefined,
-				university_job_id: formData.university_job_id || undefined,
-				source_lead_list_id: formData.source_lead_list_id || undefined,
-				include_reason: formData.include_reason || undefined,
-				status: formData.status,
-				internal_notes: formData.internal_notes || undefined,
-			});
+			let result;
 
-			if (result?.success && result.data) {
-				toast.success("Campaign lead created successfully!");
+			if (mode === "edit" && campaignLead) {
+				// Edit mode - only update editable fields
+				result = await updateCampaignLead(campaignLead.id, {
+					status: formData.status,
+					include_reason: formData.include_reason || undefined,
+					internal_notes: formData.internal_notes || undefined,
+					university_job_id: formData.university_job_id || undefined,
+				});
 
+				if (result?.success) {
+					toast.success("Campaign lead updated successfully!");
+				} else {
+					toast.error("Failed to update campaign lead");
+				}
+			} else {
+				// Create mode
+				result = await createCampaignLead({
+					coach_id: coachId,
+					campaign_id: formData.campaign_id,
+					university_id: formData.university_id,
+					program_id: formData.program_id || undefined,
+					university_job_id: formData.university_job_id || undefined,
+					source_lead_list_id: formData.source_lead_list_id || undefined,
+					include_reason: formData.include_reason || undefined,
+					status: formData.status,
+					internal_notes: formData.internal_notes || undefined,
+				});
+
+				if (result?.success && result.data) {
+					toast.success("Campaign lead created successfully!");
+
+					// Reset form for create mode
+					setFormData({
+						campaign_id: "",
+						university_id: "",
+						program_id: "",
+						university_job_id: "",
+						source_lead_list_id: "",
+						include_reason: "",
+						status: "pending",
+						internal_notes: "",
+					});
+				} else {
+					toast.error("Failed to create campaign lead");
+				}
+			}
+
+			if (result?.success) {
 				// Invalidate coach queries
 				await queryClient.invalidateQueries({
 					queryKey: coachQueries.detail(coachId),
 				});
 
 				setOpen(false);
-
-				// Navigate to the campaign detail page
-				router.push(`/dashboard/campaigns/${formData.campaign_id}`);
-			} else {
-				toast.error("Failed to create campaign lead");
 			}
 		} catch (error) {
-			console.error("Error creating campaign lead:", error);
+			console.error(
+				`Error ${mode === "edit" ? "updating" : "creating"} campaign lead:`,
+				error,
+			);
 			toast.error(
 				error instanceof Error
 					? error.message
-					: "Failed to create campaign lead",
+					: `Failed to ${mode === "edit" ? "update" : "create"} campaign lead`,
 			);
 		} finally {
 			setIsLoading(false);
@@ -122,60 +187,77 @@ export function ManageCampaignLeadModal({
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
-			{children}
+			<DialogTrigger>{children}</DialogTrigger>
 			<DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
 				<DialogHeader>
-					<DialogTitle>Add Campaign Lead</DialogTitle>
+					<DialogTitle>
+						{mode === "edit" ? "Edit Campaign Lead" : "Add Campaign Lead"}
+					</DialogTitle>
 					<DialogDescription>
-						Create a new campaign lead for this coach.
+						{mode === "edit"
+							? "Update the campaign lead details."
+							: "Create a new campaign lead for this coach."}
 					</DialogDescription>
 				</DialogHeader>
 
 				<form onSubmit={handleSubmit} className="space-y-4">
-					{/* Campaign (Required) */}
-					<CampaignLookup
-						value={formData.campaign_id}
-						onChange={(value) =>
-							setFormData((prev) => ({ ...prev, campaign_id: value }))
-						}
-						label="Campaign"
-						required
-					/>
+					{mode === "create" && (
+						<>
+							{/* Campaign (Required) */}
+							<CampaignLookup
+								value={formData.campaign_id}
+								onChange={(value) =>
+									setFormData((prev) => ({ ...prev, campaign_id: value }))
+								}
+								label="Campaign"
+								required
+							/>
 
-					{/* University (Required) */}
-					<UniversityLookup
-						value={formData.university_id}
-						onChange={(value) =>
-							setFormData((prev) => ({
-								...prev,
-								university_id: value,
-								// Clear dependent fields when university changes
-								program_id: "",
-								university_job_id: "",
-							}))
-						}
-						label="University"
-						required
-					/>
+							{/* University (Required) */}
+							<UniversityLookup
+								value={formData.university_id}
+								onChange={(value) =>
+									setFormData((prev) => ({
+										...prev,
+										university_id: value,
+										// Clear dependent fields when university changes
+										program_id: "",
+										university_job_id: "",
+									}))
+								}
+								label="University"
+								required
+							/>
 
-					{/* Program */}
-					<ProgramLookup
-						value={formData.program_id}
-						onChange={(value) =>
-							setFormData((prev) => ({ ...prev, program_id: value }))
-						}
-						label="Program"
-						universityId={formData.university_id}
-					/>
+							{/* Program */}
+							<ProgramLookup
+								value={formData.program_id}
+								onChange={(value) =>
+									setFormData((prev) => ({ ...prev, program_id: value }))
+								}
+								label="Program"
+								universityId={formData.university_id}
+							/>
+						</>
+					)}
 
-					{/* University Job */}
+					{/* University Job - editable in both modes */}
 					<UniversityJobLookup
+						key={
+							mode === "edit"
+								? `edit-${campaignLead?.id}-${campaignLead?.university_id}`
+								: `create-${formData.university_id}`
+						}
 						value={formData.university_job_id}
 						onChange={(value) =>
 							setFormData((prev) => ({ ...prev, university_job_id: value }))
 						}
 						label="University Job"
-						universityId={formData.university_id}
+						universityId={
+							mode === "edit"
+								? campaignLead?.university_id || undefined
+								: formData.university_id
+						}
 					/>
 
 					{/* Status */}
@@ -242,7 +324,13 @@ export function ManageCampaignLeadModal({
 							Cancel
 						</Button>
 						<Button type="submit" disabled={isLoading}>
-							{isLoading ? "Creating..." : "Create Lead"}
+							{isLoading
+								? mode === "edit"
+									? "Updating..."
+									: "Creating..."
+								: mode === "edit"
+									? "Update Lead"
+									: "Create Lead"}
 						</Button>
 					</div>
 				</form>
