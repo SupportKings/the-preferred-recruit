@@ -216,6 +216,19 @@ export async function getUniversitiesWithFilters(
 	try {
 		const supabase = await createClient();
 
+		// Separate conference and division filters from other filters
+		const conferenceFilter = filters.find(
+			(f) => f.columnId === "current_conference",
+		);
+		const divisionFilter = filters.find(
+			(f) => f.columnId === "current_division",
+		);
+		const otherFilters = filters.filter(
+			(f) =>
+				f.columnId !== "current_conference" &&
+				f.columnId !== "current_division",
+		);
+
 		let query: any = supabase
 			.from("universities")
 			.select(
@@ -242,34 +255,48 @@ export async function getUniversitiesWithFilters(
 			)
 			.eq("is_deleted", false);
 
-		// Apply filters with proper operator support
-		// Note: current_conference and current_division are computed fields and cannot be filtered at query level
-		// They are filtered post-processing after data is returned
-		filters.forEach((filter) => {
+		// Apply regular filters (not conference/division)
+		otherFilters.forEach((filter) => {
 			if (filter.values && filter.values.length > 0) {
 				const values = filter.values;
 				const operator = filter.operator || "is";
 				const columnId = filter.columnId;
 
-				// Skip computed fields (they will be filtered post-query)
-				if (
-					columnId === "current_conference" ||
-					columnId === "current_division"
-				) {
-					return;
-				}
-
 				// Apply filter based on column type and operator
 				switch (columnId) {
 					case "name":
 					case "city":
-					case "state":
-					case "type_public_private":
 						// Text fields - support contains/does not contain
 						if (operator === "contains") {
 							query = query.ilike(columnId, `%${values[0]}%`);
 						} else if (operator === "does not contain") {
 							query = query.not(columnId, "ilike", `%${values[0]}%`);
+						}
+						break;
+
+					case "state":
+					case "type_public_private":
+						// Text/Option fields - support both text search and exact match
+						if (operator === "contains") {
+							query = query.ilike(columnId, `%${values[0]}%`);
+						} else if (operator === "does not contain") {
+							query = query.not(columnId, "ilike", `%${values[0]}%`);
+						} else if (operator === "is" || operator === "is any of") {
+							// "is" for single value, "is any of" for multiple values
+							// Both use IN logic (OR)
+							if (values.length === 1) {
+								query = query.eq(columnId, values[0]);
+							} else {
+								query = query.in(columnId, values);
+							}
+						} else if (operator === "is not" || operator === "is none of") {
+							// "is not" for single value, "is none of" for multiple values
+							// Both use NOT IN logic (AND NOT)
+							if (values.length === 1) {
+								query = query.neq(columnId, values[0]);
+							} else {
+								query = query.not(columnId, "in", values);
+							}
 						}
 						break;
 
@@ -288,11 +315,23 @@ export async function getUniversitiesWithFilters(
 						break;
 
 					case "email_blocked":
-						// Boolean field - support is/is not
-						if (operator === "is") {
-							query = query.eq(columnId, values[0] === "true");
-						} else if (operator === "is not") {
-							query = query.not(columnId, "eq", values[0] === "true");
+						// Boolean field - support is/is not/is any of/is none of
+						if (operator === "is" || operator === "is any of") {
+							if (values.length === 1) {
+								query = query.eq(columnId, values[0] === "true");
+							} else {
+								// Multiple values for boolean (both true and false selected = all records)
+								// Convert string values to booleans
+								const boolValues = values.map((v: string) => v === "true");
+								query = query.in(columnId, boolValues);
+							}
+						} else if (operator === "is not" || operator === "is none of") {
+							if (values.length === 1) {
+								query = query.not(columnId, "eq", values[0] === "true");
+							} else {
+								const boolValues = values.map((v: string) => v === "true");
+								query = query.not(columnId, "in", boolValues);
+							}
 						}
 						break;
 				}
@@ -307,81 +346,132 @@ export async function getUniversitiesWithFilters(
 			query = query.order("name", { ascending: true });
 		}
 
-		// Apply pagination
-		const from = page * pageSize;
-		const to = from + pageSize - 1;
-		query = query.range(from, to);
+		// If conference or division filters exist, we need to fetch all data first
+		// because we can't filter on nested fields in Supabase
+		let data: any[] = [];
+		let totalCount = 0;
 
-		const { data, error, count } = await query;
+		if (conferenceFilter || divisionFilter) {
+			// Fetch ALL matching universities (without pagination)
+			const { data: allData, error } = await query;
 
-		if (error) {
-			console.error("Error fetching universities with filters:", error);
-			return { data: [], count: 0 };
-		}
+			if (error) {
+				console.error("Error fetching universities with filters:", error);
+				return { data: [], count: 0 };
+			}
 
-		// Process data to filter current conferences and divisions (end_date is null)
-		let processedData = data?.map((university: any) => {
-			const currentConference = university.university_conferences?.find(
-				(uc: any) => uc.end_date === null,
-			);
-			const currentDivision = university.university_divisions?.find(
-				(ud: any) => ud.end_date === null,
-			);
+			// Process and filter by conference/division in JavaScript
+			let filtered =
+				allData?.map((university: any) => {
+					const currentConference = university.university_conferences?.find(
+						(uc: any) => uc.end_date === null,
+					);
+					const currentDivision = university.university_divisions?.find(
+						(ud: any) => ud.end_date === null,
+					);
 
-			return {
-				...university,
-				current_conference: currentConference?.conferences?.name || null,
-				current_division: currentDivision?.divisions?.name || null,
-			};
-		});
+					return {
+						...university,
+						current_conference: currentConference?.conferences?.name || null,
+						current_division: currentDivision?.divisions?.name || null,
+					};
+				}) || [];
 
-		// Apply client-side filtering for current_conference and current_division
-		filters.forEach((filter) => {
-			if (filter.values && filter.values.length > 0) {
-				const values = filter.values;
-				const operator = filter.operator || "is";
-				const columnId = filter.columnId;
+			// Apply conference filter
+			if (
+				conferenceFilter &&
+				conferenceFilter.values &&
+				conferenceFilter.values.length > 0
+			) {
+				const operator = conferenceFilter.operator || "is";
+				const values = conferenceFilter.values;
 
-				if (columnId === "current_conference") {
-					if (operator === "is" || operator === "contains") {
-						processedData = processedData?.filter((university: any) => {
-							const value = university.current_conference;
-							return values.some((filterValue: string) =>
-								value?.toLowerCase().includes(filterValue.toLowerCase()),
-							);
-						});
-					} else if (operator === "is not" || operator === "does not contain") {
-						processedData = processedData?.filter((university: any) => {
-							const value = university.current_conference;
-							return !values.some((filterValue: string) =>
-								value?.toLowerCase().includes(filterValue.toLowerCase()),
-							);
-						});
-					}
-				} else if (columnId === "current_division") {
-					if (operator === "is" || operator === "contains") {
-						processedData = processedData?.filter((university: any) => {
-							const value = university.current_division;
-							return values.some((filterValue: string) =>
-								value?.toLowerCase().includes(filterValue.toLowerCase()),
-							);
-						});
-					} else if (operator === "is not" || operator === "does not contain") {
-						processedData = processedData?.filter((university: any) => {
-							const value = university.current_division;
-							return !values.some((filterValue: string) =>
-								value?.toLowerCase().includes(filterValue.toLowerCase()),
-							);
-						});
-					}
+				if (
+					operator === "is" ||
+					operator === "is any of" ||
+					operator === "contains"
+				) {
+					filtered = filtered.filter((uni: any) =>
+						values.includes(uni.current_conference),
+					);
+				} else if (
+					operator === "is not" ||
+					operator === "is none of" ||
+					operator === "does not contain"
+				) {
+					filtered = filtered.filter(
+						(uni: any) => !values.includes(uni.current_conference),
+					);
 				}
 			}
-		});
 
-		// Update count after client-side filtering
-		const finalCount = processedData?.length || 0;
+			// Apply division filter
+			if (
+				divisionFilter &&
+				divisionFilter.values &&
+				divisionFilter.values.length > 0
+			) {
+				const operator = divisionFilter.operator || "is";
+				const values = divisionFilter.values;
 
-		return { data: processedData || [], count: finalCount };
+				if (
+					operator === "is" ||
+					operator === "is any of" ||
+					operator === "contains"
+				) {
+					filtered = filtered.filter((uni: any) =>
+						values.includes(uni.current_division),
+					);
+				} else if (
+					operator === "is not" ||
+					operator === "is none of" ||
+					operator === "does not contain"
+				) {
+					filtered = filtered.filter(
+						(uni: any) => !values.includes(uni.current_division),
+					);
+				}
+			}
+
+			// Apply pagination to filtered results
+			totalCount = filtered.length;
+			const from = page * pageSize;
+			const to = from + pageSize;
+			data = filtered.slice(from, to);
+		} else {
+			// No conference/division filters - use database pagination
+			const from = page * pageSize;
+			const to = from + pageSize - 1;
+			query = query.range(from, to);
+
+			const { data: dbData, error, count } = await query;
+
+			if (error) {
+				console.error("Error fetching universities with filters:", error);
+				return { data: [], count: 0 };
+			}
+
+			// Process data to extract current conferences and divisions
+			data =
+				dbData?.map((university: any) => {
+					const currentConference = university.university_conferences?.find(
+						(uc: any) => uc.end_date === null,
+					);
+					const currentDivision = university.university_divisions?.find(
+						(ud: any) => ud.end_date === null,
+					);
+
+					return {
+						...university,
+						current_conference: currentConference?.conferences?.name || null,
+						current_division: currentDivision?.divisions?.name || null,
+					};
+				}) || [];
+
+			totalCount = count || 0;
+		}
+
+		return { data, count: totalCount };
 	} catch (error) {
 		console.error("Unexpected error in getUniversitiesWithFilters:", error);
 		return { data: [], count: 0 };
@@ -462,6 +552,20 @@ export async function getUniversitiesWithFaceted(
 								switch (filterColumnId) {
 									case "name":
 									case "city":
+										if (operator === "contains") {
+											facetQuery = facetQuery.ilike(
+												filterColumnId,
+												`%${values[0]}%`,
+											);
+										} else if (operator === "does not contain") {
+											facetQuery = facetQuery.not(
+												filterColumnId,
+												"ilike",
+												`%${values[0]}%`,
+											);
+										}
+										break;
+
 									case "state":
 									case "type_public_private":
 										if (operator === "contains") {
@@ -475,6 +579,29 @@ export async function getUniversitiesWithFaceted(
 												"ilike",
 												`%${values[0]}%`,
 											);
+										} else if (operator === "is" || operator === "is any of") {
+											if (values.length === 1) {
+												facetQuery = facetQuery.eq(filterColumnId, values[0]);
+											} else {
+												facetQuery = facetQuery.in(filterColumnId, values);
+											}
+										} else if (
+											operator === "is not" ||
+											operator === "is none of"
+										) {
+											if (values.length === 1) {
+												facetQuery = facetQuery.not(
+													filterColumnId,
+													"eq",
+													values[0],
+												);
+											} else {
+												facetQuery = facetQuery.not(
+													filterColumnId,
+													"in",
+													values,
+												);
+											}
 										}
 										break;
 
@@ -505,17 +632,38 @@ export async function getUniversitiesWithFaceted(
 										break;
 
 									case "email_blocked":
-										if (operator === "is") {
-											facetQuery = facetQuery.eq(
-												filterColumnId,
-												values[0] === "true",
-											);
-										} else if (operator === "is not") {
-											facetQuery = facetQuery.not(
-												filterColumnId,
-												"eq",
-												values[0] === "true",
-											);
+										if (operator === "is" || operator === "is any of") {
+											if (values.length === 1) {
+												facetQuery = facetQuery.eq(
+													filterColumnId,
+													values[0] === "true",
+												);
+											} else {
+												const boolValues = values.map(
+													(v: string) => v === "true",
+												);
+												facetQuery = facetQuery.in(filterColumnId, boolValues);
+											}
+										} else if (
+											operator === "is not" ||
+											operator === "is none of"
+										) {
+											if (values.length === 1) {
+												facetQuery = facetQuery.not(
+													filterColumnId,
+													"eq",
+													values[0] === "true",
+												);
+											} else {
+												const boolValues = values.map(
+													(v: string) => v === "true",
+												);
+												facetQuery = facetQuery.not(
+													filterColumnId,
+													"in",
+													boolValues,
+												);
+											}
 										}
 										break;
 								}
@@ -533,22 +681,61 @@ export async function getUniversitiesWithFaceted(
 						return;
 					}
 
-					// Process and count computed values
-					const facetMap = new Map<string, number>();
-					facetData?.forEach((university: any) => {
-						let value: string | null = null;
-
-						if (columnId === "current_conference") {
+					// Process data to add computed fields
+					let processedFacetData =
+						facetData?.map((university: any) => {
 							const currentConference = university.university_conferences?.find(
 								(uc: any) => uc.end_date === null,
 							);
-							value = currentConference?.conferences?.name || null;
-						} else if (columnId === "current_division") {
 							const currentDivision = university.university_divisions?.find(
 								(ud: any) => ud.end_date === null,
 							);
-							value = currentDivision?.divisions?.name || null;
+
+							return {
+								...university,
+								current_conference:
+									currentConference?.conferences?.name || null,
+								current_division: currentDivision?.divisions?.name || null,
+							};
+						}) || [];
+
+					// Apply client-side filtering for OTHER conference/division filters
+					filters.forEach((filter) => {
+						if (
+							filter.columnId !== columnId &&
+							(filter.columnId === "current_conference" ||
+								filter.columnId === "current_division") &&
+							filter.values &&
+							filter.values.length > 0
+						) {
+							const operator = filter.operator || "is";
+							const values = filter.values;
+							const filterColumn = filter.columnId;
+
+							if (
+								operator === "is" ||
+								operator === "is any of" ||
+								operator === "contains"
+							) {
+								processedFacetData = processedFacetData.filter((uni: any) =>
+									values.includes(uni[filterColumn]),
+								);
+							} else if (
+								operator === "is not" ||
+								operator === "is none of" ||
+								operator === "does not contain"
+							) {
+								processedFacetData = processedFacetData.filter(
+									(uni: any) => !values.includes(uni[filterColumn]),
+								);
+							}
 						}
+					});
+
+					// Count the values
+					const facetMap = new Map<string, number>();
+					processedFacetData.forEach((university: any) => {
+						const value = university[columnId];
 
 						if (value !== null && value !== undefined) {
 							const key = String(value);
@@ -584,6 +771,20 @@ export async function getUniversitiesWithFaceted(
 							switch (filterColumnId) {
 								case "name":
 								case "city":
+									if (operator === "contains") {
+										facetQuery = facetQuery.ilike(
+											filterColumnId,
+											`%${values[0]}%`,
+										);
+									} else if (operator === "does not contain") {
+										facetQuery = facetQuery.not(
+											filterColumnId,
+											"ilike",
+											`%${values[0]}%`,
+										);
+									}
+									break;
+
 								case "state":
 								case "type_public_private":
 									if (operator === "contains") {
@@ -597,6 +798,25 @@ export async function getUniversitiesWithFaceted(
 											"ilike",
 											`%${values[0]}%`,
 										);
+									} else if (operator === "is" || operator === "is any of") {
+										if (values.length === 1) {
+											facetQuery = facetQuery.eq(filterColumnId, values[0]);
+										} else {
+											facetQuery = facetQuery.in(filterColumnId, values);
+										}
+									} else if (
+										operator === "is not" ||
+										operator === "is none of"
+									) {
+										if (values.length === 1) {
+											facetQuery = facetQuery.not(
+												filterColumnId,
+												"eq",
+												values[0],
+											);
+										} else {
+											facetQuery = facetQuery.not(filterColumnId, "in", values);
+										}
 									}
 									break;
 
@@ -627,17 +847,38 @@ export async function getUniversitiesWithFaceted(
 									break;
 
 								case "email_blocked":
-									if (operator === "is") {
-										facetQuery = facetQuery.eq(
-											filterColumnId,
-											values[0] === "true",
-										);
-									} else if (operator === "is not") {
-										facetQuery = facetQuery.not(
-											filterColumnId,
-											"eq",
-											values[0] === "true",
-										);
+									if (operator === "is" || operator === "is any of") {
+										if (values.length === 1) {
+											facetQuery = facetQuery.eq(
+												filterColumnId,
+												values[0] === "true",
+											);
+										} else {
+											const boolValues = values.map(
+												(v: string) => v === "true",
+											);
+											facetQuery = facetQuery.in(filterColumnId, boolValues);
+										}
+									} else if (
+										operator === "is not" ||
+										operator === "is none of"
+									) {
+										if (values.length === 1) {
+											facetQuery = facetQuery.not(
+												filterColumnId,
+												"eq",
+												values[0] === "true",
+											);
+										} else {
+											const boolValues = values.map(
+												(v: string) => v === "true",
+											);
+											facetQuery = facetQuery.not(
+												filterColumnId,
+												"in",
+												boolValues,
+											);
+										}
 									}
 									break;
 							}

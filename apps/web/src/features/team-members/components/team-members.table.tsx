@@ -153,7 +153,7 @@ function TeamMembersTableContent({
 	// Reset to first page when filters change
 	useEffect(() => {
 		setCurrentPage(0);
-	}, []);
+	}, [filters]);
 
 	// Fetch team members data with faceted data in single optimized call
 	const {
@@ -256,6 +256,7 @@ function TeamMembersTableContent({
 			},
 			enableSelection: true,
 			pageSize: 25,
+			pageIndex: currentPage,
 			serverSide: true,
 			rowActions,
 			isLoading,

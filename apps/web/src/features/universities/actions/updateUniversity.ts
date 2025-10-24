@@ -34,8 +34,6 @@ const updateUniversitySchema = z.object({
 	ipeds_nces_id: z.string().optional().nullable(),
 	internal_notes: z.string().optional().nullable(),
 	institution_flags_raw: z.string().optional().nullable(),
-	conference_raw: z.string().optional().nullable(),
-	division_raw: z.string().optional().nullable(),
 });
 
 export const updateUniversity = actionClient

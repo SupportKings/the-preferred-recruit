@@ -306,6 +306,7 @@ function AthletesTableContent({
 			faceted: {},
 			enableSelection: true,
 			pageSize: 25,
+			pageIndex: currentPage,
 			serverSide: true,
 			rowActions,
 			isLoading,

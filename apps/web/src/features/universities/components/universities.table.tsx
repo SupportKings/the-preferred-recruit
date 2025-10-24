@@ -239,7 +239,7 @@ function UniversitiesTableContent({
 	// Reset to first page when filters change
 	useEffect(() => {
 		setCurrentPage(0);
-	}, []);
+	}, [filters]);
 
 	// Fetch universities data with faceted data in single optimized call
 	const {
@@ -422,6 +422,7 @@ function UniversitiesTableContent({
 			},
 			enableSelection: true,
 			pageSize: 25,
+			pageIndex: currentPage,
 			serverSide: true,
 			rowActions,
 			isLoading,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useDataTableFilters } from "@/components/data-table-filter";
 import type {
@@ -34,6 +34,7 @@ interface UseUniversalTableProps<T extends UniversalTableRow> {
 	// UI configuration
 	enableSelection?: boolean;
 	pageSize?: number;
+	pageIndex?: number;
 	serverSide?: boolean;
 	rowActions?: RowAction<T>[];
 
@@ -57,6 +58,7 @@ export function useUniversalTable<T extends UniversalTableRow>({
 	faceted = {},
 	enableSelection = false,
 	pageSize = 25,
+	pageIndex = 0,
 	serverSide = true,
 	rowActions,
 	isLoading = false,
@@ -66,8 +68,13 @@ export function useUniversalTable<T extends UniversalTableRow>({
 	onSortingChange,
 }: UseUniversalTableProps<T>) {
 	const [rowSelection, setRowSelection] = useState({});
-	const [pagination, setPagination] = useState({ pageIndex: 0, pageSize });
+	const [pagination, setPagination] = useState({ pageIndex, pageSize });
 	const [sorting, setSorting] = useState<SortingState>([]);
+
+	// Sync internal pagination state with external pageIndex prop
+	useEffect(() => {
+		setPagination((prev) => ({ ...prev, pageIndex }));
+	}, [pageIndex]);
 
 	// Handle pagination changes
 	const handlePaginationChange = (updater: any) => {

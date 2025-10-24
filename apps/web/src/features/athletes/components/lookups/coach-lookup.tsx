@@ -58,19 +58,26 @@ export function CoachLookup({
 	// Fetch selected coach details when value changes
 	useEffect(() => {
 		const fetchSelectedCoach = async () => {
-			if (value && !selectedCoach) {
-				const results = await searchCoaches("", universityId, 1000);
-				const found = results.find((coach) => coach.id === value);
-				if (found) {
-					setSelectedCoach(found);
+			if (value) {
+				// Check if we already have the coach in our coaches list
+				const foundInList = coaches.find((coach) => coach.id === value);
+				if (foundInList) {
+					setSelectedCoach(foundInList);
+				} else {
+					// Fetch from server if not in current list
+					const results = await searchCoaches("", universityId, 1000);
+					const found = results.find((coach) => coach.id === value);
+					if (found) {
+						setSelectedCoach(found);
+					}
 				}
-			} else if (!value) {
+			} else {
 				setSelectedCoach(null);
 			}
 		};
 
 		fetchSelectedCoach();
-	}, [value, universityId, selectedCoach]);
+	}, [value, universityId, coaches]);
 
 	// Debounced search
 	useEffect(() => {
