@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UniversalDataTable } from "@/components/universal-data-table/universal-data-table";
@@ -38,16 +38,25 @@ export function AthleteContactsSection({
 		data: null,
 	});
 
-	// Filter out soft-deleted contacts
-	const activeContactAthletes =
-		contactAthletes?.filter(
-			(ca: any) => !ca.contact?.is_deleted && ca.contact,
-		) || [];
+	// Memoize the onOpenChange callback to prevent re-renders
+	const handleModalOpenChange = useCallback((open: boolean) => {
+		setEditModal((prev) => ({ ...prev, isOpen: open }));
+	}, []);
 
-	const contactColumns = createContactColumns();
-	const contactRowActions = createContactRowActions(
-		setDeleteModal || (() => {}),
-		setEditModal,
+	// Filter out soft-deleted contacts
+	const activeContactAthletes = useMemo(
+		() =>
+			contactAthletes?.filter(
+				(ca: any) => !ca.contact?.is_deleted && ca.contact,
+			) || [],
+		[contactAthletes],
+	);
+
+	const contactColumns = useMemo(() => createContactColumns(), []);
+
+	const contactRowActions = useMemo(
+		() => createContactRowActions(setDeleteModal || (() => {}), setEditModal),
+		[setDeleteModal, setEditModal],
 	);
 
 	const contactTable = useReactTable({
@@ -93,9 +102,7 @@ export function AthleteContactsSection({
 				contactAthlete={editModal.data}
 				mode="edit"
 				open={editModal.isOpen && editModal.type === "contact"}
-				onOpenChange={(open: boolean) =>
-					setEditModal((prev) => ({ ...prev, isOpen: open }))
-				}
+				onOpenChange={handleModalOpenChange}
 			/>
 		</Card>
 	);

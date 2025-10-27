@@ -2,6 +2,8 @@
 
 import { type ReactNode, useEffect, useState } from "react";
 
+import { createClient } from "@/utils/supabase/client";
+
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -27,6 +29,7 @@ import {
 	updateCampaignLead,
 } from "@/features/athletes/actions/campaignLeads";
 import { CampaignLookup } from "@/features/athletes/components/lookups/campaign-lookup";
+import { LeadListLookup } from "@/features/athletes/components/lookups/lead-list-lookup";
 import { ProgramLookup } from "@/features/athletes/components/lookups/program-lookup";
 import { UniversityJobLookup } from "@/features/athletes/components/lookups/university-job-lookup";
 import { UniversityLookup } from "@/features/athletes/components/lookups/university-lookup";
@@ -67,6 +70,9 @@ export function ManageCampaignLeadModal({
 
 	const [isLoading, setIsLoading] = useState(false);
 	const queryClient = useQueryClient();
+	const [selectedCampaignAthleteId, setSelectedCampaignAthleteId] = useState<
+		string | null
+	>(null);
 
 	const [formData, setFormData] = useState({
 		campaign_id: campaignLead?.campaign_id || "",
@@ -78,6 +84,29 @@ export function ManageCampaignLeadModal({
 		status: campaignLead?.status || "pending",
 		internal_notes: campaignLead?.internal_notes || "",
 	});
+
+	// Fetch campaign's athlete_id when campaign is selected
+	useEffect(() => {
+		const fetchCampaignAthleteId = async () => {
+			if (!formData.campaign_id) {
+				setSelectedCampaignAthleteId(null);
+				return;
+			}
+
+			const supabase = createClient();
+			const { data, error } = await supabase
+				.from("campaigns")
+				.select("athlete_id")
+				.eq("id", formData.campaign_id)
+				.single();
+
+			if (!error && (data as any)?.athlete_id) {
+				setSelectedCampaignAthleteId((data as any).athlete_id);
+			}
+		};
+
+		fetchCampaignAthleteId();
+	}, [formData.campaign_id]);
 
 	// Update form data when campaignLead changes (for edit mode)
 	useEffect(() => {
@@ -207,7 +236,12 @@ export function ManageCampaignLeadModal({
 							<CampaignLookup
 								value={formData.campaign_id}
 								onChange={(value) =>
-									setFormData((prev) => ({ ...prev, campaign_id: value }))
+									setFormData((prev) => ({
+										...prev,
+										campaign_id: value,
+										// Clear lead list when campaign changes
+										source_lead_list_id: "",
+									}))
 								}
 								label="Campaign"
 								required
@@ -237,6 +271,19 @@ export function ManageCampaignLeadModal({
 								}
 								label="Program"
 								universityId={formData.university_id}
+							/>
+							{/* Source Lead List */}
+							<LeadListLookup
+								value={formData.source_lead_list_id}
+								onChange={(value) =>
+									setFormData((prev) => ({
+										...prev,
+										source_lead_list_id: value,
+									}))
+								}
+								athleteId={selectedCampaignAthleteId || undefined}
+								label="Source Lead List"
+								disabled={!formData.campaign_id}
 							/>
 						</>
 					)}

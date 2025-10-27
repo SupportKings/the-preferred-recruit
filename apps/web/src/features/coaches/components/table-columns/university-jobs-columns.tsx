@@ -32,6 +32,7 @@ type UniversityJobRow = {
 	end_date: string | null;
 	internal_notes: string | null;
 	universities?: {
+		id: string | null;
 		name: string | null;
 		city: string | null;
 		region: string | null;
@@ -53,8 +54,38 @@ export const createUniversityJobsColumns = (
 		}),
 		columnHelper.accessor("universities.name", {
 			header: "University",
-			cell: (info) =>
-				info.getValue() || info.row.original.universities?.name || "Unknown",
+			cell: (info) => {
+				const universityName =
+					info.getValue() || info.row.original.universities?.name || "Unknown";
+				const universityId = info.row.original.universities?.id;
+
+				if (!universityId) {
+					return <span>{universityName}</span>;
+				}
+
+				return (
+					<div className="flex items-center gap-2">
+						<a
+							href={`/dashboard/universities/${universityId}`}
+							target="_blank"
+							rel="noopener noreferrer"
+							className="text-primary hover:underline"
+							onClick={(e) => e.stopPropagation()}
+						>
+							{universityName}
+						</a>
+						<a
+							href={`/dashboard/universities/${universityId}`}
+							target="_blank"
+							rel="noopener noreferrer"
+							className="text-primary hover:text-primary/80"
+							onClick={(e) => e.stopPropagation()}
+						>
+							<ExternalLink className="h-4 w-4" />
+						</a>
+					</div>
+				);
+			},
 		}),
 		columnHelper.accessor("universities.city", {
 			header: "City",

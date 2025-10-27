@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState } from "react";
 
 import Link from "next/link";
 
@@ -50,7 +50,7 @@ const formatRelationship = (
 };
 
 // Inline edit component for Primary status
-function InlinePrimaryCell({
+const InlinePrimaryCell = memo(function InlinePrimaryCell({
 	contactAthleteId,
 	currentIsPrimary,
 }: {
@@ -70,6 +70,7 @@ function InlinePrimaryCell({
 		}
 
 		setIsUpdating(true);
+		setIsEditing(false);
 		try {
 			await updateAthleteContact(contactAthleteId, {
 				is_primary: newIsPrimary,
@@ -83,40 +84,29 @@ function InlinePrimaryCell({
 			toast.error("Failed to update primary status");
 		} finally {
 			setIsUpdating(false);
-			setIsEditing(false);
 		}
 	};
 
-	if (isEditing) {
-		return (
-			<Select
-				value={isPrimary.toString()}
-				onValueChange={handlePrimaryChange}
-				disabled={isUpdating}
-				open={isEditing}
-				onOpenChange={setIsEditing}
-			>
-				<SelectTrigger className="h-8 w-full">
-					<SelectValue />
-				</SelectTrigger>
-				<SelectContent>
-					<SelectItem value="true">Primary</SelectItem>
-					<SelectItem value="false">Secondary</SelectItem>
-				</SelectContent>
-			</Select>
-		);
-	}
-
 	return (
-		<button
-			type="button"
-			onClick={() => setIsEditing(true)}
-			className="cursor-pointer transition-opacity hover:opacity-70"
+		<Select
+			value={isPrimary.toString()}
+			onValueChange={handlePrimaryChange}
+			disabled={isUpdating}
+			open={isEditing}
+			onOpenChange={setIsEditing}
 		>
-			<StatusBadge>{isPrimary ? "Primary" : "Secondary"}</StatusBadge>
-		</button>
+			<SelectTrigger className="h-8 w-[140px] border-none bg-transparent hover:bg-accent">
+				<SelectValue>
+					<StatusBadge>{isPrimary ? "Primary" : "Secondary"}</StatusBadge>
+				</SelectValue>
+			</SelectTrigger>
+			<SelectContent>
+				<SelectItem value="true">Primary</SelectItem>
+				<SelectItem value="false">Secondary</SelectItem>
+			</SelectContent>
+		</Select>
 	);
-}
+});
 
 export const createContactColumns = () => {
 	const contactColumnHelper = createColumnHelper<any>();

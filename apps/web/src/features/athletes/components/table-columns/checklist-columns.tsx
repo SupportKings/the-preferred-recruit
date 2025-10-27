@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState } from "react";
 
 import {
 	Select,
@@ -28,7 +28,7 @@ const formatDate = (dateString: string | null) => {
 };
 
 // Inline editable status component
-function InlineEditableStatus({
+const InlineEditableStatus = memo(function InlineEditableStatus({
 	itemId,
 	initialValue,
 }: {
@@ -37,12 +37,14 @@ function InlineEditableStatus({
 }) {
 	const [value, setValue] = useState(initialValue);
 	const [isLoading, setIsLoading] = useState(false);
+	const [isOpen, setIsOpen] = useState(false);
 
 	const handleChange = async (newValue: string) => {
 		const boolValue = newValue === "true";
 		if (boolValue === value) return;
 
 		setIsLoading(true);
+		setIsOpen(false);
 		try {
 			await updateChecklistItem(itemId, { is_done: boolValue });
 			setValue(boolValue);
@@ -60,6 +62,8 @@ function InlineEditableStatus({
 			value={value.toString()}
 			onValueChange={handleChange}
 			disabled={isLoading}
+			open={isOpen}
+			onOpenChange={setIsOpen}
 		>
 			<SelectTrigger className="h-8 w-[140px] border-none bg-transparent hover:bg-accent">
 				<SelectValue>
@@ -72,10 +76,10 @@ function InlineEditableStatus({
 			</SelectContent>
 		</Select>
 	);
-}
+});
 
 // Inline editable required component
-function InlineEditableRequired({
+const InlineEditableRequired = memo(function InlineEditableRequired({
 	itemId,
 	initialValue,
 }: {
@@ -84,12 +88,14 @@ function InlineEditableRequired({
 }) {
 	const [value, setValue] = useState(initialValue);
 	const [isLoading, setIsLoading] = useState(false);
+	const [isOpen, setIsOpen] = useState(false);
 
 	const handleChange = async (newValue: string) => {
 		const boolValue = newValue === "true";
 		if (boolValue === value) return;
 
 		setIsLoading(true);
+		setIsOpen(false);
 		try {
 			await updateChecklistItem(itemId, { required: boolValue });
 			setValue(boolValue);
@@ -107,6 +113,8 @@ function InlineEditableRequired({
 			value={value.toString()}
 			onValueChange={handleChange}
 			disabled={isLoading}
+			open={isOpen}
+			onOpenChange={setIsOpen}
 		>
 			<SelectTrigger className="h-8 w-[140px] border-none bg-transparent hover:bg-accent">
 				<SelectValue>
@@ -119,10 +127,10 @@ function InlineEditableRequired({
 			</SelectContent>
 		</Select>
 	);
-}
+});
 
 // Inline editable applicable component
-function InlineEditableApplicable({
+const InlineEditableApplicable = memo(function InlineEditableApplicable({
 	itemId,
 	initialValue,
 }: {
@@ -131,12 +139,14 @@ function InlineEditableApplicable({
 }) {
 	const [value, setValue] = useState(initialValue);
 	const [isLoading, setIsLoading] = useState(false);
+	const [isOpen, setIsOpen] = useState(false);
 
 	const handleChange = async (newValue: string) => {
 		const boolValue = newValue === "true";
 		if (boolValue === value) return;
 
 		setIsLoading(true);
+		setIsOpen(false);
 		try {
 			await updateChecklistItem(itemId, { is_applicable: boolValue });
 			setValue(boolValue);
@@ -154,6 +164,8 @@ function InlineEditableApplicable({
 			value={value.toString()}
 			onValueChange={handleChange}
 			disabled={isLoading}
+			open={isOpen}
+			onOpenChange={setIsOpen}
 		>
 			<SelectTrigger className="h-8 w-[140px] border-none bg-transparent hover:bg-accent">
 				<SelectValue>
@@ -166,7 +178,7 @@ function InlineEditableApplicable({
 			</SelectContent>
 		</Select>
 	);
-}
+});
 
 export const createChecklistColumns = () => {
 	const checklistColumnHelper = createColumnHelper<any>();

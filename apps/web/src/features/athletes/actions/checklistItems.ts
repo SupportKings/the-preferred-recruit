@@ -1,5 +1,7 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+
 import { createClient } from "@/utils/supabase/server";
 
 import { getUser } from "@/queries/getUser";
@@ -75,6 +77,17 @@ export async function createChecklistItem(checklistItemData: {
 		throw new Error(`Failed to create checklist item: ${error.message}`);
 	}
 
+	// Get athlete_id from checklist to revalidate athlete detail page
+	const { data: checklist } = await supabase
+		.from("checklists")
+		.select("athlete_id")
+		.eq("id", checklistItemData.checklist_id)
+		.single();
+
+	if (checklist?.athlete_id) {
+		revalidatePath(`/dashboard/athletes/${checklist.athlete_id}`);
+	}
+
 	return { success: true, data };
 }
 
@@ -100,6 +113,13 @@ export async function updateChecklistItem(
 		throw new Error("Authentication required");
 	}
 
+	// Get athlete_id before updating to revalidate athlete detail page
+	const { data: item } = await supabase
+		.from("checklist_items")
+		.select("checklist_id")
+		.eq("id", itemId)
+		.single();
+
 	const { error } = await supabase
 		.from("checklist_items")
 		.update(itemData)
@@ -107,6 +127,19 @@ export async function updateChecklistItem(
 
 	if (error) {
 		throw new Error(`Failed to update checklist item: ${error.message}`);
+	}
+
+	// Get athlete_id from checklist to revalidate
+	if (item?.checklist_id) {
+		const { data: checklist } = await supabase
+			.from("checklists")
+			.select("athlete_id")
+			.eq("id", item.checklist_id)
+			.single();
+
+		if (checklist?.athlete_id) {
+			revalidatePath(`/dashboard/athletes/${checklist.athlete_id}`);
+		}
 	}
 
 	return { success: true };
@@ -120,6 +153,13 @@ export async function deleteChecklistItem(itemId: string) {
 		throw new Error("Authentication required");
 	}
 
+	// Get athlete_id before deleting to revalidate athlete detail page
+	const { data: item } = await supabase
+		.from("checklist_items")
+		.select("checklist_id")
+		.eq("id", itemId)
+		.single();
+
 	const { error } = await supabase
 		.from("checklist_items")
 		.delete()
@@ -127,6 +167,19 @@ export async function deleteChecklistItem(itemId: string) {
 
 	if (error) {
 		throw new Error(`Failed to delete checklist item: ${error.message}`);
+	}
+
+	// Get athlete_id from checklist to revalidate
+	if (item?.checklist_id) {
+		const { data: checklist } = await supabase
+			.from("checklists")
+			.select("athlete_id")
+			.eq("id", item.checklist_id)
+			.single();
+
+		if (checklist?.athlete_id) {
+			revalidatePath(`/dashboard/athletes/${checklist.athlete_id}`);
+		}
 	}
 
 	return { success: true };

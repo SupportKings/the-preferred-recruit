@@ -64,11 +64,17 @@ export function CoachLookup({
 				if (foundInList) {
 					setSelectedCoach(foundInList);
 				} else {
-					// Fetch from server if not in current list
-					const results = await searchCoaches("", universityId, 1000);
-					const found = results.find((coach) => coach.id === value);
-					if (found) {
-						setSelectedCoach(found);
+					// Fetch directly by ID from Supabase
+					const { createClient } = await import("@/utils/supabase/client");
+					const supabase = createClient();
+					const { data, error } = await supabase
+						.from("coaches")
+						.select("id, full_name, email")
+						.eq("id", value)
+						.single();
+
+					if (!error && data) {
+						setSelectedCoach(data);
 					}
 				}
 			} else {
@@ -77,7 +83,7 @@ export function CoachLookup({
 		};
 
 		fetchSelectedCoach();
-	}, [value, universityId, coaches]);
+	}, [value, coaches]);
 
 	// Debounced search
 	useEffect(() => {
@@ -152,11 +158,7 @@ export function CoachLookup({
 						<Input
 							ref={inputRef}
 							type="text"
-							placeholder={
-								selectedCoach && !searchQuery
-									? ""
-									: "Search for a coach by name..."
-							}
+							placeholder="Search for a coach by name..."
 							value={searchQuery}
 							onChange={(e) => {
 								setSearchQuery(e.target.value);
@@ -167,7 +169,9 @@ export function CoachLookup({
 							disabled={disabled}
 							className={cn(
 								"cursor-pointer pr-8 pl-9",
-								selectedCoach && !searchQuery && "cursor-pointer",
+								selectedCoach &&
+									!searchQuery &&
+									"text-transparent placeholder:text-transparent",
 							)}
 						/>
 						{selectedCoach && !searchQuery && (

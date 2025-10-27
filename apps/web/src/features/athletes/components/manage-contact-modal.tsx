@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -57,7 +57,17 @@ export function ManageContactModal({
 
 	// Use external state if provided, otherwise use internal state
 	const open = externalOpen !== undefined ? externalOpen : internalOpen;
-	const setOpen = externalOnOpenChange || setInternalOpen;
+
+	const setOpen = useCallback(
+		(value: boolean) => {
+			if (externalOnOpenChange) {
+				externalOnOpenChange(value);
+			} else {
+				setInternalOpen(value);
+			}
+		},
+		[externalOnOpenChange],
+	);
 	const [isLoading, setIsLoading] = useState(false);
 	const queryClient = useQueryClient();
 
@@ -73,15 +83,28 @@ export function ManageContactModal({
 		end_date: "",
 	});
 
-	// Populate form data when editing
+	// Populate form data when editing - only run when modal opens or contactAthlete changes
 	useEffect(() => {
+		// Only run when modal is actually open
+		if (!open) return;
+
 		if (isEdit && contactAthlete) {
+			// Validate that we have the contact data before setting form
+			if (!contactAthlete.contact) {
+				console.error(
+					"Contact data not loaded for contactAthlete:",
+					contactAthlete,
+				);
+				toast.error("Contact data not loaded. Please refresh and try again.");
+				return;
+			}
+
 			setFormData({
-				full_name: contactAthlete.contact?.full_name || "",
-				email: contactAthlete.contact?.email || "",
-				phone: contactAthlete.contact?.phone || "",
+				full_name: contactAthlete.contact.full_name || "",
+				email: contactAthlete.contact.email || "",
+				phone: contactAthlete.contact.phone || "",
 				preferred_contact_method:
-					contactAthlete.contact?.preferred_contact_method || "",
+					contactAthlete.contact.preferred_contact_method || "",
 				relationship: contactAthlete.relationship || "",
 				is_primary: contactAthlete.is_primary || false,
 				internal_notes: contactAthlete.internal_notes || "",
@@ -92,8 +115,8 @@ export function ManageContactModal({
 					? format(new Date(contactAthlete.end_date), "yyyy-MM-dd")
 					: "",
 			});
-		} else if (!isEdit) {
-			// Reset form for add mode
+		} else if (!isEdit && open) {
+			// Reset form for add mode only when opening
 			setFormData({
 				full_name: "",
 				email: "",

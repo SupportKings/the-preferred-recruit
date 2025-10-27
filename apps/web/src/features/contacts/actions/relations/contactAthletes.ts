@@ -1,5 +1,7 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+
 import { createClient } from "@/utils/supabase/server";
 
 import { getUser } from "@/queries/getUser";
@@ -12,6 +14,13 @@ export async function deleteContactAthlete(relationId: string) {
 		throw new Error("Authentication required");
 	}
 
+	// Get athlete_id and contact_id before deleting
+	const { data: relation } = await supabase
+		.from("contact_athletes")
+		.select("athlete_id, contact_id")
+		.eq("id", relationId)
+		.single();
+
 	const { error } = await supabase
 		.from("contact_athletes")
 		.delete()
@@ -21,6 +30,14 @@ export async function deleteContactAthlete(relationId: string) {
 		throw new Error(
 			`Failed to delete contact-athlete relationship: ${error.message}`,
 		);
+	}
+
+	// Revalidate both athlete and contact detail pages
+	if (relation?.athlete_id) {
+		revalidatePath(`/dashboard/athletes/${relation.athlete_id}`);
+	}
+	if (relation?.contact_id) {
+		revalidatePath(`/dashboard/contacts/${relation.contact_id}`);
 	}
 
 	return { success: true };
@@ -64,6 +81,10 @@ export async function createContactAthlete(
 		);
 	}
 
+	// Revalidate both athlete and contact detail pages
+	revalidatePath(`/dashboard/athletes/${relationData.athlete_id}`);
+	revalidatePath(`/dashboard/contacts/${contactId}`);
+
 	return { success: true, data };
 }
 
@@ -85,6 +106,13 @@ export async function updateContactAthlete(
 		throw new Error("Authentication required");
 	}
 
+	// Get athlete_id and contact_id before updating
+	const { data: relation } = await supabase
+		.from("contact_athletes")
+		.select("athlete_id, contact_id")
+		.eq("id", relationId)
+		.single();
+
 	const { error } = await supabase
 		.from("contact_athletes")
 		.update(relationData)
@@ -94,6 +122,14 @@ export async function updateContactAthlete(
 		throw new Error(
 			`Failed to update contact-athlete relationship: ${error.message}`,
 		);
+	}
+
+	// Revalidate both athlete and contact detail pages
+	if (relation?.athlete_id) {
+		revalidatePath(`/dashboard/athletes/${relation.athlete_id}`);
+	}
+	if (relation?.contact_id) {
+		revalidatePath(`/dashboard/contacts/${relation.contact_id}`);
 	}
 
 	return { success: true };
@@ -168,6 +204,10 @@ export async function createAthleteContact(
 		);
 	}
 
+	// Revalidate both athlete and contact detail pages
+	revalidatePath(`/dashboard/athletes/${athleteId}`);
+	revalidatePath(`/dashboard/contacts/${contactId}`);
+
 	return { success: true, data };
 }
 
@@ -188,6 +228,13 @@ export async function updateAthleteContact(
 		throw new Error("Authentication required");
 	}
 
+	// Get athlete_id and contact_id before updating
+	const { data: relation } = await supabase
+		.from("contact_athletes")
+		.select("athlete_id, contact_id")
+		.eq("id", relationId)
+		.single();
+
 	const { error } = await supabase
 		.from("contact_athletes")
 		.update(relationData)
@@ -197,6 +244,14 @@ export async function updateAthleteContact(
 		throw new Error(
 			`Failed to update athlete-contact relationship: ${error.message}`,
 		);
+	}
+
+	// Revalidate both athlete and contact detail pages
+	if (relation?.athlete_id) {
+		revalidatePath(`/dashboard/athletes/${relation.athlete_id}`);
+	}
+	if (relation?.contact_id) {
+		revalidatePath(`/dashboard/contacts/${relation.contact_id}`);
 	}
 
 	return { success: true };

@@ -902,7 +902,7 @@ export type Database = {
           description?: string | null
           done_at?: string | null
           done_by_team_member_id?: string | null
-          id: string
+          id?: string
           internal_notes?: string | null
           is_applicable?: boolean | null
           is_deleted?: boolean | null
@@ -976,7 +976,7 @@ export type Database = {
           checklist_definition_id?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
-          id: string
+          id?: string
           internal_notes?: string | null
           is_deleted?: boolean | null
         }
@@ -2351,10 +2351,8 @@ export type Database = {
           act_composite_75th: number | null
           average_gpa: number | null
           city: string | null
-          conference_raw: string | null
           deleted_at: string | null
           deleted_by: string | null
-          division_raw: string | null
           email_blocked: boolean | null
           id: string
           institution_flags_raw: string | null
@@ -2385,10 +2383,8 @@ export type Database = {
           act_composite_75th?: number | null
           average_gpa?: number | null
           city?: string | null
-          conference_raw?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
-          division_raw?: string | null
           email_blocked?: boolean | null
           id?: string
           institution_flags_raw?: string | null
@@ -2419,10 +2415,8 @@ export type Database = {
           act_composite_75th?: number | null
           average_gpa?: number | null
           city?: string | null
-          conference_raw?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
-          division_raw?: string | null
           email_blocked?: boolean | null
           id?: string
           institution_flags_raw?: string | null

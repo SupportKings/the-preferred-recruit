@@ -38,7 +38,6 @@ interface University {
 	city?: string;
 	state?: string;
 	region?: string;
-	division_raw?: string;
 }
 
 export function UniversityLookup({
@@ -50,49 +49,76 @@ export function UniversityLookup({
 }: UniversityLookupProps) {
 	const [open, setOpen] = useState(false);
 	const [universities, setUniversities] = useState<University[]>([]);
-	const [loading, setLoading] = useState(true);
+	const [loading, setLoading] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
 
+	// Fetch universities based on search query
 	useEffect(() => {
 		const fetchUniversities = async () => {
+			// Only fetch if search query has at least 2 characters or if we have a selected value
+			if (!searchQuery || searchQuery.length < 2) {
+				// If there's a selected value, fetch just that university
+				if (value) {
+					const supabase = createClient();
+					const { data, error } = await supabase
+						.from("universities")
+						.select("id, name, city, state, region")
+						.eq("id", value)
+						.single();
+
+					if (!error && data) {
+						setUniversities([data as University]);
+					}
+				} else {
+					setUniversities([]);
+				}
+				return;
+			}
+
 			setLoading(true);
 			const supabase = createClient();
 
 			const { data, error } = await supabase
 				.from("universities")
-				.select("id, name, city, state, region, division_raw")
-				.order("name");
+				.select("id, name, city, state, region")
+				.ilike("name", `%${searchQuery}%`)
+				.order("name")
+				.limit(50);
 
 			if (error) {
 				console.error("Error fetching universities:", error);
-				setUniversities([]);
-			} else if (data) {
-				console.log(`Fetched ${data.length} universities from database`);
-				if (data.length === 0) {
-					console.warn(
-						"No universities found in database. Table may be empty.",
-					);
-				}
+				setLoading(false);
+				return;
+			}
+			if (data) {
+				console.log(
+					`Fetched ${data.length} universities for query: "${searchQuery}"`,
+				);
 				setUniversities(data as University[]);
 			}
 			setLoading(false);
 		};
 
-		fetchUniversities();
-	}, []);
+		// Debounce the search
+		const timeoutId = setTimeout(() => {
+			fetchUniversities();
+		}, 300);
+
+		return () => clearTimeout(timeoutId);
+	}, [searchQuery, value]);
 
 	const selectedUniversity = universities.find((uni) => uni.id === value);
 
-	const filteredUniversities = universities.filter((uni) => {
-		const searchLower = searchQuery.toLowerCase();
-		return (
-			uni.name.toLowerCase().includes(searchLower) ||
-			uni.city?.toLowerCase().includes(searchLower) ||
-			uni.state?.toLowerCase().includes(searchLower) ||
-			uni.region?.toLowerCase().includes(searchLower) ||
-			uni.division_raw?.toLowerCase().includes(searchLower)
-		);
-	});
+	// Get empty message based on search state
+	const getEmptyMessage = () => {
+		if (!searchQuery || searchQuery.length < 2) {
+			return "Type at least 2 characters to search universities...";
+		}
+		if (loading) {
+			return "Searching...";
+		}
+		return "No university found.";
+	};
 
 	return (
 		<div className="space-y-2">
@@ -127,12 +153,12 @@ export function UniversityLookup({
 							onValueChange={setSearchQuery}
 						/>
 						<CommandList>
-							<CommandEmpty>No university found.</CommandEmpty>
+							<CommandEmpty>{getEmptyMessage()}</CommandEmpty>
 							<CommandGroup>
-								{filteredUniversities.map((uni) => (
+								{universities.map((uni) => (
 									<CommandItem
 										key={uni.id}
-										value={`${uni.name} ${uni.city || ""} ${uni.state || ""} ${uni.region || ""} ${uni.division_raw || ""}`}
+										value={`${uni.name} ${uni.city || ""} ${uni.state || ""} ${uni.region || ""}`}
 										onSelect={() => {
 											onChange(uni.id);
 											setOpen(false);
@@ -146,12 +172,9 @@ export function UniversityLookup({
 										/>
 										<div className="flex flex-col">
 											<span>{uni.name}</span>
-											{(uni.city ||
-												uni.state ||
-												uni.region ||
-												uni.division_raw) && (
+											{(uni.city || uni.state || uni.region) && (
 												<span className="text-muted-foreground text-xs">
-													{[uni.city, uni.state, uni.region, uni.division_raw]
+													{[uni.city, uni.state, uni.region]
 														.filter(Boolean)
 														.join(" • ")}
 												</span>

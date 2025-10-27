@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UniversalDataTable } from "@/components/universal-data-table/universal-data-table";
@@ -38,15 +38,22 @@ export function AthleteChecklistSection({
 		data: null,
 	});
 
-	// Flatten checklist items from all checklists
-	const checklistItems = checklists.flatMap(
-		(checklist) => checklist.checklist_items || [],
+	// Memoize the onOpenChange callback to prevent re-renders
+	const handleModalOpenChange = useCallback((open: boolean) => {
+		setEditModal((prev) => ({ ...prev, isOpen: open }));
+	}, []);
+
+	// Flatten checklist items from all checklists - memoized
+	const checklistItems = useMemo(
+		() => checklists.flatMap((checklist) => checklist.checklist_items || []),
+		[checklists],
 	);
 
-	const checklistColumns = createChecklistColumns();
-	const checklistRowActions = createChecklistRowActions(
-		setDeleteModal || (() => {}),
-		setEditModal,
+	const checklistColumns = useMemo(() => createChecklistColumns(), []);
+
+	const checklistRowActions = useMemo(
+		() => createChecklistRowActions(setDeleteModal || (() => {}), setEditModal),
+		[setDeleteModal, setEditModal],
 	);
 
 	const checklistTable = useReactTable({
@@ -92,9 +99,7 @@ export function AthleteChecklistSection({
 				checklistItem={editModal.data}
 				mode="edit"
 				open={editModal.isOpen && editModal.type === "checklist"}
-				onOpenChange={(open: boolean) =>
-					setEditModal((prev) => ({ ...prev, isOpen: open }))
-				}
+				onOpenChange={handleModalOpenChange}
 			/>
 		</Card>
 	);
