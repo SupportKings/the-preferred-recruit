@@ -4,6 +4,43 @@ import { createClient } from "@/utils/supabase/server";
 
 import { getUser } from "@/queries/getUser";
 
+export async function getOrCreateChecklist(athleteId: string) {
+	const supabase = await createClient();
+	const user = await getUser();
+
+	if (!user) {
+		throw new Error("Authentication required");
+	}
+
+	// First, try to find existing checklist
+	const { data: existingChecklist } = await supabase
+		.from("checklists")
+		.select("id")
+		.eq("athlete_id", athleteId)
+		.order("created_at", { ascending: false })
+		.limit(1)
+		.maybeSingle();
+
+	if (existingChecklist) {
+		return { success: true, data: existingChecklist };
+	}
+
+	// No checklist exists, create one
+	const { data: newChecklist, error } = await supabase
+		.from("checklists")
+		.insert({
+			athlete_id: athleteId,
+		})
+		.select("id")
+		.single();
+
+	if (error) {
+		throw new Error(`Failed to create checklist: ${error.message}`);
+	}
+
+	return { success: true, data: newChecklist };
+}
+
 export async function createChecklistItem(checklistItemData: {
 	checklist_id: string;
 	template_item_id?: string;

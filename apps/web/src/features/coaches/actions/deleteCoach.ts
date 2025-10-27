@@ -6,8 +6,6 @@ import { actionClient } from "@/lib/safe-action";
 
 import { createClient } from "@/utils/supabase/server";
 
-import { getUser } from "@/queries/getUser";
-
 import { returnValidationErrors } from "next-safe-action";
 import { z } from "zod";
 
@@ -20,19 +18,13 @@ export const deleteCoach = actionClient
 	.action(async ({ parsedInput: { id } }) => {
 		try {
 			const supabase = await createClient();
-			const user = await getUser();
-
-			if (!user) {
-				return returnValidationErrors(deleteCoachSchema, {
-					_errors: ["Authentication required"],
-				});
-			}
 
 			// Check if coach exists
 			const { data: existingCoach, error: fetchError } = await supabase
 				.from("coaches")
 				.select("id, full_name")
 				.eq("id", id)
+				.eq("is_deleted", false)
 				.single();
 
 			if (fetchError || !existingCoach) {
@@ -47,7 +39,6 @@ export const deleteCoach = actionClient
 				.update({
 					is_deleted: true,
 					deleted_at: new Date().toISOString(),
-					deleted_by: user.user.id,
 				})
 				.eq("id", id);
 

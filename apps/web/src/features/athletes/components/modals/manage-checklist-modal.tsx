@@ -2,8 +2,6 @@
 
 import { type ReactNode, useEffect, useState } from "react";
 
-import { createClient } from "@/utils/supabase/client";
-
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -20,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 import {
 	createChecklistItem,
+	getOrCreateChecklist,
 	updateChecklistItem,
 } from "@/features/athletes/actions/checklistItems";
 import { athleteQueries } from "@/features/athletes/queries/useAthletes";
@@ -67,38 +66,17 @@ export function ManageChecklistModal({
 	useEffect(() => {
 		if (!isEdit && open && !formData.checklist_id) {
 			const fetchOrCreateChecklist = async () => {
-				const supabase = createClient();
-
-				// First, try to find existing checklist
-				const { data: existingChecklist } = await supabase
-					.from("checklists")
-					.select("id")
-					.eq("athlete_id", athleteId)
-					.order("created_at", { ascending: false })
-					.limit(1)
-					.maybeSingle();
-
-				if (existingChecklist) {
-					setFormData((prev) => ({
-						...prev,
-						checklist_id: existingChecklist.id,
-					}));
-				} else {
-					// No checklist exists, create one
-					const { data: newChecklist, error } = await supabase
-						.from("checklists")
-						.insert({
-							athlete_id: athleteId,
-						})
-						.select("id")
-						.single();
-
-					if (error) {
-						console.error("Error creating checklist:", error);
-						toast.error("Failed to create checklist");
-					} else if (newChecklist) {
-						setFormData((prev) => ({ ...prev, checklist_id: newChecklist.id }));
+				try {
+					const result = await getOrCreateChecklist(athleteId);
+					if (result.success && result.data) {
+						setFormData((prev) => ({
+							...prev,
+							checklist_id: result.data.id,
+						}));
 					}
+				} catch (error) {
+					console.error("Error fetching/creating checklist:", error);
+					toast.error("Failed to create checklist");
 				}
 			};
 
