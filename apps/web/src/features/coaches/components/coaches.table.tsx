@@ -24,7 +24,6 @@ import {
 	AwardIcon,
 	BriefcaseIcon,
 	BuildingIcon,
-	EditIcon,
 	EyeIcon,
 	InstagramIcon,
 	MailIcon,
@@ -37,6 +36,7 @@ import {
 import { toast } from "sonner";
 import { deleteCoach } from "../actions/deleteCoach";
 import { coachQueries, useCoachesWithFaceted } from "../queries/useCoaches";
+import { DeleteConfirmModal } from "./shared/delete-confirm-modal";
 
 // Color mapping for coach specialties
 const getSpecialtyColor = (
@@ -285,6 +285,8 @@ function CoachesTableContent({
 	const [sorting, setSorting] = useState<any[]>([]);
 	const queryClient = useQueryClient();
 	const [deleteLoading, setDeleteLoading] = useState(false);
+	const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+	const [coachToDelete, setCoachToDelete] = useState<CoachRow | null>(null);
 
 	// Reset to first page when filters change
 	useEffect(() => {
@@ -370,18 +372,17 @@ function CoachesTableContent({
 			.build(),
 	];
 
-	const handleDelete = async (coach: CoachRow) => {
-		if (deleteLoading) return;
+	const handleDeleteClick = (coach: CoachRow) => {
+		setCoachToDelete(coach);
+		setDeleteModalOpen(true);
+	};
 
-		const confirmed = window.confirm(
-			`Are you sure you want to delete ${coach.full_name}? This action cannot be undone.`,
-		);
-
-		if (!confirmed) return;
+	const handleDeleteConfirm = async () => {
+		if (!coachToDelete || deleteLoading) return;
 
 		setDeleteLoading(true);
 		try {
-			const result = await deleteCoach({ id: coach.id });
+			const result = await deleteCoach({ id: coachToDelete.id });
 
 			if (result?.serverError || result?.validationErrors) {
 				const errorMessage =
@@ -415,17 +416,10 @@ function CoachesTableContent({
 			},
 		},
 		{
-			label: "Edit",
-			icon: EditIcon,
-			onClick: (coach: CoachRow) => {
-				window.location.href = `/dashboard/coaches/${coach.id}`;
-			},
-		},
-		{
 			label: "Delete",
 			icon: TrashIcon,
 			variant: "destructive" as const,
-			onClick: handleDelete,
+			onClick: handleDeleteClick,
 		},
 	];
 
@@ -504,6 +498,18 @@ function CoachesTableContent({
 					}
 				/>
 			)}
+
+			<DeleteConfirmModal
+				isOpen={deleteModalOpen}
+				onOpenChange={setDeleteModalOpen}
+				onConfirm={handleDeleteConfirm}
+				title="Delete Coach"
+				description={
+					coachToDelete
+						? `Are you sure you want to delete ${coachToDelete.full_name}? This action cannot be undone.`
+						: "Are you sure you want to delete this coach? This action cannot be undone."
+				}
+			/>
 		</div>
 	);
 }
