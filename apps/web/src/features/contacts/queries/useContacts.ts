@@ -28,6 +28,7 @@ export async function getContact(id: string): Promise<Contact | null> {
 		`,
 		)
 		.eq("id", id)
+		.eq("is_deleted", false)
 		.single();
 
 	if (error) {
@@ -60,6 +61,7 @@ export async function getContacts(): Promise<Contact[]> {
 			)
 		`,
 		)
+		.eq("is_deleted", false)
 		.order("full_name", { ascending: true });
 
 	if (error) {

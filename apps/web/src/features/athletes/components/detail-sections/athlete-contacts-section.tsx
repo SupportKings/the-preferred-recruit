@@ -38,6 +38,12 @@ export function AthleteContactsSection({
 		data: null,
 	});
 
+	// Filter out soft-deleted contacts
+	const activeContactAthletes =
+		contactAthletes?.filter(
+			(ca: any) => !ca.contact?.is_deleted && ca.contact,
+		) || [];
+
 	const contactColumns = createContactColumns();
 	const contactRowActions = createContactRowActions(
 		setDeleteModal || (() => {}),
@@ -45,7 +51,7 @@ export function AthleteContactsSection({
 	);
 
 	const contactTable = useReactTable({
-		data: contactAthletes || [],
+		data: activeContactAthletes,
 		columns: contactColumns,
 		getCoreRowModel: getCoreRowModel(),
 		getSortedRowModel: getSortedRowModel(),
@@ -63,7 +69,7 @@ export function AthleteContactsSection({
 				</div>
 			</CardHeader>
 			<CardContent>
-				{contactAthletes.length === 0 ? (
+				{activeContactAthletes.length === 0 ? (
 					<div className="py-8 text-center text-muted-foreground">
 						<Users className="mx-auto mb-4 h-12 w-12 opacity-50" />
 						<p className="text-sm">No contacts yet</p>
@@ -77,7 +83,7 @@ export function AthleteContactsSection({
 						rowActions={contactRowActions}
 						inlineActions={true}
 						emptyStateMessage="No contacts found for this athlete"
-						totalCount={contactAthletes.length}
+						totalCount={activeContactAthletes.length}
 					/>
 				)}
 			</CardContent>

@@ -13,6 +13,7 @@ import { SidebarTrigger } from "@/components/ui/sidebar";
 import { deleteContact } from "@/features/contacts/actions/deleteContact";
 import { useContact } from "@/features/contacts/queries/useContacts";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { Trash2Icon, X } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "sonner";
@@ -26,6 +27,7 @@ export default function ContactDetailHeader({
 }: ContactDetailHeaderProps) {
 	const { data: contact } = useContact(contactId);
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
 	const { execute: executeDeleteContact, isExecuting } = useAction(
@@ -36,7 +38,9 @@ export default function ContactDetailHeader({
 				toast.success(
 					`${contact?.full_name || "Contact"} has been deleted successfully`,
 				);
-				router.push("/dashboard/contacts");
+				// Invalidate all athlete queries to refresh contact relationships
+				queryClient.invalidateQueries({ queryKey: ["athletes"] });
+				router.back();
 			},
 			onError: (error) => {
 				console.error("Failed to delete contact:", error);

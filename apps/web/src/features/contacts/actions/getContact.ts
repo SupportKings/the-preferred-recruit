@@ -17,6 +17,7 @@ export async function getContact(id: string) {
 		`,
 		)
 		.eq("id", id)
+		.eq("is_deleted", false)
 		.single();
 
 	if (error) {

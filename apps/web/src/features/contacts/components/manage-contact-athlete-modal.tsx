@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
-import { useAthletes } from "@/features/athletes/queries/useAthletes";
+import { AthleteLookup } from "@/features/athletes/components/lookups/athlete-lookup";
 import {
 	createContactAthlete,
 	updateContactAthlete,
@@ -61,9 +61,6 @@ export function ManageContactAthleteModal({
 	const [isLoading, setIsLoading] = useState(false);
 	const queryClient = useQueryClient();
 
-	// Fetch athletes for dropdown
-	const { data: athletes = [] } = useAthletes();
-
 	const [formData, setFormData] = useState({
 		athlete_id: "",
 		relationship: "",
@@ -99,7 +96,7 @@ export function ManageContactAthleteModal({
 				end_date: "",
 			});
 		}
-	}, [isEdit, contactAthlete, open]);
+	}, [isEdit, contactAthlete]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -192,33 +189,17 @@ export function ManageContactAthleteModal({
 
 				<form onSubmit={handleSubmit} className="space-y-4">
 					{/* Athlete Selection */}
-					<div className="space-y-2">
-						<Label htmlFor="athlete_id">Athlete *</Label>
-						<Select
-							value={formData.athlete_id || "none"}
-							onValueChange={(value) =>
-								setFormData({
-									...formData,
-									athlete_id: value === "none" ? "" : value,
-								})
-							}
-						>
-							<SelectTrigger>
-								<SelectValue placeholder="Select an athlete" />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value="none" disabled>
-									Select an athlete
-								</SelectItem>
-								{athletes.map((athlete: any) => (
-									<SelectItem key={athlete.id} value={athlete.id}>
-										{athlete.full_name}{" "}
-										{athlete.contact_email && `(${athlete.contact_email})`}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					</div>
+					<AthleteLookup
+						value={formData.athlete_id}
+						onChange={(value) =>
+							setFormData({
+								...formData,
+								athlete_id: value,
+							})
+						}
+						label="Athlete"
+						required
+					/>
 
 					{/* Relationship */}
 					<div className="space-y-2">

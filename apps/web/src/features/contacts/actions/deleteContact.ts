@@ -13,7 +13,14 @@ export const deleteContact = actionClient
 	.action(async ({ parsedInput: { id } }) => {
 		const supabase = await createClient();
 
-		const { error } = await supabase.from("contacts").delete().eq("id", id);
+		// Soft delete: set is_deleted to true instead of hard delete
+		const { error } = await supabase
+			.from("contacts")
+			.update({
+				is_deleted: true,
+				deleted_at: new Date().toISOString(),
+			})
+			.eq("id", id);
 
 		if (error) {
 			console.error("Failed to delete contact:", error);

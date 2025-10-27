@@ -42,7 +42,7 @@ export async function getAthlete(id: string) {
 					start_date,
 					end_date,
 					internal_notes,
-					contact:contacts(id, full_name, email, phone, preferred_contact_method)
+					contact:contacts(id, full_name, email, phone, preferred_contact_method, is_deleted)
 				),
 				athlete_results(
 					id,
@@ -202,10 +202,14 @@ export async function getAthletesWithFilters(
 							query = query.eq(columnId, values[0]);
 						} else if (operator === "is not") {
 							query = query.not(columnId, "eq", values[0]);
-						} else if (operator === "greater than") {
+						} else if (operator === "is greater than") {
 							query = query.gt(columnId, values[0]);
-						} else if (operator === "less than") {
+						} else if (operator === "is greater than or equal to") {
+							query = query.gte(columnId, values[0]);
+						} else if (operator === "is less than") {
 							query = query.lt(columnId, values[0]);
+						} else if (operator === "is less than or equal to") {
+							query = query.lte(columnId, values[0]);
 						} else if (operator === "is between") {
 							query = query.gte(columnId, values[0]).lte(columnId, values[1]);
 						} else if (operator === "is not between") {
@@ -321,10 +325,14 @@ export async function getAthletesWithFaceted(
 											"eq",
 											values[0],
 										);
-									} else if (operator === "greater than") {
+									} else if (operator === "is greater than") {
 										facetQuery = facetQuery.gt(filterColumnId, values[0]);
-									} else if (operator === "less than") {
+									} else if (operator === "is greater than or equal to") {
+										facetQuery = facetQuery.gte(filterColumnId, values[0]);
+									} else if (operator === "is less than") {
 										facetQuery = facetQuery.lt(filterColumnId, values[0]);
+									} else if (operator === "is less than or equal to") {
+										facetQuery = facetQuery.lte(filterColumnId, values[0]);
 									} else if (operator === "is between") {
 										facetQuery = facetQuery
 											.gte(filterColumnId, values[0])
@@ -430,10 +438,14 @@ export async function getAthletesFaceted(
 								query = query.eq(filterColumnId, values[0]);
 							} else if (operator === "is not") {
 								query = query.not(filterColumnId, "eq", values[0]);
-							} else if (operator === "greater than") {
+							} else if (operator === "is greater than") {
 								query = query.gt(filterColumnId, values[0]);
-							} else if (operator === "less than") {
+							} else if (operator === "is greater than or equal to") {
+								query = query.gte(filterColumnId, values[0]);
+							} else if (operator === "is less than") {
 								query = query.lt(filterColumnId, values[0]);
+							} else if (operator === "is less than or equal to") {
+								query = query.lte(filterColumnId, values[0]);
 							} else if (operator === "is between") {
 								query = query
 									.gte(filterColumnId, values[0])
