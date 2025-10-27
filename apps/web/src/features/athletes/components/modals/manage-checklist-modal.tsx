@@ -2,6 +2,8 @@
 
 import { type ReactNode, useEffect, useState } from "react";
 
+import { createClient } from "@/utils/supabase/client";
+
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -25,8 +27,6 @@ import { athleteQueries } from "@/features/athletes/queries/useAthletes";
 import { useQueryClient } from "@tanstack/react-query";
 import { CheckSquare, Plus } from "lucide-react";
 import { toast } from "sonner";
-import { ChecklistLookup } from "../lookups/checklist-lookup";
-import { TemplateItemLookup } from "../lookups/template-item-lookup";
 
 interface ManageChecklistModalProps {
 	athleteId: string;
@@ -63,6 +63,49 @@ export function ManageChecklistModal({
 		is_applicable: true,
 	});
 
+	// Auto-fetch or create the athlete's checklist when in add mode
+	useEffect(() => {
+		if (!isEdit && open && !formData.checklist_id) {
+			const fetchOrCreateChecklist = async () => {
+				const supabase = createClient();
+
+				// First, try to find existing checklist
+				const { data: existingChecklist } = await supabase
+					.from("checklists")
+					.select("id")
+					.eq("athlete_id", athleteId)
+					.order("created_at", { ascending: false })
+					.limit(1)
+					.maybeSingle();
+
+				if (existingChecklist) {
+					setFormData((prev) => ({
+						...prev,
+						checklist_id: existingChecklist.id,
+					}));
+				} else {
+					// No checklist exists, create one
+					const { data: newChecklist, error } = await supabase
+						.from("checklists")
+						.insert({
+							athlete_id: athleteId,
+						})
+						.select("id")
+						.single();
+
+					if (error) {
+						console.error("Error creating checklist:", error);
+						toast.error("Failed to create checklist");
+					} else if (newChecklist) {
+						setFormData((prev) => ({ ...prev, checklist_id: newChecklist.id }));
+					}
+				}
+			};
+
+			fetchOrCreateChecklist();
+		}
+	}, [isEdit, open, athleteId, formData.checklist_id]);
+
 	useEffect(() => {
 		if (isEdit && checklistItem) {
 			setFormData({
@@ -75,7 +118,7 @@ export function ManageChecklistModal({
 				is_applicable: checklistItem.is_applicable ?? true,
 			});
 		} else if (!isEdit) {
-			// Create mode: only minimal fields per XML CreateForm spec
+			// Create mode: only title field shown
 			setFormData({
 				checklist_id: "",
 				template_item_id: "",
@@ -91,13 +134,14 @@ export function ManageChecklistModal({
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
-		if (!formData.checklist_id) {
-			toast.error("Checklist is required");
+		if (!formData.title.trim()) {
+			toast.error("Title is required");
 			return;
 		}
 
-		if (!formData.title.trim()) {
-			toast.error("Title is required");
+		// For add mode, ensure we have a checklist_id
+		if (!isEdit && !formData.checklist_id) {
+			toast.error("Unable to create checklist. Please try again.");
 			return;
 		}
 
@@ -172,40 +216,20 @@ export function ManageChecklistModal({
 				</DialogHeader>
 
 				<form onSubmit={handleSubmit} className="space-y-4">
-					{/* Checklist - Required */}
-					<ChecklistLookup
-						athleteId={athleteId}
-						value={formData.checklist_id}
-						onChange={(value) =>
-							setFormData({ ...formData, checklist_id: value })
-						}
-						label="Onboarding Checklist"
-						required
-					/>
-
-					{/* Template Item - Optional */}
-					<TemplateItemLookup
-						value={formData.template_item_id}
-						onChange={(value) =>
-							setFormData({ ...formData, template_item_id: value })
-						}
-						label="Template Item"
-						required={false}
-					/>
-
-					{/* Title - Required */}
+					{/* Title - Required (only field shown in add mode) */}
 					<div className="space-y-2">
 						<Label htmlFor="title">
 							Title <span className="text-destructive">*</span>
 						</Label>
 						<Input
 							id="title"
-							placeholder="Action title for this checklist item"
+							placeholder="Enter checklist item title"
 							value={formData.title}
 							onChange={(e) =>
 								setFormData({ ...formData, title: e.target.value })
 							}
 							required
+							autoFocus
 						/>
 					</div>
 

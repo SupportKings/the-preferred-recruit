@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { DataTableFilter } from "@/components/data-table-filter";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import type { StatusColorScheme } from "@/components/ui/status-badge";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { useUniversalTable } from "@/components/universal-data-table/hooks/use-universal-table";
 import {
@@ -17,6 +18,7 @@ import { createUniversalColumnHelper } from "@/components/universal-data-table/u
 
 import type { CoachRow } from "@/features/coaches/types/coach";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { createColumnHelper } from "@tanstack/react-table";
 import {
 	AwardIcon,
@@ -32,7 +34,35 @@ import {
 	TrashIcon,
 	UserIcon,
 } from "lucide-react";
-import { useCoachesWithFaceted } from "../queries/useCoaches";
+import { toast } from "sonner";
+import { deleteCoach } from "../actions/deleteCoach";
+import { coachQueries, useCoachesWithFaceted } from "../queries/useCoaches";
+
+// Color mapping for coach specialties
+const getSpecialtyColor = (
+	specialty: string | null | undefined,
+): StatusColorScheme => {
+	if (!specialty) return "gray";
+
+	switch (specialty.toLowerCase()) {
+		case "sprints":
+			return "blue";
+		case "hurdles":
+			return "purple";
+		case "distance":
+			return "green";
+		case "jumps":
+			return "orange";
+		case "throws":
+			return "red";
+		case "relays":
+			return "yellow";
+		case "combined":
+			return "gray";
+		default:
+			return "gray";
+	}
+};
 
 // Create column helper for TanStack table
 const columnHelper = createColumnHelper<CoachRow>();
@@ -84,7 +114,7 @@ const coachTableColumns = [
 		cell: ({ row }) => {
 			const specialty = row.getValue<string>("primary_specialty");
 			return (
-				<StatusBadge>
+				<StatusBadge colorScheme={getSpecialtyColor(specialty)}>
 					{specialty
 						? specialty.charAt(0).toUpperCase() + specialty.slice(1)
 						: "N/A"}
@@ -94,28 +124,37 @@ const coachTableColumns = [
 	}),
 	columnHelper.display({
 		id: "work_email",
-		header: "Work Email",
+		header: "Email",
 		enableColumnFilter: true,
 		enableSorting: false,
 		cell: ({ row }) => {
 			const job = row.original.university_jobs?.[0];
 			const workEmail = job?.work_email;
 			const personalEmail = row.original.email;
-			const displayEmail = workEmail || personalEmail;
 
-			return (
-				<div className="text-sm">
-					{displayEmail || "N/A"}
-					{workEmail && (
+			// Prioritize work email if available
+			if (workEmail) {
+				return (
+					<div className="text-sm">
+						{workEmail}
 						<span className="ml-1 text-muted-foreground text-xs">(Work)</span>
-					)}
-					{!workEmail && personalEmail && (
+					</div>
+				);
+			}
+
+			// Fall back to personal email
+			if (personalEmail) {
+				return (
+					<div className="text-sm">
+						{personalEmail}
 						<span className="ml-1 text-muted-foreground text-xs">
 							(Personal)
 						</span>
-					)}
-				</div>
-			);
+					</div>
+				);
+			}
+
+			return <div className="text-sm">N/A</div>;
 		},
 	}),
 	columnHelper.accessor("instagram_profile", {
@@ -126,7 +165,7 @@ const coachTableColumns = [
 		cell: ({ row }) => {
 			const instagram = row.getValue<string>("instagram_profile");
 			return (
-				<div className="text-sm">
+				<div className="max-w-[200px] text-sm">
 					{instagram ? (
 						<a
 							href={
@@ -136,7 +175,8 @@ const coachTableColumns = [
 							}
 							target="_blank"
 							rel="noopener noreferrer"
-							className="text-blue-600 hover:underline"
+							className="block truncate text-blue-600 hover:underline"
+							title={instagram}
 						>
 							{instagram}
 						</a>
@@ -183,7 +223,7 @@ const coachTableColumns = [
 		enableSorting: false,
 		cell: ({ row }) => {
 			const job = row.original.university_jobs?.[0];
-			return <StatusBadge>{job?.universities?.state || "N/A"}</StatusBadge>;
+			return <div className="text-sm">{job?.universities?.state || "N/A"}</div>;
 		},
 	}),
 ];
@@ -243,6 +283,8 @@ function CoachesTableContent({
 }) {
 	const [currentPage, setCurrentPage] = useState(0);
 	const [sorting, setSorting] = useState<any[]>([]);
+	const queryClient = useQueryClient();
+	const [deleteLoading, setDeleteLoading] = useState(false);
 
 	// Reset to first page when filters change
 	useEffect(() => {
@@ -328,6 +370,42 @@ function CoachesTableContent({
 			.build(),
 	];
 
+	const handleDelete = async (coach: CoachRow) => {
+		if (deleteLoading) return;
+
+		const confirmed = window.confirm(
+			`Are you sure you want to delete ${coach.full_name}? This action cannot be undone.`,
+		);
+
+		if (!confirmed) return;
+
+		setDeleteLoading(true);
+		try {
+			const result = await deleteCoach({ id: coach.id });
+
+			if (result?.serverError || result?.validationErrors) {
+				const errorMessage =
+					result.serverError ||
+					result.validationErrors?.id?._errors?.[0] ||
+					result.validationErrors?._errors?.[0] ||
+					"Failed to delete coach. Please try again.";
+				toast.error(errorMessage);
+			} else {
+				toast.success(result.data?.success || "Coach deleted successfully");
+
+				// Invalidate coaches queries to refresh the list
+				await queryClient.invalidateQueries({
+					queryKey: coachQueries.lists(),
+				});
+			}
+		} catch (error) {
+			console.error("Error deleting coach:", error);
+			toast.error("An unexpected error occurred. Please try again.");
+		} finally {
+			setDeleteLoading(false);
+		}
+	};
+
 	const rowActions = [
 		{
 			label: "View Details",
@@ -347,10 +425,7 @@ function CoachesTableContent({
 			label: "Delete",
 			icon: TrashIcon,
 			variant: "destructive" as const,
-			onClick: (coach: CoachRow) => {
-				// Will be handled via detail page
-				window.location.href = `/dashboard/coaches/${coach.id}`;
-			},
+			onClick: handleDelete,
 		},
 	];
 

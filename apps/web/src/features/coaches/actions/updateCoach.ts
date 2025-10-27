@@ -27,7 +27,8 @@ const coachUpdateSchema = z.object({
 			"relays",
 			"combined",
 		])
-		.optional(),
+		.optional()
+		.or(z.literal("")),
 	email: z.string().email("Invalid email").optional().or(z.literal("")),
 	phone: z.string().optional().or(z.literal("")),
 	twitter_profile: z.string().optional().or(z.literal("")),

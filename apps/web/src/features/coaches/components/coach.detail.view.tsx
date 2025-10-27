@@ -77,8 +77,8 @@ export default function CoachDetailView({ coachId }: CoachDetailViewProps) {
 			if (editState.section === "identity" && "full_name" in data) {
 				// Identity & Role fields
 				updateData.full_name = data.full_name;
-				updateData.primary_specialty = data.primary_specialty || null;
-				updateData.internal_notes = data.internal_notes || null;
+				updateData.primary_specialty = data.primary_specialty || "";
+				updateData.internal_notes = data.internal_notes || "";
 			} else if (editState.section === "contact" && "email" in data) {
 				// Contact & Social fields
 				updateData.email = data.email || "";

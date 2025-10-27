@@ -81,6 +81,7 @@ export async function getCoach(id: string) {
 			`,
 			)
 			.eq("id", id)
+			.eq("is_deleted", false)
 			.eq("university_jobs.is_deleted", false)
 			.eq("campaign_leads.is_deleted", false)
 			.eq("campaign_leads.university_jobs.is_deleted", false)
@@ -118,6 +119,7 @@ export async function getAllCoaches() {
 				)
 			`,
 			)
+			.eq("is_deleted", false)
 			.eq("university_jobs.is_deleted", false)
 			.order("full_name", { ascending: true });
 
@@ -165,8 +167,10 @@ export async function getCoachesWithFilters(
 			? "universities!inner"
 			: "universities";
 
-		let query: any = supabase.from("coaches").select(
-			`
+		let query: any = supabase
+			.from("coaches")
+			.select(
+				`
 				*,
 				${universityJobsJoin} (
 					job_title,
@@ -178,8 +182,9 @@ export async function getCoachesWithFilters(
 					)
 				)
 			`,
-			{ count: "exact" },
-		);
+				{ count: "exact" },
+			)
+			.eq("is_deleted", false);
 
 		// Apply filters with proper operator support
 		filters.forEach((filter) => {
@@ -203,11 +208,15 @@ export async function getCoachesWithFilters(
 						break;
 
 					case "primary_specialty":
-						// Enum field - support is/is not
+						// Enum field - support option operators
 						if (operator === "is") {
 							query = query.eq(columnId, values[0]);
 						} else if (operator === "is not") {
 							query = query.not(columnId, "eq", values[0]);
+						} else if (operator === "is any of") {
+							query = query.in(columnId, values);
+						} else if (operator === "is none of") {
+							query = query.not(columnId, "in", `(${values.join(",")})`);
 						}
 						break;
 
@@ -366,7 +375,8 @@ export async function getCoachesWithFaceted(
 
 				let facetQuery: any = supabase
 					.from("coaches")
-					.select(selectString, { count: "exact" });
+					.select(selectString, { count: "exact" })
+					.eq("is_deleted", false);
 
 				// Apply existing filters (excluding the column we're faceting)
 				filters
@@ -405,6 +415,14 @@ export async function getCoachesWithFaceted(
 											filterColumnId,
 											"eq",
 											values[0],
+										);
+									} else if (operator === "is any of") {
+										facetQuery = facetQuery.in(filterColumnId, values);
+									} else if (operator === "is none of") {
+										facetQuery = facetQuery.not(
+											filterColumnId,
+											"in",
+											`(${values.join(",")})`,
 										);
 									}
 									break;
@@ -560,7 +578,8 @@ export async function getCoachesFaceted(columnId: string, filters: any[] = []) {
 
 		let query: any = supabase
 			.from("coaches")
-			.select(selectString, { count: "exact" });
+			.select(selectString, { count: "exact" })
+			.eq("is_deleted", false);
 
 		// Apply existing filters (excluding the column we're faceting)
 		filters
@@ -589,6 +608,14 @@ export async function getCoachesFaceted(columnId: string, filters: any[] = []) {
 								query = query.eq(filterColumnId, values[0]);
 							} else if (operator === "is not") {
 								query = query.not(filterColumnId, "eq", values[0]);
+							} else if (operator === "is any of") {
+								query = query.in(filterColumnId, values);
+							} else if (operator === "is none of") {
+								query = query.not(
+									filterColumnId,
+									"in",
+									`(${values.join(",")})`,
+								);
 							}
 							break;
 
@@ -752,12 +779,14 @@ export async function searchCoaches(
 					university_jobs!inner(university_id)
 				`,
 				)
+				.eq("is_deleted", false)
 				.eq("university_jobs.university_id", universityId)
 				.order("full_name");
 		} else {
 			query = supabase
 				.from("coaches")
 				.select("id, full_name, email")
+				.eq("is_deleted", false)
 				.order("full_name");
 		}
 
