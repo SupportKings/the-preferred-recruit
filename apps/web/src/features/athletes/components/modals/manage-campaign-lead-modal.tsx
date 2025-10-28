@@ -123,7 +123,6 @@ export function ManageCampaignLeadModal({
 				toast.success("Campaign lead updated successfully!");
 			} else {
 				await createCampaignLead({
-					athlete_id: athleteId,
 					campaign_id: formData.campaign_id,
 					university_id: formData.university_id,
 					program_id: formData.program_id || undefined,

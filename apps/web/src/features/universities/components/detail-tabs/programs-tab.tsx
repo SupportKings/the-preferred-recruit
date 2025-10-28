@@ -1,5 +1,6 @@
 "use client";
 
+import type { Dispatch, SetStateAction } from "react";
 import { useState } from "react";
 
 import Link from "next/link";
@@ -17,11 +18,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 
-import { deleteProgramAction } from "@/features/programs/actions/deleteProgram";
-
-import { Edit2, ExternalLink, Eye, Layers, Plus, Trash2 } from "lucide-react";
-import { useAction } from "next-safe-action/hooks";
-import { toast } from "sonner";
+import { Edit2, ExternalLink, Eye, Layers, Trash2 } from "lucide-react";
 import { ManageProgramModal } from "../shared/manage-program-modal";
 
 interface Program extends Tables<"programs"> {}
@@ -29,12 +26,21 @@ interface Program extends Tables<"programs"> {}
 interface ProgramsTabProps {
 	programs: Program[];
 	universityId: string;
+	setDeleteModal: Dispatch<
+		SetStateAction<{
+			isOpen: boolean;
+			type: string;
+			id: string;
+			title: string;
+		}>
+	>;
 	onRefresh: () => void;
 }
 
 export function ProgramsTab({
 	programs,
 	universityId,
+	setDeleteModal,
 	onRefresh,
 }: ProgramsTabProps) {
 	const [editModal, setEditModal] = useState<{
@@ -46,29 +52,6 @@ export function ProgramsTab({
 		type: "",
 		data: null,
 	});
-
-	// Delete program action
-	const { execute: executeDelete, isExecuting: isDeleting } = useAction(
-		deleteProgramAction,
-		{
-			onSuccess: () => {
-				toast.success("Program deleted successfully");
-				onRefresh();
-			},
-			onError: (err) => {
-				console.error("Error deleting program:", err);
-				toast.error(
-					err.error.serverError ||
-						"Failed to delete program. Please try again.",
-				);
-			},
-		},
-	);
-
-	const handleDelete = async (programId: string) => {
-		if (!confirm("Are you sure you want to delete this program?")) return;
-		executeDelete({ id: programId });
-	};
 
 	return (
 		<Card>
@@ -184,8 +167,14 @@ export function ProgramsTab({
 												<Button
 													variant="ghost"
 													size="sm"
-													onClick={() => handleDelete(program.id)}
-													disabled={isDeleting}
+													onClick={() =>
+														setDeleteModal({
+															isOpen: true,
+															type: "program",
+															id: program.id,
+															title: `Delete ${program.gender === "men" ? "Men's" : program.gender === "women" ? "Women's" : ""} Program`,
+														})
+													}
 												>
 													<Trash2 className="h-4 w-4 text-red-600" />
 												</Button>

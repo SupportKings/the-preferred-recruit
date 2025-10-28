@@ -1,5 +1,7 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+
 import { createClient } from "@/utils/supabase/server";
 
 import { getUser } from "@/queries/getUser";
@@ -78,14 +80,22 @@ export async function deleteSchoolLeadList(leadListId: string) {
 		throw new Error("Authentication required");
 	}
 
+	// Soft delete: set is_deleted, deleted_at, and deleted_by
 	const { error } = await supabase
 		.from("school_lead_lists")
-		.delete()
+		.update({
+			is_deleted: true,
+			deleted_at: new Date().toISOString(),
+			deleted_by: null,
+		})
 		.eq("id", leadListId);
 
 	if (error) {
 		throw new Error(`Failed to delete school lead list: ${error.message}`);
 	}
+
+	// Revalidate the athlete detail page to refresh the list
+	revalidatePath("/dashboard/athletes/[id]", "page");
 
 	return { success: true };
 }

@@ -3,6 +3,7 @@
 import { createClient } from "@/utils/supabase/server";
 
 import { getUser } from "@/queries/getUser";
+import { revalidatePath } from "next/cache";
 
 export async function createLeadListEntry(data: {
 	lead_list_id: string;
@@ -80,14 +81,22 @@ export async function deleteLeadListEntry(entryId: string) {
 		throw new Error("Authentication required");
 	}
 
+	// Soft delete: set is_deleted, deleted_at, and deleted_by
 	const { error } = await supabase
 		.from("school_lead_list_entries")
-		.delete()
+		.update({
+			is_deleted: true,
+			deleted_at: new Date().toISOString(),
+			deleted_by: null,
+		})
 		.eq("id", entryId);
 
 	if (error) {
 		throw new Error(`Failed to delete lead list entry: ${error.message}`);
 	}
+
+	// Revalidate the athlete detail page to refresh the list
+	revalidatePath("/dashboard/athletes/[id]", "page");
 
 	return { success: true };
 }

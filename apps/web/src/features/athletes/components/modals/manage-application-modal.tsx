@@ -215,11 +215,11 @@ export function ManageApplicationModal({
 							</SelectTrigger>
 							<SelectContent>
 								<SelectItem value="intro">Introduction</SelectItem>
-								<SelectItem value="contacted">Contacted</SelectItem>
-								<SelectItem value="interested">Interested</SelectItem>
+								<SelectItem value="ongoing">Ongoing</SelectItem>
+								<SelectItem value="visit">Visit</SelectItem>
 								<SelectItem value="offer">Offer Received</SelectItem>
 								<SelectItem value="committed">Committed</SelectItem>
-								<SelectItem value="declined">Declined</SelectItem>
+								<SelectItem value="dropped">Dropped</SelectItem>
 							</SelectContent>
 						</Select>
 					</div>

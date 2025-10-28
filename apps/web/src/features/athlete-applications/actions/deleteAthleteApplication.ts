@@ -21,10 +21,14 @@ export const deleteAthleteApplication = actionClient
 			const supabase = await createClient();
 
 			// Soft delete: set is_deleted to true
-			const { error } = await supabase
+			// Do update and select in one operation to get application details for revalidation
+			const { data: deletedApplication, error } = await supabase
 				.from("athlete_applications")
 				.update({ is_deleted: true, updated_at: new Date().toISOString() })
-				.eq("id", id);
+				.eq("id", id)
+				.eq("is_deleted", false) // Only update if not already deleted
+				.select("id, athlete_id, university_id, program_id")
+				.maybeSingle();
 
 			if (error) {
 				console.error("Error deleting application:", error);
@@ -34,8 +38,27 @@ export const deleteAthleteApplication = actionClient
 				};
 			}
 
+			if (!deletedApplication) {
+				return {
+					success: false,
+					error: "Application not found or already deleted",
+				};
+			}
+
+			const application = deletedApplication;
+
 			// Revalidate relevant paths
 			revalidatePath("/dashboard/athlete-applications");
+			revalidatePath(`/dashboard/athlete-applications/${id}`);
+			if (application.athlete_id) {
+				revalidatePath(`/dashboard/athletes/${application.athlete_id}`);
+			}
+			if (application.university_id) {
+				revalidatePath(`/dashboard/universities/${application.university_id}`);
+			}
+			if (application.program_id) {
+				revalidatePath(`/dashboard/programs/${application.program_id}`);
+			}
 
 			return {
 				success: true,

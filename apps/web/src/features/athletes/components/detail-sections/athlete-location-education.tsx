@@ -84,10 +84,24 @@ export function AthleteLocationEducation({
 				formData.state
 			: "";
 
-		onSave?.({
-			...formData,
-			state: stateName,
-		});
+		// Convert string values to numbers for numeric fields
+		const saveData: any = {
+			high_school: formData.high_school || undefined,
+			city: formData.city || undefined,
+			state: stateName || undefined,
+			country: formData.country || undefined,
+			graduation_year: formData.graduation_year
+				? Number(formData.graduation_year)
+				: undefined,
+			year_entering_university: formData.year_entering_university
+				? Number(formData.year_entering_university)
+				: undefined,
+			student_type: formData.student_type || undefined,
+			sat_score: formData.sat_score ? Number(formData.sat_score) : undefined,
+			act_score: formData.act_score ? Number(formData.act_score) : undefined,
+		};
+
+		onSave?.(saveData);
 	};
 
 	const handleCancel = () => {

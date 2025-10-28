@@ -61,6 +61,14 @@ export function AthleteChecklistSection({
 		columns: checklistColumns,
 		getCoreRowModel: getCoreRowModel(),
 		getSortedRowModel: getSortedRowModel(),
+		initialState: {
+			sorting: [
+				{
+					id: "sort_order",
+					desc: false, // ascending order (1, 2, 3...)
+				},
+			],
+		},
 	});
 
 	return (

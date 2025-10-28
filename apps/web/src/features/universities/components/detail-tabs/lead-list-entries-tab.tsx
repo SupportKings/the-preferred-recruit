@@ -1,5 +1,6 @@
 "use client";
 
+import type { Dispatch, SetStateAction } from "react";
 import { useState } from "react";
 
 import Link from "next/link";
@@ -18,11 +19,8 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 
-import { deleteSchoolLeadListEntry } from "@/features/school-lead-lists/actions/relations/entries";
-
 import { format } from "date-fns";
 import { Edit2, ExternalLink, List, Plus, Trash2 } from "lucide-react";
-import { toast } from "sonner";
 import { ManageSchoolLeadListEntryModal } from "../shared/manage-school-lead-list-entry-modal";
 
 type LeadListEntry = Tables<"school_lead_list_entries"> & {
@@ -41,6 +39,14 @@ type LeadListEntry = Tables<"school_lead_list_entries"> & {
 interface LeadListEntriesTabProps {
 	entries: LeadListEntry[];
 	universityId: string;
+	setDeleteModal: Dispatch<
+		SetStateAction<{
+			isOpen: boolean;
+			type: string;
+			id: string;
+			title: string;
+		}>
+	>;
 	onRefresh: () => void;
 }
 
@@ -76,6 +82,7 @@ const formatPriority = (priority: string | null | undefined): string => {
 export function LeadListEntriesTab({
 	entries,
 	universityId,
+	setDeleteModal,
 	onRefresh,
 }: LeadListEntriesTabProps) {
 	const [editModal, setEditModal] = useState<{
@@ -85,23 +92,6 @@ export function LeadListEntriesTab({
 		isOpen: false,
 		data: null,
 	});
-	const [isDeleting, setIsDeleting] = useState(false);
-
-	const handleDelete = async (entryId: string) => {
-		if (!confirm("Are you sure you want to remove this entry?")) return;
-
-		setIsDeleting(true);
-		try {
-			await deleteSchoolLeadListEntry(entryId);
-			toast.success("Entry removed successfully");
-			onRefresh();
-		} catch (error) {
-			console.error("Error deleting entry:", error);
-			toast.error("Failed to remove entry. Please try again.");
-		} finally {
-			setIsDeleting(false);
-		}
-	};
 
 	return (
 		<Card>
@@ -234,8 +224,14 @@ export function LeadListEntriesTab({
 												<Button
 													variant="ghost"
 													size="sm"
-													onClick={() => handleDelete(entry.id)}
-													disabled={isDeleting}
+													onClick={() =>
+														setDeleteModal({
+															isOpen: true,
+															type: "lead_list_entry",
+															id: entry.id,
+															title: `Delete entry from ${entry.school_lead_lists?.name || "lead list"}`,
+														})
+													}
 												>
 													<Trash2 className="h-4 w-4 text-red-600" />
 												</Button>

@@ -73,6 +73,7 @@ export async function getAthlete(id: string) {
 					scholarship_percent,
 					offer_notes,
 					internal_notes,
+					is_deleted,
 					university:universities(id, name, city, region, acceptance_rate_pct),
 					program:programs(id, gender, team_url, team_instagram),
 					origin_lead_list:school_lead_lists(id, name, priority, season_label),
@@ -84,7 +85,8 @@ export async function getAthlete(id: string) {
 					priority,
 					type,
 					season_label,
-					internal_notes
+					internal_notes,
+					is_deleted
 				),
 				campaigns(
 					id,
@@ -101,6 +103,7 @@ export async function getAthlete(id: string) {
 					leads_remaining,
 					sending_tool_campaign_url,
 					internal_notes,
+					is_deleted,
 					primary_lead_list:school_lead_lists(id, name, priority),
 					seed_campaign:campaigns(id, name, type)
 				),

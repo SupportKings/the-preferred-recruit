@@ -71,6 +71,7 @@ export const updateAthleteAction = actionClient
 				cleanUpdateData.gender = updateData.gender;
 			if (updateData.date_of_birth !== undefined)
 				cleanUpdateData.date_of_birth = updateData.date_of_birth;
+			if (updateData.gpa !== undefined) cleanUpdateData.gpa = updateData.gpa;
 			if (updateData.high_school !== undefined)
 				cleanUpdateData.high_school = updateData.high_school;
 			if (updateData.city !== undefined) cleanUpdateData.city = updateData.city;

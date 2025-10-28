@@ -1,5 +1,7 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+
 import { createClient } from "@/utils/supabase/server";
 
 import { getUser } from "@/queries/getUser";
@@ -12,14 +14,41 @@ export async function deleteSchoolLeadListEntry(entryId: string) {
 		throw new Error("Authentication required");
 	}
 
-	const { error } = await supabase
+	// Get team member ID for the current user
+	const { data: teamMember } = await supabase
+		.from("team_members")
+		.select("id")
+		.eq("user_id", user.user.id)
+		.maybeSingle();
+
+	// Soft delete by setting is_deleted flag
+	// Do update and select in one operation to get entry details for revalidation
+	const { data: deletedEntry, error } = await supabase
 		.from("school_lead_list_entries")
-		.delete()
-		.eq("id", entryId);
+		.update({
+			is_deleted: true,
+			deleted_at: new Date().toISOString(),
+			deleted_by: teamMember?.id || null,
+		})
+		.eq("id", entryId)
+		.eq("is_deleted", false) // Only update if not already deleted
+		.select("id, school_lead_list_id, university_id")
+		.maybeSingle();
 
 	if (error) {
 		throw new Error(`Failed to delete entry: ${error.message}`);
 	}
+
+	if (!deletedEntry) {
+		throw new Error("Entry not found or already deleted");
+	}
+
+	const entry = deletedEntry;
+
+	// Revalidate paths
+	revalidatePath("/dashboard/school-lead-lists");
+	revalidatePath(`/dashboard/school-lead-lists/${entry.school_lead_list_id}`);
+	revalidatePath(`/dashboard/universities/${entry.university_id}`);
 
 	return { success: true };
 }

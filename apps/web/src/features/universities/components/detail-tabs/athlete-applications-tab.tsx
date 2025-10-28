@@ -1,5 +1,6 @@
 "use client";
 
+import type { Dispatch, SetStateAction } from "react";
 import { useState } from "react";
 
 import Link from "next/link";
@@ -20,7 +21,7 @@ import {
 import { updateAthleteApplication } from "@/features/athlete-applications/actions/updateAthleteApplication";
 
 import { format } from "date-fns";
-import { Edit2, ExternalLink, Eye, FileText } from "lucide-react";
+import { Edit2, ExternalLink, Eye, FileText, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { ManageApplicationModal } from "../shared/manage-application-modal";
 import { InlineStageCell } from "./inline-stage-cell";
@@ -43,12 +44,21 @@ type AthleteApplication = Tables<"athlete_applications"> & {
 interface AthleteApplicationsTabProps {
 	applications: AthleteApplication[];
 	universityId: string;
+	setDeleteModal: Dispatch<
+		SetStateAction<{
+			isOpen: boolean;
+			type: string;
+			id: string;
+			title: string;
+		}>
+	>;
 	onRefresh: () => void;
 }
 
 export function AthleteApplicationsTab({
 	applications,
 	universityId,
+	setDeleteModal,
 	onRefresh,
 }: AthleteApplicationsTabProps) {
 	const [editModal, setEditModal] = useState<{
@@ -248,6 +258,20 @@ export function AthleteApplicationsTab({
 													}
 												>
 													<Edit2 className="h-4 w-4" />
+												</Button>
+												<Button
+													variant="ghost"
+													size="sm"
+													onClick={() =>
+														setDeleteModal({
+															isOpen: true,
+															type: "athlete_application",
+															id: app.id,
+															title: `Delete application for ${app.athletes?.full_name || "athlete"}`,
+														})
+													}
+												>
+													<Trash2 className="h-4 w-4 text-red-600" />
 												</Button>
 											</div>
 										</TableCell>

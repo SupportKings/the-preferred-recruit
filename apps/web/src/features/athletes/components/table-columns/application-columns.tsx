@@ -21,11 +21,11 @@ const formatStage = (stage: string | null | undefined): string => {
 
 	const stageMap: Record<string, string> = {
 		intro: "Introduction",
-		contacted: "Contacted",
-		interested: "Interested",
+		ongoing: "Ongoing",
+		visit: "Visit",
 		offer: "Offer Received",
 		committed: "Committed",
-		declined: "Declined",
+		dropped: "Dropped",
 	};
 
 	return stageMap[stage.toLowerCase()] || stage;
@@ -34,12 +34,6 @@ const formatStage = (stage: string | null | undefined): string => {
 export const createApplicationColumns = () => {
 	const applicationColumnHelper = createColumnHelper<any>();
 	return [
-		// Priority
-		applicationColumnHelper.accessor("origin_lead_list_priority", {
-			header: "Priority",
-			cell: (info) => info.getValue() ?? "N/A",
-		}),
-
 		// University Name with acceptance rate - clickable
 		applicationColumnHelper.accessor("university.name", {
 			header: "University",

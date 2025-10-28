@@ -3,7 +3,6 @@
 import { type ReactNode, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
 	Dialog,
 	DialogContent,
@@ -133,8 +132,6 @@ export function ManageChecklistModal({
 					sort_order: formData.sort_order
 						? Number.parseInt(formData.sort_order, 10)
 						: undefined,
-					required: formData.required,
-					is_applicable: formData.is_applicable,
 				});
 				toast.success("Checklist item updated successfully!");
 			} else {
@@ -146,8 +143,6 @@ export function ManageChecklistModal({
 					sort_order: formData.sort_order
 						? Number.parseInt(formData.sort_order, 10)
 						: undefined,
-					required: formData.required,
-					is_applicable: formData.is_applicable,
 				});
 				toast.success("Checklist item added successfully!");
 			}
@@ -240,35 +235,6 @@ export function ManageChecklistModal({
 										setFormData({ ...formData, sort_order: e.target.value })
 									}
 								/>
-							</div>
-
-							{/* Checkboxes */}
-							<div className="space-y-2">
-								<div className="flex items-center space-x-2">
-									<Checkbox
-										id="required"
-										checked={formData.required}
-										onCheckedChange={(checked) =>
-											setFormData({ ...formData, required: !!checked })
-										}
-									/>
-									<Label htmlFor="required" className="cursor-pointer">
-										Required?
-									</Label>
-								</div>
-
-								<div className="flex items-center space-x-2">
-									<Checkbox
-										id="is_applicable"
-										checked={formData.is_applicable}
-										onCheckedChange={(checked) =>
-											setFormData({ ...formData, is_applicable: !!checked })
-										}
-									/>
-									<Label htmlFor="is_applicable" className="cursor-pointer">
-										Applicable?
-									</Label>
-								</div>
 							</div>
 						</>
 					)}

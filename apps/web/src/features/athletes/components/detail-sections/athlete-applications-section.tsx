@@ -49,14 +49,6 @@ export function AthleteApplicationsSection({
 		columns: applicationColumns,
 		getCoreRowModel: getCoreRowModel(),
 		getSortedRowModel: getSortedRowModel(),
-		initialState: {
-			sorting: [
-				{
-					id: "origin_lead_list_priority",
-					desc: false, // ascending order (1, 2, 3...)
-				},
-			],
-		},
 	});
 
 	return (

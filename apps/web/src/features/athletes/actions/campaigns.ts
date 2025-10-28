@@ -3,6 +3,7 @@
 import { createClient } from "@/utils/supabase/server";
 
 import { getUser } from "@/queries/getUser";
+import { revalidatePath } from "next/cache";
 
 export async function createCampaign(
 	athleteId: string,
@@ -83,14 +84,22 @@ export async function deleteCampaign(campaignId: string) {
 		throw new Error("Authentication required");
 	}
 
+	// Soft delete: set is_deleted, deleted_at, and deleted_by
 	const { error } = await supabase
 		.from("campaigns")
-		.delete()
+		.update({
+			is_deleted: true,
+			deleted_at: new Date().toISOString(),
+			deleted_by: null,
+		})
 		.eq("id", campaignId);
 
 	if (error) {
 		throw new Error(`Failed to delete campaign: ${error.message}`);
 	}
+
+	// Revalidate the athlete detail page to refresh the list
+	revalidatePath("/dashboard/athletes/[id]", "page");
 
 	return { success: true };
 }

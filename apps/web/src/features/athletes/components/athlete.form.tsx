@@ -139,6 +139,7 @@ export function AthleteForm({
 			country: initialData?.country || "United States",
 			graduation_year: initialData?.graduation_year || "",
 			year_entering_university: initialData?.year_entering_university || "",
+			gpa: initialData?.gpa || "",
 			athlete_net_url: initialData?.athlete_net_url || "",
 			milesplit_url: initialData?.milesplit_url || "",
 			google_drive_folder_url: initialData?.google_drive_folder_url || "",
@@ -189,6 +190,7 @@ export function AthleteForm({
 					year_entering_university: value.year_entering_university
 						? Number(value.year_entering_university)
 						: undefined,
+					gpa: value.gpa ? Number(value.gpa) : undefined,
 					athlete_net_url: value.athlete_net_url || undefined,
 					milesplit_url: value.milesplit_url || undefined,
 					google_drive_folder_url: value.google_drive_folder_url || undefined,
@@ -534,6 +536,25 @@ export function AthleteForm({
 									onChange={(e) => field.handleChange(e.target.value)}
 									onBlur={field.handleBlur}
 									placeholder="2025"
+								/>
+							</div>
+						)}
+					</form.Field>
+
+					<form.Field name="gpa">
+						{(field) => (
+							<div className="space-y-2">
+								<Label htmlFor="gpa">GPA</Label>
+								<Input
+									id="gpa"
+									type="number"
+									step="0.01"
+									min="0"
+									max="5"
+									value={field.state.value}
+									onChange={(e) => field.handleChange(e.target.value)}
+									onBlur={field.handleBlur}
+									placeholder="4.00"
 								/>
 							</div>
 						)}

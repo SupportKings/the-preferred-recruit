@@ -40,7 +40,23 @@ export function AthleteIdentityContact({
 	});
 
 	const handleSave = () => {
-		onSave?.(formData);
+		// Helper function to ensure date is in YYYY-MM-DD format
+		const formatDate = (dateString: string) => {
+			if (!dateString) return undefined;
+			// If already in YYYY-MM-DD format, return as-is
+			if (/^\d{4}-\d{2}-\d{2}$/.test(dateString)) return dateString;
+			// Otherwise extract just the date part from ISO string
+			return dateString.split("T")[0];
+		};
+
+		// Convert GPA string to number and format date
+		const saveData: any = {
+			...formData,
+			gpa: formData.gpa ? Number(formData.gpa) : undefined,
+			date_of_birth: formatDate(formData.date_of_birth),
+		};
+
+		onSave?.(saveData);
 	};
 
 	const handleCancel = () => {
@@ -234,11 +250,13 @@ export function AthleteIdentityContact({
 							onChange={(e) =>
 								setFormData((prev) => ({ ...prev, gpa: e.target.value }))
 							}
-							placeholder="0.00"
+							placeholder="4.00"
 							className="mt-1"
 						/>
 					) : (
-						<p className="text-sm">{athlete.gpa || "Not provided"}</p>
+						<p className="text-sm">
+							{athlete.gpa ? Number(athlete.gpa).toFixed(2) : "Not provided"}
+						</p>
 					)}
 				</div>
 			</CardContent>

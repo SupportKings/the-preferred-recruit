@@ -36,29 +36,21 @@ export const deleteProgramAction = actionClient
 				.eq("user_id", user.user.id)
 				.maybeSingle();
 
-			// Get program to find university_id for revalidation
-			const { data: program } = await (supabase as any)
-				.from("programs")
-				.select("id, university_id")
-				.eq("id", parsedInput.id)
-				.maybeSingle();
-
-			if (!program) {
-				return {
-					success: false,
-					error: "Program not found",
-				};
-			}
-
 			// Soft delete by setting is_deleted flag
-			const { error: deleteError } = await (supabase as any)
+			// Do update and select in one operation to get program details for revalidation
+			const { data: deletedProgram, error: deleteError } = await (
+				supabase as any
+			)
 				.from("programs")
 				.update({
 					is_deleted: true,
 					deleted_at: new Date().toISOString(),
 					deleted_by: teamMember?.id || null,
 				})
-				.eq("id", parsedInput.id);
+				.eq("id", parsedInput.id)
+				.eq("is_deleted", false) // Only update if not already deleted
+				.select("id, university_id")
+				.maybeSingle();
 
 			if (deleteError) {
 				console.error("Error deleting program:", deleteError);
@@ -67,6 +59,15 @@ export const deleteProgramAction = actionClient
 					error: `Failed to delete program: ${deleteError.message}`,
 				};
 			}
+
+			if (!deletedProgram) {
+				return {
+					success: false,
+					error: "Program not found or already deleted",
+				};
+			}
+
+			const program = deletedProgram;
 
 			// Revalidate paths
 			revalidatePath("/dashboard/universities");

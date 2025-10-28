@@ -1,4 +1,4 @@
-import type { Database, Enums, Tables } from "@/utils/supabase/database.types";
+import type { Enums, Tables } from "@/utils/supabase/database.types";
 
 import { z } from "zod";
 
@@ -191,6 +191,7 @@ export const athleteCreateSchema = z.object({
 	country: validationUtils.text(50),
 	graduation_year: validationUtils.graduationYear,
 	year_entering_university: validationUtils.graduationYear,
+	gpa: validationUtils.gpa,
 
 	// Profiles & Academic
 	athlete_net_url: validationUtils.url,
@@ -246,6 +247,7 @@ export const athleteFormSchema = z.object({
 	country: z.string().optional().default(""),
 	graduation_year: z.string().optional().default(""),
 	year_entering_university: z.string().optional().default(""),
+	gpa: z.string().optional().default(""),
 
 	// Profiles & Academic
 	athlete_net_url: z.string().optional().default(""),
@@ -325,6 +327,7 @@ export const getFieldValidator = (fieldName: keyof AthleteFormInput) => {
 		country: validationUtils.text(50),
 		graduation_year: validationUtils.graduationYear,
 		year_entering_university: validationUtils.graduationYear,
+		gpa: validationUtils.gpa,
 		athlete_net_url: validationUtils.url,
 		milesplit_url: validationUtils.url,
 		google_drive_folder_url: validationUtils.url,

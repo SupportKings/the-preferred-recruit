@@ -5,8 +5,11 @@ import { useState } from "react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+import { deleteAthleteApplication } from "@/features/athlete-applications/actions/deleteAthleteApplication";
 import { deleteCampaignLead } from "@/features/athletes/actions/campaignLeads";
 import { useBallKnowledge } from "@/features/ball-knowledge/queries/useBallKnowledge";
+import { deleteProgramAction } from "@/features/programs/actions/deleteProgram";
+import { deleteSchoolLeadListEntry } from "@/features/school-lead-lists/actions/relations/entries";
 import { updateUniversity } from "@/features/universities/actions/updateUniversity";
 import { updateUniversityAthletics } from "@/features/universities/actions/updateUniversityAthletics";
 import { useUniversity } from "@/features/universities/queries/useUniversities";
@@ -170,6 +173,26 @@ export default function UniversityDetailView({
 	const handleDelete = async () => {
 		try {
 			switch (deleteModal.type) {
+				case "program": {
+					const result = await deleteProgramAction({ id: deleteModal.id });
+					if (result?.serverError) {
+						throw new Error(result.serverError);
+					}
+					toast.success("Program deleted successfully");
+					break;
+				}
+				case "lead_list_entry":
+					await deleteSchoolLeadListEntry(deleteModal.id);
+					toast.success("Lead list entry deleted successfully");
+					break;
+				case "athlete_application": {
+					const result = await deleteAthleteApplication({ id: deleteModal.id });
+					if (result?.data?.success === false) {
+						throw new Error(result.data.error);
+					}
+					toast.success("Athlete application deleted successfully");
+					break;
+				}
 				case "campaign_lead":
 					await deleteCampaignLead(deleteModal.id);
 					toast.success("Campaign lead deleted successfully");
@@ -275,6 +298,7 @@ export default function UniversityDetailView({
 					<ProgramsTab
 						programs={university.programs || []}
 						universityId={universityId}
+						setDeleteModal={setDeleteModal}
 						onRefresh={() =>
 							queryClient.invalidateQueries({
 								queryKey: ["universities", "detail", universityId],
@@ -299,6 +323,7 @@ export default function UniversityDetailView({
 					<AthleteApplicationsTab
 						applications={university.athlete_applications || []}
 						universityId={universityId}
+						setDeleteModal={setDeleteModal}
 						onRefresh={() =>
 							queryClient.invalidateQueries({
 								queryKey: ["universities", "detail", universityId],
@@ -311,6 +336,7 @@ export default function UniversityDetailView({
 					<LeadListEntriesTab
 						entries={university.school_lead_list_entries || []}
 						universityId={universityId}
+						setDeleteModal={setDeleteModal}
 						onRefresh={() =>
 							queryClient.invalidateQueries({
 								queryKey: ["universities", "detail", universityId],

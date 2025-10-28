@@ -108,6 +108,7 @@ export function ManageCampaignLeadModal({
 		try {
 			if (isEdit && lead) {
 				await updateCampaignLead(lead.id, {
+					university_job_id: formData.university_job_id || null,
 					status: formData.status,
 					internal_notes: formData.internal_notes,
 				});
@@ -201,7 +202,6 @@ export function ManageCampaignLeadModal({
 						}
 						label="Coach/Job (Optional)"
 						required={false}
-						disabled={isEdit}
 					/>
 
 					<div className="space-y-2">

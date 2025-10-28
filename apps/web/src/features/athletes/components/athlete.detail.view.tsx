@@ -90,6 +90,13 @@ export default function AthleteDetailView({
 				...data,
 			};
 
+			// Convert GPA string to number if present
+			if (updateData.gpa !== undefined && updateData.gpa !== "") {
+				updateData.gpa = Number.parseFloat(updateData.gpa);
+			} else if (updateData.gpa === "") {
+				updateData.gpa = undefined;
+			}
+
 			// Call the update action
 			const result = await updateAthleteAction(updateData);
 
@@ -104,15 +111,26 @@ export default function AthleteDetailView({
 				// Handle field-specific errors
 				Object.entries(result.validationErrors).forEach(([field, errors]) => {
 					if (field !== "_errors" && errors) {
+						// Format field name for better readability
+						const fieldName = field
+							.replace(/_/g, " ")
+							.replace(/\b\w/g, (l) => l.toUpperCase());
+
 						if (Array.isArray(errors)) {
-							errorMessages.push(...errors);
+							errorMessages.push(
+								...errors.map((error) => `${fieldName}: ${error}`),
+							);
 						} else if (
 							errors &&
 							typeof errors === "object" &&
 							"_errors" in errors &&
 							Array.isArray(errors._errors)
 						) {
-							errorMessages.push(...errors._errors);
+							errorMessages.push(
+								...errors._errors.map(
+									(error: string) => `${fieldName}: ${error}`,
+								),
+							);
 						}
 					}
 				});
@@ -307,7 +325,10 @@ export default function AthleteDetailView({
 				<TabsContent value="lead-lists">
 					<AthleteLeadListsSection
 						athleteId={athleteId}
-						leadLists={athlete.school_lead_lists || []}
+						leadLists={
+							athlete.school_lead_lists?.filter((list: any) => !list.is_deleted) ||
+							[]
+						}
 						setDeleteModal={setDeleteModal}
 					/>
 				</TabsContent>
@@ -315,7 +336,10 @@ export default function AthleteDetailView({
 				<TabsContent value="campaigns">
 					<AthleteCampaignsSection
 						athleteId={athleteId}
-						campaigns={athlete.campaigns || []}
+						campaigns={
+							athlete.campaigns?.filter((campaign: any) => !campaign.is_deleted) ||
+							[]
+						}
 						setDeleteModal={setDeleteModal}
 					/>
 				</TabsContent>
@@ -323,7 +347,10 @@ export default function AthleteDetailView({
 				<TabsContent value="applications">
 					<AthleteApplicationsSection
 						athleteId={athleteId}
-						applications={athlete.athlete_applications || []}
+						applications={
+							athlete.athlete_applications?.filter((app: any) => !app.is_deleted) ||
+							[]
+						}
 						setDeleteModal={setDeleteModal}
 					/>
 				</TabsContent>

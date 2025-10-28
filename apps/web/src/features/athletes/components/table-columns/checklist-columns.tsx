@@ -46,7 +46,12 @@ const InlineEditableStatus = memo(function InlineEditableStatus({
 		setIsLoading(true);
 		setIsOpen(false);
 		try {
-			await updateChecklistItem(itemId, { is_done: boolValue });
+			// When marking as complete, set done_at to current timestamp
+			// When marking as pending, clear done_at
+			await updateChecklistItem(itemId, {
+				is_done: boolValue,
+				done_at: boolValue ? new Date().toISOString() : undefined,
+			});
 			setValue(boolValue);
 			toast.success("Status updated");
 		} catch (error) {
@@ -235,7 +240,7 @@ export const createChecklistColumns = () => {
 
 		// Done At
 		checklistColumnHelper.accessor("done_at", {
-			header: "Completed",
+			header: "Completed At",
 			cell: (info) => formatDate(info.getValue()),
 		}),
 
@@ -243,6 +248,14 @@ export const createChecklistColumns = () => {
 		checklistColumnHelper.accessor("sort_order", {
 			header: "Order",
 			cell: (info) => info.getValue() ?? "N/A",
+			sortingFn: (rowA, rowB, columnId) => {
+				const a = rowA.getValue(columnId) as number | null;
+				const b = rowB.getValue(columnId) as number | null;
+				// Treat null/undefined as very large numbers so they sort last
+				const aValue = a ?? Number.MAX_SAFE_INTEGER;
+				const bValue = b ?? Number.MAX_SAFE_INTEGER;
+				return aValue - bValue;
+			},
 		}),
 	];
 };
