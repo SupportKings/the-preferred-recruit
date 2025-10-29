@@ -74,6 +74,7 @@ export type Database = {
         Row: {
           athlete_id: string | null
           commitment_date: string | null
+          created_at: string | null
           deleted_at: string | null
           deleted_by: string | null
           id: string
@@ -91,31 +92,12 @@ export type Database = {
           stage: Database["public"]["Enums"]["application_stage_enum"] | null
           start_date: string | null
           university_id: string | null
+          updated_at: string | null
         }
         Insert: {
           athlete_id?: string | null
           commitment_date?: string | null
-          deleted_at?: string | null
-          deleted_by?: string | null
-          id: string
-          internal_notes?: string | null
-          is_deleted?: boolean | null
-          last_interaction_at?: string | null
-          offer_date?: string | null
-          offer_notes?: string | null
-          origin_campaign_id?: string | null
-          origin_lead_list_id?: string | null
-          origin_lead_list_priority?: number | null
-          program_id?: string | null
-          scholarship_amount_per_year?: number | null
-          scholarship_percent?: number | null
-          stage?: Database["public"]["Enums"]["application_stage_enum"] | null
-          start_date?: string | null
-          university_id?: string | null
-        }
-        Update: {
-          athlete_id?: string | null
-          commitment_date?: string | null
+          created_at?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           id?: string
@@ -133,6 +115,30 @@ export type Database = {
           stage?: Database["public"]["Enums"]["application_stage_enum"] | null
           start_date?: string | null
           university_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          athlete_id?: string | null
+          commitment_date?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          internal_notes?: string | null
+          is_deleted?: boolean | null
+          last_interaction_at?: string | null
+          offer_date?: string | null
+          offer_notes?: string | null
+          origin_campaign_id?: string | null
+          origin_lead_list_id?: string | null
+          origin_lead_list_priority?: number | null
+          program_id?: string | null
+          scholarship_amount_per_year?: number | null
+          scholarship_percent?: number | null
+          stage?: Database["public"]["Enums"]["application_stage_enum"] | null
+          start_date?: string | null
+          university_id?: string | null
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -193,7 +199,7 @@ export type Database = {
           is_deleted: boolean | null
           location: string | null
           organized_event: boolean | null
-          performance_mark: number | null
+          performance_mark: string | null
           wind: number | null
         }
         Insert: {
@@ -204,12 +210,12 @@ export type Database = {
           deleted_by?: string | null
           event_id?: string | null
           hand_timed?: boolean | null
-          id: string
+          id?: string
           internal_notes?: string | null
           is_deleted?: boolean | null
           location?: string | null
           organized_event?: boolean | null
-          performance_mark?: number | null
+          performance_mark?: string | null
           wind?: number | null
         }
         Update: {
@@ -225,7 +231,7 @@ export type Database = {
           is_deleted?: boolean | null
           location?: string | null
           organized_event?: boolean | null
-          performance_mark?: number | null
+          performance_mark?: string | null
           wind?: number | null
         }
         Relationships: [
@@ -270,6 +276,7 @@ export type Database = {
           gender: Database["public"]["Enums"]["athlete_gender_enum"] | null
           go_live_date: string | null
           google_drive_folder_url: string | null
+          gpa: number | null
           graduation_year: number | null
           high_school: string | null
           id: string
@@ -313,9 +320,10 @@ export type Database = {
           gender?: Database["public"]["Enums"]["athlete_gender_enum"] | null
           go_live_date?: string | null
           google_drive_folder_url?: string | null
+          gpa?: number | null
           graduation_year?: number | null
           high_school?: string | null
-          id: string
+          id?: string
           initial_cash_collected_usd?: number | null
           initial_contract_amount_usd?: number | null
           initial_payment_type?:
@@ -356,6 +364,7 @@ export type Database = {
           gender?: Database["public"]["Enums"]["athlete_gender_enum"] | null
           go_live_date?: string | null
           google_drive_folder_url?: string | null
+          gpa?: number | null
           graduation_year?: number | null
           high_school?: string | null
           id?: string
@@ -402,6 +411,13 @@ export type Database = {
             columns: ["sales_setter_id"]
             isOneToOne: false
             referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "athletes_sending_email_id_fkey"
+            columns: ["sending_email_id"]
+            isOneToOne: false
+            referencedRelation: "email_sending_accounts"
             referencedColumns: ["id"]
           },
         ]
@@ -466,7 +482,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           from_athlete_id?: string | null
-          id: string
+          id?: string
           internal_notes?: string | null
           is_deleted?: boolean | null
           note: string
@@ -583,7 +599,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           first_reply_at?: string | null
-          id: string
+          id?: string
           include_reason?: string | null
           included_at?: string | null
           internal_notes?: string | null
@@ -702,7 +718,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           end_date?: string | null
-          id: string
+          id?: string
           internal_notes?: string | null
           is_deleted?: boolean | null
           leads_loaded?: number | null
@@ -785,7 +801,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           description?: string | null
-          id: string
+          id?: string
           internal_notes?: string | null
           is_deleted?: boolean | null
           required?: boolean | null
@@ -834,7 +850,7 @@ export type Database = {
         Insert: {
           deleted_at?: string | null
           deleted_by?: string | null
-          id: string
+          id?: string
           internal_notes?: string | null
           is_deleted?: boolean | null
           name?: string | null
@@ -886,7 +902,7 @@ export type Database = {
           description?: string | null
           done_at?: string | null
           done_by_team_member_id?: string | null
-          id: string
+          id?: string
           internal_notes?: string | null
           is_applicable?: boolean | null
           is_deleted?: boolean | null
@@ -960,7 +976,7 @@ export type Database = {
           checklist_definition_id?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
-          id: string
+          id?: string
           internal_notes?: string | null
           is_deleted?: boolean | null
         }
@@ -1064,7 +1080,7 @@ export type Database = {
           deleted_by?: string | null
           event_group?: Database["public"]["Enums"]["event_group_enum"] | null
           event_id?: string | null
-          id: string
+          id?: string
           internal_notes?: string | null
           is_deleted?: boolean | null
           university_job_id?: string | null
@@ -1125,7 +1141,7 @@ export type Database = {
           deleted_by?: string | null
           email?: string | null
           full_name?: string | null
-          id: string
+          id?: string
           instagram_profile?: string | null
           internal_notes?: string | null
           is_deleted?: boolean | null
@@ -1162,6 +1178,38 @@ export type Database = {
           },
         ]
       }
+      conferences: {
+        Row: {
+          governing_body_id: string
+          id: string
+          is_active: boolean
+          name: string
+          notes: string | null
+        }
+        Insert: {
+          governing_body_id: string
+          id?: string
+          is_active?: boolean
+          name: string
+          notes?: string | null
+        }
+        Update: {
+          governing_body_id?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conferences_governing_body_id_fkey"
+            columns: ["governing_body_id"]
+            isOneToOne: false
+            referencedRelation: "governing_bodies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contact_athletes: {
         Row: {
           athlete_id: string | null
@@ -1182,7 +1230,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           end_date?: string | null
-          id: string
+          id?: string
           internal_notes?: string | null
           is_deleted?: boolean | null
           is_primary?: boolean | null
@@ -1243,7 +1291,7 @@ export type Database = {
           deleted_by?: string | null
           email?: string | null
           full_name?: string | null
-          id: string
+          id?: string
           internal_notes?: string | null
           is_deleted?: boolean | null
           phone?: string | null
@@ -1270,6 +1318,41 @@ export type Database = {
           },
         ]
       }
+      divisions: {
+        Row: {
+          governing_body_id: string
+          id: string
+          is_active: boolean
+          level: string
+          name: string
+          notes: string | null
+        }
+        Insert: {
+          governing_body_id: string
+          id?: string
+          is_active?: boolean
+          level: string
+          name: string
+          notes?: string | null
+        }
+        Update: {
+          governing_body_id?: string
+          id?: string
+          is_active?: boolean
+          level?: string
+          name?: string
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "divisions_governing_body_id_fkey"
+            columns: ["governing_body_id"]
+            isOneToOne: false
+            referencedRelation: "governing_bodies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       domains: {
         Row: {
           athlete_id: string | null
@@ -1286,7 +1369,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           domain_url?: string | null
-          id: string
+          id?: string
           internal_notes?: string | null
           is_deleted?: boolean | null
           status_option_id?: number | null
@@ -1341,7 +1424,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           domain_id?: string | null
-          id: string
+          id?: string
           internal_notes?: string | null
           is_deleted?: boolean | null
           name?: string | null
@@ -1469,7 +1552,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           event_group?: Database["public"]["Enums"]["event_group_enum"] | null
-          id: string
+          id?: string
           internal_notes?: string | null
           is_deleted?: boolean | null
           name?: string | null
@@ -1495,6 +1578,24 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      governing_bodies: {
+        Row: {
+          id: string
+          name: string
+          notes: string | null
+        }
+        Insert: {
+          id?: string
+          name: string
+          notes?: string | null
+        }
+        Update: {
+          id?: string
+          name?: string
+          notes?: string | null
+        }
+        Relationships: []
       }
       onboarding_status: {
         Row: {
@@ -1591,7 +1692,7 @@ export type Database = {
           deleted_by?: string | null
           end_date?: string | null
           event_id?: string | null
-          id: string
+          id?: string
           internal_notes?: string | null
           is_active?: boolean | null
           is_deleted?: boolean | null
@@ -1651,7 +1752,7 @@ export type Database = {
           deleted_at?: string | null
           deleted_by?: string | null
           gender?: Database["public"]["Enums"]["program_gender_enum"] | null
-          id: string
+          id?: string
           internal_notes?: string | null
           is_deleted?: boolean | null
           team_instagram?: string | null
@@ -1709,7 +1810,7 @@ export type Database = {
           campaign_id?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
-          id: string
+          id?: string
           internal_notes?: string | null
           is_deleted?: boolean | null
           occurred_at?: string | null
@@ -1798,6 +1899,7 @@ export type Database = {
           id: string
           internal_notes: string | null
           is_deleted: boolean | null
+          priority: string | null
           program_id: string | null
           school_lead_list_id: string | null
           status: string | null
@@ -1807,9 +1909,10 @@ export type Database = {
           added_at?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
-          id: string
+          id?: string
           internal_notes?: string | null
           is_deleted?: boolean | null
+          priority?: string | null
           program_id?: string | null
           school_lead_list_id?: string | null
           status?: string | null
@@ -1822,6 +1925,7 @@ export type Database = {
           id?: string
           internal_notes?: string | null
           is_deleted?: boolean | null
+          priority?: string | null
           program_id?: string | null
           school_lead_list_id?: string | null
           status?: string | null
@@ -1861,6 +1965,7 @@ export type Database = {
       school_lead_lists: {
         Row: {
           athlete_id: string | null
+          created_at: string | null
           deleted_at: string | null
           deleted_by: string | null
           id: string
@@ -1870,21 +1975,11 @@ export type Database = {
           priority: number | null
           season_label: string | null
           type: string | null
+          updated_at: string | null
         }
         Insert: {
           athlete_id?: string | null
-          deleted_at?: string | null
-          deleted_by?: string | null
-          id: string
-          internal_notes?: string | null
-          is_deleted?: boolean | null
-          name?: string | null
-          priority?: number | null
-          season_label?: string | null
-          type?: string | null
-        }
-        Update: {
-          athlete_id?: string | null
+          created_at?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           id?: string
@@ -1894,6 +1989,21 @@ export type Database = {
           priority?: number | null
           season_label?: string | null
           type?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          athlete_id?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          id?: string
+          internal_notes?: string | null
+          is_deleted?: boolean | null
+          name?: string | null
+          priority?: number | null
+          season_label?: string | null
+          type?: string | null
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -1915,6 +2025,7 @@ export type Database = {
       sending_tool_lead_lists: {
         Row: {
           campaign_id: string | null
+          created_at: string | null
           deleted_at: string | null
           deleted_by: string | null
           file_url: string | null
@@ -1925,22 +2036,11 @@ export type Database = {
           internal_notes: string | null
           is_deleted: boolean | null
           row_count: number | null
+          updated_at: string | null
         }
         Insert: {
           campaign_id?: string | null
-          deleted_at?: string | null
-          deleted_by?: string | null
-          file_url?: string | null
-          format?: string | null
-          generated_at?: string | null
-          generated_by?: string | null
-          id: string
-          internal_notes?: string | null
-          is_deleted?: boolean | null
-          row_count?: number | null
-        }
-        Update: {
-          campaign_id?: string | null
+          created_at?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           file_url?: string | null
@@ -1951,6 +2051,22 @@ export type Database = {
           internal_notes?: string | null
           is_deleted?: boolean | null
           row_count?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          campaign_id?: string | null
+          created_at?: string | null
+          deleted_at?: string | null
+          deleted_by?: string | null
+          file_url?: string | null
+          format?: string | null
+          generated_at?: string | null
+          generated_by?: string | null
+          id?: string
+          internal_notes?: string | null
+          is_deleted?: boolean | null
+          row_count?: number | null
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -2185,7 +2301,7 @@ export type Database = {
           deleted_by?: string | null
           email?: string | null
           first_name?: string | null
-          id: string
+          id?: string
           internal_notes?: string | null
           is_active?: boolean | null
           is_deleted?: boolean | null
@@ -2235,18 +2351,18 @@ export type Database = {
           act_composite_75th: number | null
           average_gpa: number | null
           city: string | null
-          conference_raw: string | null
           deleted_at: string | null
           deleted_by: string | null
-          division_raw: string | null
           email_blocked: boolean | null
           id: string
           institution_flags_raw: string | null
           internal_notes: string | null
           ipeds_nces_id: string | null
+          is_active: boolean | null
           is_deleted: boolean | null
           majors_offered_url: string | null
           name: string | null
+          notes: string | null
           region: string | null
           religious_affiliation: string | null
           sat_ebrw_25th: number | null
@@ -2267,18 +2383,18 @@ export type Database = {
           act_composite_75th?: number | null
           average_gpa?: number | null
           city?: string | null
-          conference_raw?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
-          division_raw?: string | null
           email_blocked?: boolean | null
-          id: string
+          id?: string
           institution_flags_raw?: string | null
           internal_notes?: string | null
           ipeds_nces_id?: string | null
+          is_active?: boolean | null
           is_deleted?: boolean | null
           majors_offered_url?: string | null
           name?: string | null
+          notes?: string | null
           region?: string | null
           religious_affiliation?: string | null
           sat_ebrw_25th?: number | null
@@ -2299,18 +2415,18 @@ export type Database = {
           act_composite_75th?: number | null
           average_gpa?: number | null
           city?: string | null
-          conference_raw?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
-          division_raw?: string | null
           email_blocked?: boolean | null
           id?: string
           institution_flags_raw?: string | null
           internal_notes?: string | null
           ipeds_nces_id?: string | null
+          is_active?: boolean | null
           is_deleted?: boolean | null
           majors_offered_url?: string | null
           name?: string | null
+          notes?: string | null
           region?: string | null
           religious_affiliation?: string | null
           sat_ebrw_25th?: number | null
@@ -2335,9 +2451,94 @@ export type Database = {
           },
         ]
       }
+      university_conferences: {
+        Row: {
+          conference_id: string | null
+          end_date: string | null
+          id: string
+          notes: string | null
+          start_date: string
+          university_id: string
+        }
+        Insert: {
+          conference_id?: string | null
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          start_date: string
+          university_id: string
+        }
+        Update: {
+          conference_id?: string | null
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          start_date?: string
+          university_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "university_conferences_conference_id_fkey"
+            columns: ["conference_id"]
+            isOneToOne: false
+            referencedRelation: "conferences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "university_conferences_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      university_divisions: {
+        Row: {
+          division_id: string
+          end_date: string | null
+          id: string
+          notes: string | null
+          start_date: string
+          university_id: string
+        }
+        Insert: {
+          division_id: string
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          start_date: string
+          university_id: string
+        }
+        Update: {
+          division_id?: string
+          end_date?: string | null
+          id?: string
+          notes?: string | null
+          start_date?: string
+          university_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "university_divisions_division_id_fkey"
+            columns: ["division_id"]
+            isOneToOne: false
+            referencedRelation: "divisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "university_divisions_university_id_fkey"
+            columns: ["university_id"]
+            isOneToOne: false
+            referencedRelation: "universities"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       university_jobs: {
         Row: {
           coach_id: string | null
+          created_at: string | null
           deleted_at: string | null
           deleted_by: string | null
           end_date: string | null
@@ -2356,10 +2557,11 @@ export type Database = {
         }
         Insert: {
           coach_id?: string | null
+          created_at?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           end_date?: string | null
-          id: string
+          id?: string
           internal_notes?: string | null
           is_deleted?: boolean | null
           job_title?: string | null
@@ -2374,6 +2576,7 @@ export type Database = {
         }
         Update: {
           coach_id?: string | null
+          created_at?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           end_date?: string | null
@@ -2558,29 +2761,89 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      citext: {
-        Args: { "": boolean } | { "": string } | { "": unknown }
-        Returns: string
+      get_ball_knowledge_for_coach: {
+        Args: {
+          p_coach_id: string
+          p_page?: number
+          p_page_size?: number
+          p_search?: string
+          p_sort_column?: string
+          p_sort_direction?: string
+        }
+        Returns: {
+          about_coach_id: string
+          about_coach_name: string
+          about_program_gender: string
+          about_program_id: string
+          about_university_id: string
+          about_university_name: string
+          created_at: string
+          from_athlete_id: string
+          id: string
+          internal_notes: string
+          note: string
+          relation_type: string
+          review_after: string
+          source_type: string
+          total_count: number
+          updated_at: string
+        }[]
       }
-      citext_hash: {
-        Args: { "": string }
-        Returns: number
+      get_ball_knowledge_for_program: {
+        Args: {
+          p_page?: number
+          p_page_size?: number
+          p_program_id: string
+          p_search?: string
+          p_sort_column?: string
+          p_sort_direction?: string
+        }
+        Returns: {
+          about_coach_id: string
+          about_coach_name: string
+          about_program_gender: string
+          about_program_id: string
+          about_university_id: string
+          about_university_name: string
+          created_at: string
+          from_athlete_id: string
+          id: string
+          internal_notes: string
+          note: string
+          relation_type: string
+          review_after: string
+          source_type: string
+          total_count: number
+          updated_at: string
+        }[]
       }
-      citextin: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      citextout: {
-        Args: { "": string }
-        Returns: unknown
-      }
-      citextrecv: {
-        Args: { "": unknown }
-        Returns: string
-      }
-      citextsend: {
-        Args: { "": string }
-        Returns: string
+      get_ball_knowledge_for_university: {
+        Args: {
+          p_page?: number
+          p_page_size?: number
+          p_search?: string
+          p_sort_column?: string
+          p_sort_direction?: string
+          p_university_id: string
+        }
+        Returns: {
+          about_coach_id: string
+          about_coach_name: string
+          about_program_gender: string
+          about_program_id: string
+          about_university_id: string
+          about_university_name: string
+          created_at: string
+          from_athlete_id: string
+          id: string
+          internal_notes: string
+          note: string
+          relation_type: string
+          review_after: string
+          source_type: string
+          total_count: number
+          updated_at: string
+        }[]
       }
     }
     Enums: {

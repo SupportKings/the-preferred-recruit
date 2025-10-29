@@ -4,7 +4,8 @@ import { redirect } from "next/navigation";
 
 import MainLayout from "@/components/layout/main-layout";
 
-import TeamMembersHeader from "@/features/team-members/layout/team-members-header";
+import TeamMembersContent from "@/features/team-members/components/team-members.content";
+import TeamMembersHeader from "@/features/team-members/layout/team-members.header";
 
 import { getUser } from "@/queries/getUser";
 
@@ -32,24 +33,16 @@ async function TeamMembersPageAsync() {
 		redirect("/");
 	}
 
+	// TODO: Add data prefetching here when implementing actual queries
+	// await Promise.all([
+	//   queryClient.prefetchQuery(teamMembersQueries.query1()),
+	//   queryClient.prefetchQuery(teamMembersQueries.query2()),
+	// ]);
+
 	return (
 		<HydrationBoundary state={dehydrate(queryClient)}>
 			<MainLayout headers={[<TeamMembersHeader key="team-members-header" />]}>
-				<div className="space-y-6 p-6">
-					<div className="space-y-2">
-						<h1 className="text-3xl">Team Members</h1>
-						<p className="text-lg text-muted-foreground">
-							Manage team members and their roles.
-						</p>
-					</div>
-
-					<div className="space-y-4 rounded-lg border bg-card p-6">
-						<h2 className="text-xl">Coming Soon</h2>
-						<p className="text-muted-foreground">
-							Team member management features will be available here.
-						</p>
-					</div>
-				</div>
+				<TeamMembersContent />
 			</MainLayout>
 		</HydrationBoundary>
 	);

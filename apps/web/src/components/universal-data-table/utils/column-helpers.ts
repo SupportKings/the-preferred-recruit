@@ -110,7 +110,7 @@ class NumberColumnBuilderImpl<T extends UniversalTableRow>
 
 	currency(code = "USD"): this {
 		// Store currency format info for rendering
-		// @ts-ignore - This is used for custom rendering logic
+		// @ts-expect-error - This is used for custom rendering logic
 		this.config.transformOptionFn = () => ({ value: code, label: code });
 		return this;
 	}
@@ -153,7 +153,6 @@ class RelationColumnBuilderImpl<T extends UniversalTableRow>
 	) {
 		super(accessor, "option");
 		// Store relation info for query building
-		// @ts-ignore - This is used for custom rendering logic
 		this.config.transformOptionFn = () => ({
 			value: relationTable,
 			label: relationTable,

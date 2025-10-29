@@ -2,6 +2,7 @@
 
 import * as React from "react";
 
+import { parseLocalDate, toDateString } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
@@ -33,37 +34,23 @@ export function DatePicker({
 	id,
 }: DatePickerProps) {
 	const [date, setDate] = React.useState<Date | undefined>(
-		value ? new Date(value) : undefined,
+		parseLocalDate(value) || undefined,
 	);
 
 	const handleDateSelect = (newDate: Date | undefined) => {
 		setDate(newDate);
 		if (onChange && newDate) {
-			// Create UTC date at midnight to represent the selected date
-			const year = newDate.getFullYear();
-			const month = newDate.getMonth();
-			const day = newDate.getDate();
-			const utcDate = new Date(Date.UTC(year, month, day));
-			onChange(utcDate.toISOString().split("T")[0]);
+			// Convert to YYYY-MM-DD using local date components (no timezone conversion)
+			onChange(toDateString(newDate));
 		} else if (onChange && !newDate) {
 			onChange("");
 		}
 	};
 
 	React.useEffect(() => {
-		if (value) {
-			// Parse date string as local date to avoid timezone issues
-			const [year, month, day] = value.split("-");
-			setDate(
-				new Date(
-					Number.parseInt(year),
-					Number.parseInt(month) - 1,
-					Number.parseInt(day),
-				),
-			);
-		} else {
-			setDate(undefined);
-		}
+		// Parse value as local date to avoid timezone shifts
+		const parsedDate = parseLocalDate(value);
+		setDate(parsedDate || undefined);
 	}, [value]);
 
 	return (

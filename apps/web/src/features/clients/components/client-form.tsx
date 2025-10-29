@@ -125,7 +125,12 @@ export default function ClientForm({
 					if (onSuccess) {
 						onSuccess();
 					} else {
-						router.back();
+						// Navigate to client details page after creation, back for edits
+						if (!isEditMode && result?.data?.data?.client?.id) {
+							router.push(`/dashboard/clients/${result.data.data.client.id}`);
+						} else {
+							router.back();
+						}
 					}
 				} else if (result?.validationErrors) {
 					// Handle validation errors - show exact error messages

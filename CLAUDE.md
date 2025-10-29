@@ -347,6 +347,7 @@ For detailed information, see `/docs/claude/`:
 - [commands.md](./docs/claude/commands.md) - All commands reference
 - [architecture.md](./docs/claude/architecture.md) - System design
 - [security-config.md](./docs/claude/security-config.md) - Environment setup
+- [date-handling.md](./docs/claude/date-handling.md) - **Timezone-safe date handling guide**
 - [project-documentation-guidelines.md](./docs/claude/project-documentation-guidelines.md) - Guidelines for maintaining PROJECT_OVERVIEW.md
 
 ### Best Practices  

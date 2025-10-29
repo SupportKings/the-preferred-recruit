@@ -1,0 +1,90 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+
+import { actionClient } from "@/lib/safe-action";
+
+import { createClient } from "@/utils/supabase/server";
+
+import { getUser } from "@/queries/getUser";
+
+import { z } from "zod";
+
+const deleteProgramSchema = z.object({
+	id: z.string().uuid(),
+});
+
+export const deleteProgramAction = actionClient
+	.schema(deleteProgramSchema)
+	.action(async ({ parsedInput }) => {
+		try {
+			// Authentication check
+			const user = await getUser();
+			if (!user) {
+				return {
+					success: false,
+					error: "You must be logged in to delete a program",
+				};
+			}
+
+			const supabase = await createClient();
+
+			// Get team member ID for the current user
+			const { data: teamMember } = await (supabase as any)
+				.from("team_members")
+				.select("id")
+				.eq("user_id", user.user.id)
+				.maybeSingle();
+
+			// Soft delete by setting is_deleted flag
+			// Do update and select in one operation to get program details for revalidation
+			const { data: deletedProgram, error: deleteError } = await (
+				supabase as any
+			)
+				.from("programs")
+				.update({
+					is_deleted: true,
+					deleted_at: new Date().toISOString(),
+					deleted_by: teamMember?.id || null,
+				})
+				.eq("id", parsedInput.id)
+				.eq("is_deleted", false) // Only update if not already deleted
+				.select("id, university_id")
+				.maybeSingle();
+
+			if (deleteError) {
+				console.error("Error deleting program:", deleteError);
+				return {
+					success: false,
+					error: `Failed to delete program: ${deleteError.message}`,
+				};
+			}
+
+			if (!deletedProgram) {
+				return {
+					success: false,
+					error: "Program not found or already deleted",
+				};
+			}
+
+			const program = deletedProgram;
+
+			// Revalidate paths
+			revalidatePath("/dashboard/universities");
+			revalidatePath(`/dashboard/universities/${program.university_id}`);
+			revalidatePath(`/dashboard/programs/${parsedInput.id}`);
+
+			return {
+				success: true,
+			};
+		} catch (error) {
+			console.error("Unexpected error in deleteProgramAction:", error);
+			return {
+				success: false,
+				error:
+					error instanceof Error
+						? error.message
+						: "An unexpected error occurred",
+			};
+		}
+	});

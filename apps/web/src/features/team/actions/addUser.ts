@@ -4,6 +4,7 @@ import { headers } from "next/headers";
 
 import { auth } from "@/lib/auth";
 import { actionClient } from "@/lib/safe-action";
+
 import { createClient } from "@/utils/supabase/server";
 
 import { siteConfig } from "@/siteConfig";
@@ -124,10 +125,10 @@ export const addUser = actionClient
 
 			// 2. Add record to team_members table
 			const supabase = await createClient();
-			
+
 			// Handle different response structures from Better Auth
-			const userId = 'id' in newUser ? newUser.id : newUser.user.id;
-			
+			const userId = "id" in newUser ? newUser.id : newUser.user.id;
+
 			const { data: teamMember, error: teamMemberError } = await supabase
 				.from("team_members")
 				.insert({

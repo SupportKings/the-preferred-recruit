@@ -61,7 +61,10 @@ export const updateClientAction = actionClient
 			const fieldsToNullify = ["billing_status_id", "onboarding_status_id"];
 
 			fieldsToNullify.forEach((field) => {
-				if (cleanUpdateData[field] === "" || cleanUpdateData[field] === "none") {
+				if (
+					cleanUpdateData[field] === "" ||
+					cleanUpdateData[field] === "none"
+				) {
 					cleanUpdateData[field] = null;
 				}
 			});

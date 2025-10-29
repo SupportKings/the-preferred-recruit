@@ -1,0 +1,268 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+import { cn } from "@/lib/utils";
+
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+
+import { format } from "date-fns";
+import { CalendarIcon, Plus } from "lucide-react";
+import { useAction } from "next-safe-action/hooks";
+import { toast } from "sonner";
+import { createProgramEventAction } from "../actions/createProgramEvent";
+import { useEvents } from "../queries/useEvents";
+
+interface ManageProgramEventModalProps {
+	programId: string;
+	onSuccess?: () => void;
+	open?: boolean;
+	onOpenChange?: (open: boolean) => void;
+}
+
+export function ManageProgramEventModal({
+	programId,
+	onSuccess,
+	open: controlledOpen,
+	onOpenChange,
+}: ManageProgramEventModalProps) {
+	const [internalOpen, setInternalOpen] = useState(false);
+	const open = controlledOpen !== undefined ? controlledOpen : internalOpen;
+	const setOpen = onOpenChange || setInternalOpen;
+
+	const [eventId, setEventId] = useState("");
+	const [isActive, setIsActive] = useState(true);
+	const [startDate, setStartDate] = useState<Date | undefined>();
+	const [endDate, setEndDate] = useState<Date | undefined>();
+	const [internalNotes, setInternalNotes] = useState("");
+
+	const { data: events, isLoading: isLoadingEvents } = useEvents();
+
+	const {
+		execute: executeCreate,
+		isExecuting: isCreating,
+		result: createResult,
+	} = useAction(createProgramEventAction, {
+		onSuccess: (result) => {
+			if (result?.data?.success) {
+				toast.success("Event added to program successfully!");
+				setOpen(false);
+				onSuccess?.();
+			}
+		},
+		onError: (err) => {
+			console.error("Error adding event:", err);
+
+			const validationErrors = err.error?.validationErrors;
+			if (validationErrors) {
+				if (validationErrors.event_id?._errors?.[0]) {
+					toast.error(validationErrors.event_id._errors[0]);
+				} else if (validationErrors._errors?.[0]) {
+					toast.error(validationErrors._errors[0]);
+				} else {
+					toast.error("Validation error. Please check your inputs.");
+				}
+			} else {
+				const errorMessage =
+					err.error?.serverError || "Failed to add event. Please try again.";
+				toast.error(errorMessage);
+			}
+		},
+	});
+
+	const handleSubmit = (e: React.FormEvent) => {
+		e.preventDefault();
+
+		if (!eventId) {
+			toast.error("Please select an event");
+			return;
+		}
+
+		executeCreate({
+			program_id: programId,
+			event_id: eventId,
+			is_active: isActive,
+			start_date: startDate ? startDate.toISOString() : null,
+			end_date: endDate ? endDate.toISOString() : null,
+			internal_notes: internalNotes || null,
+		});
+	};
+
+	const resetForm = () => {
+		setEventId("");
+		setIsActive(true);
+		setStartDate(undefined);
+		setEndDate(undefined);
+		setInternalNotes("");
+	};
+
+	useEffect(() => {
+		if (!open) {
+			resetForm();
+		}
+	}, [open, resetForm]);
+
+	return (
+		<Dialog open={open} onOpenChange={setOpen}>
+			<DialogTrigger>
+				<Button size="sm">
+					<Plus className="mr-2 h-4 w-4" />
+					Add Event
+				</Button>
+			</DialogTrigger>
+			<DialogContent className="max-w-2xl">
+				<DialogHeader>
+					<DialogTitle>Add Event to Program</DialogTitle>
+					<DialogDescription>
+						Associate an event with this program
+					</DialogDescription>
+				</DialogHeader>
+
+				<form onSubmit={handleSubmit} className="space-y-4">
+					<div className="space-y-2">
+						<Label htmlFor="event_id">
+							Event <span className="text-red-500">*</span>
+						</Label>
+						<Select value={eventId} onValueChange={setEventId}>
+							<SelectTrigger>
+								<SelectValue placeholder="Select an event" />
+							</SelectTrigger>
+							<SelectContent>
+								{isLoadingEvents ? (
+									<SelectItem value="loading" disabled>
+										Loading events...
+									</SelectItem>
+								) : events && events.length > 0 ? (
+									events.map((event: any) => (
+										<SelectItem key={event.id} value={event.id}>
+											{event.name}
+											{event.code ? ` (${event.code})` : ""}
+										</SelectItem>
+									))
+								) : (
+									<SelectItem value="no-events" disabled>
+										No events available
+									</SelectItem>
+								)}
+							</SelectContent>
+						</Select>
+					</div>
+
+					<div className="flex items-center space-x-2">
+						<Checkbox
+							id="is_active"
+							checked={isActive}
+							onCheckedChange={(checked) => setIsActive(checked as boolean)}
+						/>
+						<Label htmlFor="is_active" className="cursor-pointer font-normal">
+							Active
+						</Label>
+					</div>
+
+					<div className="grid gap-4 md:grid-cols-2">
+						<div className="space-y-2">
+							<Label>Start Date</Label>
+							<Popover>
+								<PopoverTrigger asChild>
+									<Button
+										variant="outline"
+										className={cn(
+											"w-full justify-start text-left font-normal",
+											!startDate && "text-muted-foreground",
+										)}
+									>
+										<CalendarIcon className="mr-2 h-4 w-4" />
+										{startDate ? format(startDate, "PPP") : "Pick a date"}
+									</Button>
+								</PopoverTrigger>
+								<PopoverContent className="w-auto p-0">
+									<Calendar
+										mode="single"
+										selected={startDate}
+										onSelect={setStartDate}
+										initialFocus
+									/>
+								</PopoverContent>
+							</Popover>
+						</div>
+
+						<div className="space-y-2">
+							<Label>End Date</Label>
+							<Popover>
+								<PopoverTrigger asChild>
+									<Button
+										variant="outline"
+										className={cn(
+											"w-full justify-start text-left font-normal",
+											!endDate && "text-muted-foreground",
+										)}
+									>
+										<CalendarIcon className="mr-2 h-4 w-4" />
+										{endDate ? format(endDate, "PPP") : "Pick a date"}
+									</Button>
+								</PopoverTrigger>
+								<PopoverContent className="w-auto p-0">
+									<Calendar
+										mode="single"
+										selected={endDate}
+										onSelect={setEndDate}
+										initialFocus
+									/>
+								</PopoverContent>
+							</Popover>
+						</div>
+					</div>
+
+					<div className="space-y-2">
+						<Label htmlFor="internal_notes">Internal Notes</Label>
+						<Textarea
+							id="internal_notes"
+							value={internalNotes}
+							onChange={(e) => setInternalNotes(e.target.value)}
+							placeholder="Add any notes about this event assignment..."
+							rows={3}
+						/>
+					</div>
+
+					<div className="flex justify-end gap-3">
+						<Button
+							type="button"
+							variant="outline"
+							onClick={() => setOpen(false)}
+							disabled={isCreating}
+						>
+							Cancel
+						</Button>
+						<Button type="submit" disabled={isCreating || !eventId}>
+							{isCreating ? "Adding..." : "Add Event"}
+						</Button>
+					</div>
+				</form>
+			</DialogContent>
+		</Dialog>
+	);
+}

@@ -263,7 +263,9 @@ export async function getClientsFaceted(columnId: string, filters: any[] = []) {
 	try {
 		const supabase = await createClient();
 
-		let query = (supabase as any).from("clients").select(columnId, { count: "exact" });
+		let query = (supabase as any)
+			.from("clients")
+			.select(columnId, { count: "exact" });
 
 		// Apply existing filters (excluding the column we're faceting)
 		filters

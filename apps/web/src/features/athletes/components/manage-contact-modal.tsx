@@ -1,0 +1,403 @@
+"use client";
+
+import { type ReactNode, useCallback, useEffect, useState } from "react";
+
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { DatePicker } from "@/components/ui/date-picker";
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+
+import { athleteQueries } from "@/features/athletes/queries/useAthletes";
+import {
+	createAthleteContact,
+	updateAthleteContact,
+} from "@/features/contacts/actions/relations/contactAthletes";
+
+import { useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { Edit, Plus, Users } from "lucide-react";
+import { toast } from "sonner";
+
+interface ManageContactModalProps {
+	athleteId: string;
+	mode: "add" | "edit";
+	contactAthlete?: any;
+	children?: ReactNode;
+	open?: boolean;
+	onOpenChange?: (open: boolean) => void;
+}
+
+export function ManageContactModal({
+	athleteId,
+	mode,
+	contactAthlete,
+	children,
+	open: externalOpen,
+	onOpenChange: externalOnOpenChange,
+}: ManageContactModalProps) {
+	const isEdit = mode === "edit";
+	const [internalOpen, setInternalOpen] = useState(false);
+
+	// Use external state if provided, otherwise use internal state
+	const open = externalOpen !== undefined ? externalOpen : internalOpen;
+
+	const setOpen = useCallback(
+		(value: boolean) => {
+			if (externalOnOpenChange) {
+				externalOnOpenChange(value);
+			} else {
+				setInternalOpen(value);
+			}
+		},
+		[externalOnOpenChange],
+	);
+	const [isLoading, setIsLoading] = useState(false);
+	const queryClient = useQueryClient();
+
+	const [formData, setFormData] = useState({
+		full_name: "",
+		email: "",
+		phone: "",
+		preferred_contact_method: "",
+		relationship: "",
+		is_primary: false,
+		internal_notes: "",
+		start_date: format(new Date(), "yyyy-MM-dd"),
+		end_date: "",
+	});
+
+	// Populate form data when editing - only run when modal opens or contactAthlete changes
+	useEffect(() => {
+		// Only run when modal is actually open
+		if (!open) return;
+
+		if (isEdit && contactAthlete) {
+			// Validate that we have the contact data before setting form
+			if (!contactAthlete.contact) {
+				console.error(
+					"Contact data not loaded for contactAthlete:",
+					contactAthlete,
+				);
+				toast.error("Contact data not loaded. Please refresh and try again.");
+				return;
+			}
+
+			setFormData({
+				full_name: contactAthlete.contact.full_name || "",
+				email: contactAthlete.contact.email || "",
+				phone: contactAthlete.contact.phone || "",
+				preferred_contact_method:
+					contactAthlete.contact.preferred_contact_method || "",
+				relationship: contactAthlete.relationship || "",
+				is_primary: contactAthlete.is_primary || false,
+				internal_notes: contactAthlete.internal_notes || "",
+				start_date: contactAthlete.start_date
+					? format(new Date(contactAthlete.start_date), "yyyy-MM-dd")
+					: format(new Date(), "yyyy-MM-dd"),
+				end_date: contactAthlete.end_date
+					? format(new Date(contactAthlete.end_date), "yyyy-MM-dd")
+					: "",
+			});
+		} else if (!isEdit && open) {
+			// Reset form for add mode only when opening
+			setFormData({
+				full_name: "",
+				email: "",
+				phone: "",
+				preferred_contact_method: "",
+				relationship: "",
+				is_primary: false,
+				internal_notes: "",
+				start_date: format(new Date(), "yyyy-MM-dd"),
+				end_date: "",
+			});
+		}
+	}, [isEdit, contactAthlete, open]);
+
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+
+		// Validation
+		if (!formData.full_name.trim()) {
+			toast.error("Contact name is required");
+			return;
+		}
+
+		if (!formData.relationship.trim()) {
+			toast.error("Relationship is required");
+			return;
+		}
+
+		setIsLoading(true);
+
+		try {
+			if (isEdit && contactAthlete) {
+				await updateAthleteContact(contactAthlete.id, {
+					relationship: formData.relationship,
+					is_primary: formData.is_primary,
+					internal_notes: formData.internal_notes,
+					start_date: formData.start_date,
+					end_date: formData.end_date || undefined,
+				});
+				toast.success("Contact relationship updated successfully!");
+			} else {
+				await createAthleteContact(athleteId, {
+					full_name: formData.full_name,
+					email: formData.email,
+					phone: formData.phone,
+					preferred_contact_method: formData.preferred_contact_method,
+					relationship: formData.relationship,
+					is_primary: formData.is_primary,
+					internal_notes: formData.internal_notes,
+					start_date: formData.start_date,
+					end_date: formData.end_date || undefined,
+				});
+				toast.success("Contact added successfully!");
+			}
+
+			// Invalidate the athlete query to refresh the data
+			await queryClient.invalidateQueries({
+				queryKey: athleteQueries.detail(athleteId),
+			});
+
+			setOpen(false);
+		} catch (error) {
+			console.error(`Error ${isEdit ? "updating" : "adding"} contact:`, error);
+			toast.error(`Failed to ${isEdit ? "update" : "add"} contact`);
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	return (
+		<Dialog open={open} onOpenChange={setOpen}>
+			{externalOpen === undefined && (
+				<DialogTrigger>
+					{children || (
+						<Button variant="outline" size="sm" className="gap-2">
+							{isEdit ? (
+								<Edit className="h-4 w-4" />
+							) : (
+								<Plus className="h-4 w-4" />
+							)}
+							{isEdit ? "Edit Contact" : "Add Contact"}
+						</Button>
+					)}
+				</DialogTrigger>
+			)}
+			<DialogContent className="sm:max-w-[500px]">
+				<DialogHeader>
+					<DialogTitle className="flex items-center gap-2">
+						<Users className="h-5 w-5" />
+						{isEdit ? "Edit Contact" : "Add New Contact"}
+					</DialogTitle>
+					<DialogDescription>
+						{isEdit
+							? "Update the contact relationship details."
+							: "Add a new contact for this athlete."}
+					</DialogDescription>
+				</DialogHeader>
+
+				<form onSubmit={handleSubmit} className="space-y-4">
+					{/* Full Name - Only editable in add mode */}
+					<div className="space-y-2">
+						<Label htmlFor="full_name">Full Name *</Label>
+						<Input
+							id="full_name"
+							placeholder="e.g., John Doe"
+							value={formData.full_name}
+							onChange={(e) =>
+								setFormData({ ...formData, full_name: e.target.value })
+							}
+							required
+							disabled={isEdit}
+						/>
+					</div>
+
+					{/* Email - Only editable in add mode */}
+					{!isEdit && (
+						<div className="space-y-2">
+							<Label htmlFor="email">Email</Label>
+							<Input
+								id="email"
+								type="email"
+								placeholder="e.g., john.doe@example.com"
+								value={formData.email}
+								onChange={(e) =>
+									setFormData({ ...formData, email: e.target.value })
+								}
+							/>
+						</div>
+					)}
+
+					{/* Phone - Only editable in add mode */}
+					{!isEdit && (
+						<div className="space-y-2">
+							<Label htmlFor="phone">Phone</Label>
+							<Input
+								id="phone"
+								placeholder="e.g., (555) 123-4567"
+								value={formData.phone}
+								onChange={(e) =>
+									setFormData({ ...formData, phone: e.target.value })
+								}
+							/>
+						</div>
+					)}
+
+					{/* Preferred Contact Method - Only editable in add mode */}
+					{!isEdit && (
+						<div className="space-y-2">
+							<Label htmlFor="preferred_contact_method">
+								Preferred Contact Method
+							</Label>
+							<Select
+								value={formData.preferred_contact_method || "none"}
+								onValueChange={(value) =>
+									setFormData({
+										...formData,
+										preferred_contact_method: value === "none" ? "" : value,
+									})
+								}
+							>
+								<SelectTrigger id="preferred_contact_method">
+									<SelectValue placeholder="Select a method" />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value="none" disabled>
+										Select a method
+									</SelectItem>
+									<SelectItem value="email">Email</SelectItem>
+									<SelectItem value="phone">Phone</SelectItem>
+									<SelectItem value="text">Text/SMS</SelectItem>
+									<SelectItem value="whatsapp">WhatsApp</SelectItem>
+									<SelectItem value="other">Other</SelectItem>
+								</SelectContent>
+							</Select>
+						</div>
+					)}
+
+					{/* Relationship */}
+					<div className="space-y-2">
+						<Label htmlFor="relationship">Relationship *</Label>
+						<Select
+							value={formData.relationship || "none"}
+							onValueChange={(value) =>
+								setFormData({
+									...formData,
+									relationship: value === "none" ? "" : value,
+								})
+							}
+						>
+							<SelectTrigger id="relationship">
+								<SelectValue placeholder="Select a relationship" />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value="none" disabled>
+									Select a relationship
+								</SelectItem>
+								<SelectItem value="parent">Parent</SelectItem>
+								<SelectItem value="guardian">Guardian</SelectItem>
+								<SelectItem value="agent">Agent</SelectItem>
+								<SelectItem value="coach">Coach</SelectItem>
+								<SelectItem value="trainer">Trainer</SelectItem>
+								<SelectItem value="advisor">Advisor</SelectItem>
+								<SelectItem value="family">Family Member</SelectItem>
+								<SelectItem value="other">Other</SelectItem>
+							</SelectContent>
+						</Select>
+					</div>
+
+					{/* Start Date */}
+					<div className="space-y-2">
+						<Label htmlFor="start_date">Start Date</Label>
+						<DatePicker
+							id="start_date"
+							value={formData.start_date}
+							onChange={(value) =>
+								setFormData({ ...formData, start_date: value })
+							}
+							placeholder="Select start date"
+						/>
+					</div>
+
+					{/* End Date */}
+					<div className="space-y-2">
+						<Label htmlFor="end_date">End Date</Label>
+						<DatePicker
+							id="end_date"
+							value={formData.end_date}
+							onChange={(value) =>
+								setFormData({ ...formData, end_date: value })
+							}
+							placeholder="Select end date (optional)"
+						/>
+					</div>
+
+					{/* Internal Notes */}
+					<div className="space-y-2">
+						<Label htmlFor="internal_notes">Internal Notes</Label>
+						<Textarea
+							id="internal_notes"
+							placeholder="Private notes about this relationship"
+							value={formData.internal_notes}
+							onChange={(e) =>
+								setFormData({ ...formData, internal_notes: e.target.value })
+							}
+							rows={3}
+						/>
+					</div>
+
+					{/* Is Primary - Moved to end */}
+					<div className="flex items-center space-x-2">
+						<Checkbox
+							id="is_primary"
+							checked={formData.is_primary}
+							onCheckedChange={(checked) =>
+								setFormData({ ...formData, is_primary: !!checked })
+							}
+						/>
+						<Label htmlFor="is_primary">Mark as primary contact</Label>
+					</div>
+
+					<div className="flex justify-end gap-2 pt-4">
+						<Button
+							type="button"
+							variant="outline"
+							onClick={() => setOpen(false)}
+							disabled={isLoading}
+						>
+							Cancel
+						</Button>
+						<Button type="submit" disabled={isLoading}>
+							{isLoading
+								? isEdit
+									? "Updating..."
+									: "Adding..."
+								: isEdit
+									? "Update Contact"
+									: "Add Contact"}
+						</Button>
+					</div>
+				</form>
+			</DialogContent>
+		</Dialog>
+	);
+}

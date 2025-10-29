@@ -23,6 +23,7 @@ import {
 	ChevronsRightIcon,
 	XIcon,
 } from "lucide-react";
+import { TableActionsInline } from "./table-actions-inline";
 import { TableActionsPopover } from "./table-actions-popover";
 import type { RowAction, UniversalTableRow } from "./types";
 
@@ -36,6 +37,7 @@ interface UniversalDataTableProps<
 	totalCount?: number;
 	serverSide?: boolean;
 	rowActions?: RowAction<T>[];
+	inlineActions?: boolean;
 }
 
 export function UniversalDataTable<T extends UniversalTableRow>({
@@ -45,6 +47,7 @@ export function UniversalDataTable<T extends UniversalTableRow>({
 	emptyStateAction,
 	totalCount,
 	rowActions,
+	inlineActions = false,
 }: UniversalDataTableProps<T>) {
 	return (
 		<>
@@ -163,10 +166,17 @@ export function UniversalDataTable<T extends UniversalTableRow>({
 									))}
 									{rowActions && rowActions.length > 0 && (
 										<TableCell className="h-12 text-right">
-											<TableActionsPopover
-												row={row.original}
-												actions={rowActions}
-											/>
+											{inlineActions ? (
+												<TableActionsInline
+													row={row.original}
+													actions={rowActions}
+												/>
+											) : (
+												<TableActionsPopover
+													row={row.original}
+													actions={rowActions}
+												/>
+											)}
 										</TableCell>
 									)}
 								</TableRow>

@@ -267,19 +267,23 @@ export function FilterValueMultiOptionDisplay<TData>({
 	);
 }
 
-function formatDateRange(start: Date, end: Date) {
-	const sameMonth = start.getMonth() === end.getMonth();
-	const sameYear = start.getFullYear() === end.getFullYear();
+function formatDateRange(start: Date | string, end: Date | string) {
+	// Convert strings to Date objects if needed
+	const startDate = typeof start === "string" ? new Date(start) : start;
+	const endDate = typeof end === "string" ? new Date(end) : end;
+
+	const sameMonth = startDate.getMonth() === endDate.getMonth();
+	const sameYear = startDate.getFullYear() === endDate.getFullYear();
 
 	if (sameMonth && sameYear) {
-		return `${format(start, "MMM d")} - ${format(end, "d, yyyy")}`;
+		return `${format(startDate, "MMM d")} - ${format(endDate, "d, yyyy")}`;
 	}
 
 	if (sameYear) {
-		return `${format(start, "MMM d")} - ${format(end, "MMM d, yyyy")}`;
+		return `${format(startDate, "MMM d")} - ${format(endDate, "MMM d, yyyy")}`;
 	}
 
-	return `${format(start, "MMM d, yyyy")} - ${format(end, "MMM d, yyyy")}`;
+	return `${format(startDate, "MMM d, yyyy")} - ${format(endDate, "MMM d, yyyy")}`;
 }
 
 export function FilterValueDateDisplay<TData>({

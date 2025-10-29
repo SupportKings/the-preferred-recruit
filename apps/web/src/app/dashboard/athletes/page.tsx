@@ -1,12 +1,10 @@
 import { Suspense } from "react";
 
-import { redirect } from "next/navigation";
-
 import MainLayout from "@/components/layout/main-layout";
 
-import AthletesHeader from "@/features/athletes/layout/athletes-header";
-
-import { getUser } from "@/queries/getUser";
+import { prefetchAthletesWithFacetedServer } from "@/features/athletes/actions/getAthletes";
+import AthletesContent from "@/features/athletes/components/athletes.content";
+import AthletesHeader from "@/features/athletes/layout/athletes.header";
 
 import {
 	dehydrate,
@@ -26,30 +24,44 @@ export default function AthletesPage() {
 async function AthletesPageAsync() {
 	const queryClient = new QueryClient();
 
-	const session = await getUser();
+	// Default filters for initial load
+	const defaultFilters: any[] = [];
+	const defaultSorting: any[] = [];
 
-	if (!session) {
-		redirect("/");
-	}
+	// Create query keys directly (matching client-side keys)
+	const facetedColumns: string[] = [];
+	const combinedDataKey = [
+		"athletes",
+		"list",
+		"tableWithFaceted",
+		defaultFilters,
+		0,
+		25,
+		defaultSorting,
+		facetedColumns,
+	];
+
+	// Prefetch optimized combined data
+	await Promise.all([
+		// Prefetch combined athletes + faceted data (single optimized call)
+		queryClient.prefetchQuery({
+			queryKey: combinedDataKey,
+			queryFn: () =>
+				prefetchAthletesWithFacetedServer(
+					defaultFilters,
+					0,
+					25,
+					defaultSorting,
+					facetedColumns,
+				),
+			staleTime: 2 * 60 * 1000,
+		}),
+	]);
 
 	return (
 		<HydrationBoundary state={dehydrate(queryClient)}>
 			<MainLayout headers={[<AthletesHeader key="athletes-header" />]}>
-				<div className="space-y-6 p-6">
-					<div className="space-y-2">
-						<h1 className="text-3xl">Athletes</h1>
-						<p className="text-lg text-muted-foreground">
-							Manage and track athlete profiles and progress.
-						</p>
-					</div>
-
-					<div className="space-y-4 rounded-lg border bg-card p-6">
-						<h2 className="text-xl">Coming Soon</h2>
-						<p className="text-muted-foreground">
-							Athletes management features will be available here.
-						</p>
-					</div>
-				</div>
+				<AthletesContent />
 			</MainLayout>
 		</HydrationBoundary>
 	);

@@ -1,4 +1,9 @@
+import Link from "next/link";
+
+import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+
+import { UserRoundPlusIcon } from "lucide-react";
 
 export default function CoachesHeader() {
 	return (
@@ -7,6 +12,12 @@ export default function CoachesHeader() {
 				<SidebarTrigger />
 				<h1 className="font-medium text-[13px]">Coaches</h1>
 			</div>
+			<Button asChild>
+				<Link href="/dashboard/coaches/add" className="flex items-center">
+					<UserRoundPlusIcon className="mr-[6px] h-4 w-4" />
+					Add Coach
+				</Link>
+			</Button>
 		</div>
 	);
 }
