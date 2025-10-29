@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UniversalDataTable } from "@/components/universal-data-table/universal-data-table";
 
 import { getCoreRowModel, useReactTable } from "@tanstack/react-table";
-import { Plus } from "lucide-react";
+import { BookOpen, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { deleteBallKnowledge } from "../actions/deleteBallKnowledge";
 import { useBallKnowledge } from "../queries/useBallKnowledge";
@@ -82,6 +82,8 @@ export function BallKnowledgeSection({
 		pageCount: Math.ceil((data?.totalCount || 0) / pageSize),
 	});
 
+	const hasNoData = !data?.data || data.data.length === 0;
+
 	return (
 		<>
 			<Card>
@@ -93,11 +95,19 @@ export function BallKnowledgeSection({
 					</Button>
 				</CardHeader>
 				<CardContent>
-					<UniversalDataTable
-						table={table}
-						totalCount={data?.totalCount || 0}
-						emptyStateMessage="No ball knowledge found"
-					/>
+					{hasNoData ? (
+						<div className="py-8 text-center text-muted-foreground">
+							<BookOpen className="mx-auto mb-4 h-12 w-12 opacity-50" />
+							<p className="text-sm">No ball knowledge yet</p>
+							<p className="mt-1 text-xs">Notes will appear here once added</p>
+						</div>
+					) : (
+						<UniversalDataTable
+							table={table}
+							totalCount={data?.totalCount || 0}
+							emptyStateMessage="No ball knowledge found"
+						/>
+					)}
 				</CardContent>
 			</Card>
 

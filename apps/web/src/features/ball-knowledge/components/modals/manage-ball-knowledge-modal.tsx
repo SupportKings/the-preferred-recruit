@@ -1,7 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
-import { useEffect, useId, useState } from "react";
+import { useCallback, useEffect, useId, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
@@ -35,7 +34,6 @@ import type { BallKnowledgeWithRelations } from "../../types/ball-knowledge";
 interface ManageBallKnowledgeModalProps {
 	mode: "add" | "edit";
 	ballKnowledge?: BallKnowledgeWithRelations;
-	children?: ReactNode;
 	open?: boolean;
 	onOpenChange?: (open: boolean) => void;
 	defaultAboutCoachId?: string;
@@ -46,7 +44,6 @@ interface ManageBallKnowledgeModalProps {
 export function ManageBallKnowledgeModal({
 	mode,
 	ballKnowledge,
-	children,
 	open: externalOpen,
 	onOpenChange: externalOnOpenChange,
 	defaultAboutCoachId,
@@ -77,7 +74,7 @@ export function ManageBallKnowledgeModal({
 		about_program_id: defaultAboutProgramId || null,
 	});
 
-	useEffect(() => {
+	const resetForm = useCallback(() => {
 		if (isEdit && ballKnowledge) {
 			setFormData({
 				note: ballKnowledge.note || "",
@@ -90,7 +87,7 @@ export function ManageBallKnowledgeModal({
 				about_university_id: ballKnowledge.about_university_id || null,
 				about_program_id: ballKnowledge.about_program_id || null,
 			});
-		} else if (!isEdit) {
+		} else {
 			setFormData({
 				note: "",
 				source_type: "",
@@ -108,6 +105,12 @@ export function ManageBallKnowledgeModal({
 		defaultAboutUniversityId,
 		defaultAboutProgramId,
 	]);
+
+	useEffect(() => {
+		if (open) {
+			resetForm();
+		}
+	}, [open, resetForm]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
