@@ -239,6 +239,7 @@ export function ManageBallKnowledgeModal({
 								setFormData({ ...formData, about_university_id: value })
 							}
 							label="University"
+							disabled={!!defaultAboutUniversityId}
 						/>
 
 						<ProgramLookup
@@ -248,6 +249,7 @@ export function ManageBallKnowledgeModal({
 								setFormData({ ...formData, about_program_id: value })
 							}
 							label="Program"
+							disabled={!!defaultAboutProgramId}
 						/>
 					</div>
 
