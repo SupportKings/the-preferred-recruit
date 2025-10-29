@@ -86,7 +86,7 @@ export function ManageSendingToolLeadListModal({
 				internal_notes: "",
 			});
 		}
-	}, [isEdit, list, campaignId]);
+	}, [isEdit, list, campaignId, open]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();

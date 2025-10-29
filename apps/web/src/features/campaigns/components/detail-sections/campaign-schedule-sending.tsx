@@ -2,12 +2,12 @@ import { useState } from "react";
 
 import type { Database } from "@/utils/supabase/database.types";
 
+import { format } from "date-fns";
+import { Calendar, Edit3, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-
-import { format } from "date-fns";
-import { Calendar, Edit3, Save, X } from "lucide-react";
+import { UrlActions } from "@/components/url-actions";
 
 type Campaign = Database["public"]["Tables"]["campaigns"]["Row"];
 
@@ -174,21 +174,10 @@ export function CampaignScheduleSending({
 							placeholder="https://..."
 							className="mt-1"
 						/>
+					) : campaign.sending_tool_campaign_url ? (
+						<UrlActions url={campaign.sending_tool_campaign_url} className="mt-1" />
 					) : (
-						<p className="text-sm">
-							{campaign.sending_tool_campaign_url ? (
-								<a
-									href={campaign.sending_tool_campaign_url}
-									target="_blank"
-									rel="noopener noreferrer"
-									className="text-blue-600 hover:underline"
-								>
-									{campaign.sending_tool_campaign_url}
-								</a>
-							) : (
-								"Not set"
-							)}
-						</p>
+						<p className="mt-1 text-sm">Not set</p>
 					)}
 				</div>
 			</CardContent>

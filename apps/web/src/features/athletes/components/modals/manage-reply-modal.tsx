@@ -96,7 +96,7 @@ export function ManageReplyModal({
 				campaign_id: campaignId || "",
 			});
 		}
-	}, [isEdit, reply, campaignId]);
+	}, [isEdit, reply, campaignId, open]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();

@@ -1,11 +1,11 @@
 import { useState } from "react";
 
+import { Edit3, Instagram, Linkedin, Mail, Phone, Save, Twitter, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-import { Edit3, Instagram, Linkedin, Mail, Phone, Save, Twitter, X } from "lucide-react";
+import { UrlActions } from "@/components/url-actions";
 
 interface CoachContactSocialFormData {
 	email: string;
@@ -167,25 +167,17 @@ export function CoachContactSocial({
 								placeholder="Enter Twitter URL or handle"
 							/>
 						</div>
+					) : coach.twitter_profile ? (
+						<UrlActions
+							url={
+								coach.twitter_profile.startsWith("http")
+									? coach.twitter_profile
+									: `https://twitter.com/${coach.twitter_profile}`
+							}
+							className="mt-1"
+						/>
 					) : (
-						<p className="text-sm">
-							{coach.twitter_profile ? (
-								<a
-									href={
-										coach.twitter_profile.startsWith("http")
-											? coach.twitter_profile
-											: `https://twitter.com/${coach.twitter_profile}`
-									}
-									target="_blank"
-									rel="noopener noreferrer"
-									className="text-blue-600 hover:underline"
-								>
-									{coach.twitter_profile}
-								</a>
-							) : (
-								"Not provided"
-							)}
-						</p>
+						<p className="mt-1 text-sm">Not provided</p>
 					)}
 				</div>
 				<div>
@@ -211,21 +203,10 @@ export function CoachContactSocial({
 								placeholder="Enter LinkedIn URL"
 							/>
 						</div>
+					) : coach.linkedin_profile ? (
+						<UrlActions url={coach.linkedin_profile} className="mt-1" />
 					) : (
-						<p className="text-sm">
-							{coach.linkedin_profile ? (
-								<a
-									href={coach.linkedin_profile}
-									target="_blank"
-									rel="noopener noreferrer"
-									className="text-blue-600 hover:underline"
-								>
-									{coach.linkedin_profile}
-								</a>
-							) : (
-								"Not provided"
-							)}
-						</p>
+						<p className="mt-1 text-sm">Not provided</p>
 					)}
 				</div>
 				<div>
@@ -251,25 +232,17 @@ export function CoachContactSocial({
 								placeholder="Enter Instagram URL or handle"
 							/>
 						</div>
+					) : coach.instagram_profile ? (
+						<UrlActions
+							url={
+								coach.instagram_profile.startsWith("http")
+									? coach.instagram_profile
+									: `https://instagram.com/${coach.instagram_profile}`
+							}
+							className="mt-1"
+						/>
 					) : (
-						<p className="text-sm">
-							{coach.instagram_profile ? (
-								<a
-									href={
-										coach.instagram_profile.startsWith("http")
-											? coach.instagram_profile
-											: `https://instagram.com/${coach.instagram_profile}`
-									}
-									target="_blank"
-									rel="noopener noreferrer"
-									className="text-blue-600 hover:underline"
-								>
-									{coach.instagram_profile}
-								</a>
-							) : (
-								"Not provided"
-							)}
-						</p>
+						<p className="mt-1 text-sm">Not provided</p>
 					)}
 				</div>
 			</CardContent>

@@ -1,5 +1,6 @@
 import { useState } from "react";
 
+import { Check, ChevronsUpDown, Edit3, Save, Users, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -18,10 +19,9 @@ import {
 	PopoverTrigger,
 } from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
+import { UrlActions } from "@/components/url-actions";
 
 import { useTeamMembers } from "@/features/athletes/queries/useAthletes";
-
-import { Check, ChevronsUpDown, Edit3, Save, Users, X } from "lucide-react";
 
 interface AthleteSalesEngagementProps {
 	athlete: any;
@@ -337,21 +337,10 @@ export function AthleteSalesEngagement({
 							placeholder="https://..."
 							className="mt-1"
 						/>
+					) : athlete.sales_call_recording_url ? (
+						<UrlActions url={athlete.sales_call_recording_url} className="mt-1" />
 					) : (
-						<p className="text-sm">
-							{athlete.sales_call_recording_url ? (
-								<a
-									href={athlete.sales_call_recording_url}
-									target="_blank"
-									rel="noopener noreferrer"
-									className="text-blue-600 hover:underline"
-								>
-									Listen to Recording
-								</a>
-							) : (
-								"No recording"
-							)}
-						</p>
+						<p className="mt-1 text-sm">No recording</p>
 					)}
 				</div>
 			</CardContent>
