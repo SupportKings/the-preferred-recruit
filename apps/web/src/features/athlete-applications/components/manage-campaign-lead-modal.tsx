@@ -2,17 +2,8 @@
 
 import { type ReactNode, useEffect, useState } from "react";
 
-import { cn } from "@/lib/utils";
-
-import { Badge } from "@/components/ui/badge";
+import { UniversityLookup } from "@/components/lookups/university-lookup";
 import { Button } from "@/components/ui/button";
-import {
-	Command,
-	CommandEmpty,
-	CommandGroup,
-	CommandItem,
-	CommandList,
-} from "@/components/ui/command";
 import {
 	Dialog,
 	DialogContent,
@@ -21,13 +12,7 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@/components/ui/popover";
 import {
 	Select,
 	SelectContent,
@@ -42,9 +27,10 @@ import {
 	updateCampaignLead,
 } from "@/features/athlete-applications/actions/relations/campaign-leads";
 import { applicationQueries } from "@/features/athlete-applications/queries/useApplications";
+import { UniversityJobLookup } from "@/features/athletes/components/lookups/university-job-lookup";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { Check, Edit, Plus, Search, Target, X } from "lucide-react";
+import { Edit, Plus, Target } from "lucide-react";
 import { toast } from "sonner";
 
 interface ManageCampaignLeadModalProps {
@@ -52,17 +38,7 @@ interface ManageCampaignLeadModalProps {
 	mode: "add" | "edit";
 	lead?: any;
 	campaigns?: Array<{ id: string; name: string; type: string }>;
-	universities?: Array<{ id: string; name: string; city: string | null }>;
 	programs?: Array<{ id: string; gender: string; university_id: string }>;
-	coaches?: Array<{
-		id: string;
-		full_name: string;
-		university_jobs: Array<{
-			id: string;
-			job_title: string;
-			work_email: string | null;
-		}>;
-	}>;
 	children?: ReactNode;
 	open?: boolean;
 	onOpenChange?: (open: boolean) => void;
@@ -75,9 +51,7 @@ export function ManageCampaignLeadModal({
 	mode,
 	lead,
 	campaigns = [],
-	universities = [],
 	programs = [],
-	coaches = [],
 	children,
 	open: externalOpen,
 	onOpenChange: externalOnOpenChange,
@@ -89,8 +63,6 @@ export function ManageCampaignLeadModal({
 	const open = externalOpen !== undefined ? externalOpen : internalOpen;
 	const setOpen = externalOnOpenChange || setInternalOpen;
 	const [isLoading, setIsLoading] = useState(false);
-	const [coachSearch, setCoachSearch] = useState("");
-	const [coachPopoverOpen, setCoachPopoverOpen] = useState(false);
 	const queryClient = useQueryClient();
 
 	const [formData, setFormData] = useState({
@@ -182,20 +154,6 @@ export function ManageCampaignLeadModal({
 		? programs.filter((p) => p.university_id === formData.university_id)
 		: programs;
 
-	// Filter coaches based on search
-	const filteredCoaches = coaches.filter((coach) =>
-		coach.full_name.toLowerCase().includes(coachSearch.toLowerCase()),
-	);
-
-	// Filter coaches' jobs based on search
-	const availableJobs = filteredCoaches.flatMap((coach) =>
-		coach.university_jobs.map((job) => ({
-			...job,
-			coach_full_name: coach.full_name,
-			coach_id: coach.id,
-		})),
-	);
-
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			{externalOpen === undefined && (
@@ -231,55 +189,53 @@ export function ManageCampaignLeadModal({
 						<>
 							<div className="space-y-2">
 								<Label htmlFor="campaign_id">Campaign *</Label>
-								<Select
-									value={formData.campaign_id || "NONE"}
-									onValueChange={(value) =>
-										setFormData({
-											...formData,
-											campaign_id: value === "NONE" ? null : value,
-										})
-									}
-								>
-									<SelectTrigger>
-										<SelectValue placeholder="Select campaign..." />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem value="NONE">None</SelectItem>
-										{campaigns.map((campaign) => (
-											<SelectItem key={campaign.id} value={campaign.id}>
-												{campaign.name} ({campaign.type})
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
+								{campaigns.length === 0 ? (
+									<div className="rounded-md border border-yellow-200 bg-yellow-50 p-3 text-sm dark:border-yellow-900 dark:bg-yellow-950">
+										<p className="font-medium text-yellow-800 dark:text-yellow-200">
+											No campaigns available
+										</p>
+										<p className="mt-1 text-yellow-700 dark:text-yellow-300">
+											This athlete doesn't have any campaigns yet. Create a
+											campaign first to link it to this application.
+										</p>
+									</div>
+								) : (
+									<Select
+										value={formData.campaign_id || "NONE"}
+										onValueChange={(value) =>
+											setFormData({
+												...formData,
+												campaign_id: value === "NONE" ? null : value,
+											})
+										}
+									>
+										<SelectTrigger>
+											<SelectValue placeholder="Select campaign..." />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value="NONE">None</SelectItem>
+											{campaigns.map((campaign) => (
+												<SelectItem key={campaign.id} value={campaign.id}>
+													{campaign.name} ({campaign.type})
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								)}
 							</div>
 
-							<div className="space-y-2">
-								<Label htmlFor="university_id">University</Label>
-								<Select
-									value={formData.university_id || "NONE"}
-									onValueChange={(value) =>
-										setFormData({
-											...formData,
-											university_id: value === "NONE" ? null : value,
-											program_id: null, // Reset program when university changes
-										})
-									}
-								>
-									<SelectTrigger>
-										<SelectValue placeholder="Select university..." />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem value="NONE">None</SelectItem>
-										{universities.map((university) => (
-											<SelectItem key={university.id} value={university.id}>
-												{university.name}
-												{university.city && ` (${university.city})`}
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
-							</div>
+							<UniversityLookup
+								label="University (Optional)"
+								value={formData.university_id || ""}
+								onChange={(value) =>
+									setFormData({
+										...formData,
+										university_id: value || null,
+										program_id: null, // Reset program when university changes
+									})
+								}
+								placeholder="Search for a university..."
+							/>
 
 							<div className="space-y-2">
 								<Label htmlFor="program_id">Program</Label>
@@ -315,116 +271,17 @@ export function ManageCampaignLeadModal({
 								</Select>
 							</div>
 
-							<div className="space-y-2">
-								<Label htmlFor="coach_search">Coach/Job (Optional)</Label>
-								<Popover
-									open={coachPopoverOpen}
-									onOpenChange={setCoachPopoverOpen}
-								>
-									<PopoverTrigger asChild>
-										<div className="relative">
-											<div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-												<Search className="h-4 w-4 text-muted-foreground" />
-											</div>
-											<Input
-												type="text"
-												placeholder={
-													formData.university_job_id
-														? ""
-														: "Search for a coach or job..."
-												}
-												value={coachSearch}
-												onChange={(e) => {
-													setCoachSearch(e.target.value);
-													if (!coachPopoverOpen) setCoachPopoverOpen(true);
-												}}
-												onFocus={() => setCoachPopoverOpen(true)}
-												className="pr-8 pl-9"
-											/>
-											{formData.university_job_id && !coachSearch && (
-												<div className="absolute inset-y-0 right-8 left-9 flex items-center">
-													<Badge
-														variant="secondary"
-														className="max-w-full truncate"
-													>
-														{availableJobs.find(
-															(job) => job.id === formData.university_job_id,
-														)?.coach_full_name || "Selected coach"}
-													</Badge>
-												</div>
-											)}
-											{formData.university_job_id && (
-												<button
-													type="button"
-													onClick={(e) => {
-														e.stopPropagation();
-														setFormData({
-															...formData,
-															university_job_id: null,
-														});
-														setCoachSearch("");
-														setCoachPopoverOpen(false);
-													}}
-													className="absolute inset-y-0 right-0 flex items-center pr-3 text-muted-foreground hover:text-foreground"
-												>
-													<X className="h-4 w-4" />
-												</button>
-											)}
-										</div>
-									</PopoverTrigger>
-									<PopoverContent
-										className="w-[var(--radix-popover-trigger-width)] p-0"
-										align="start"
-									>
-										<Command shouldFilter={false}>
-											<CommandList>
-												<CommandEmpty>
-													{coachSearch
-														? "No coaches found matching your search."
-														: "Start typing to search for coaches..."}
-												</CommandEmpty>
-												<CommandGroup>
-													{availableJobs.length > 0 &&
-														availableJobs.map((job) => (
-															<CommandItem
-																key={job.id}
-																value={job.id}
-																onSelect={() => {
-																	setFormData({
-																		...formData,
-																		university_job_id: job.id,
-																	});
-																	setCoachSearch("");
-																	setCoachPopoverOpen(false);
-																}}
-																className="cursor-pointer"
-															>
-																<Check
-																	className={cn(
-																		"mr-2 h-4 w-4",
-																		formData.university_job_id === job.id
-																			? "opacity-100"
-																			: "opacity-0",
-																	)}
-																/>
-																<div className="flex flex-col">
-																	<span className="font-medium">
-																		{job.coach_full_name} - {job.job_title}
-																	</span>
-																	{job.work_email && (
-																		<span className="text-muted-foreground text-xs">
-																			{job.work_email}
-																		</span>
-																	)}
-																</div>
-															</CommandItem>
-														))}
-												</CommandGroup>
-											</CommandList>
-										</Command>
-									</PopoverContent>
-								</Popover>
-							</div>
+							<UniversityJobLookup
+								label="Coach/Job (Optional)"
+								value={formData.university_job_id || ""}
+								onChange={(value) =>
+									setFormData({
+										...formData,
+										university_job_id: value || null,
+									})
+								}
+								universityId={formData.university_id || undefined}
+							/>
 						</>
 					)}
 

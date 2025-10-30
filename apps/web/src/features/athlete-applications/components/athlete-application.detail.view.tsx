@@ -27,34 +27,16 @@ import { DeleteConfirmModal } from "./shared/delete-confirm-modal";
 
 interface AthleteApplicationDetailViewProps {
 	applicationId: string;
-	athletes?: Array<{
-		id: string;
-		full_name: string;
-		graduation_year: number | null;
-	}>;
-	universities?: Array<{ id: string; name: string; city: string | null }>;
 	programs?: Array<{ id: string; gender: string; university_id: string }>;
 	leadLists?: Array<{ id: string; name: string; priority: string }>;
 	campaigns?: Array<{ id: string; name: string; type: string; status: string }>;
-	coaches?: Array<{
-		id: string;
-		full_name: string;
-		university_jobs: Array<{
-			id: string;
-			job_title: string;
-			work_email: string | null;
-		}>;
-	}>;
 }
 
 export default function AthleteApplicationDetailView({
 	applicationId,
-	athletes = [],
-	universities = [],
 	programs = [],
 	leadLists = [],
 	campaigns = [],
-	coaches = [],
 }: AthleteApplicationDetailViewProps) {
 	const { data: application, isLoading, error } = useApplication(applicationId);
 	const queryClient = useQueryClient();
@@ -179,8 +161,6 @@ export default function AthleteApplicationDetailView({
 			<div className="grid gap-6 md:grid-cols-2">
 				<ApplicationPartiesTarget
 					application={application}
-					athletes={athletes}
-					universities={universities}
 					programs={programs}
 					isEditing={editState.isEditing && editState.section === "parties"}
 					onEditToggle={() => handleEditToggle("parties")}
@@ -237,9 +217,7 @@ export default function AthleteApplicationDetailView({
 						applicationId={applicationId}
 						leads={application.campaign_leads || []}
 						campaigns={campaigns}
-						universities={universities}
 						programs={programs}
-						coaches={coaches}
 						setDeleteModal={setDeleteModal}
 					/>
 				</TabsContent>

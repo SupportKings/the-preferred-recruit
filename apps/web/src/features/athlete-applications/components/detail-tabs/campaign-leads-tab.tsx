@@ -20,17 +20,7 @@ interface CampaignLeadsTabProps {
 	applicationId: string;
 	leads: any[];
 	campaigns?: Array<{ id: string; name: string; type: string }>;
-	universities?: Array<{ id: string; name: string; city: string | null }>;
 	programs?: Array<{ id: string; gender: string; university_id: string }>;
-	coaches?: Array<{
-		id: string;
-		full_name: string;
-		university_jobs: Array<{
-			id: string;
-			job_title: string;
-			work_email: string | null;
-		}>;
-	}>;
 	setDeleteModal: (modal: any) => void;
 }
 
@@ -38,9 +28,7 @@ export function CampaignLeadsTab({
 	applicationId,
 	leads,
 	campaigns,
-	universities,
 	programs,
-	coaches,
 	setDeleteModal,
 }: CampaignLeadsTabProps) {
 	const [editModal, setEditModal] = useState<{
@@ -71,9 +59,7 @@ export function CampaignLeadsTab({
 			<NoCampaignLeads
 				applicationId={applicationId}
 				campaigns={campaigns}
-				universities={universities}
 				programs={programs}
-				coaches={coaches}
 			/>
 		);
 	}
@@ -90,9 +76,7 @@ export function CampaignLeadsTab({
 						applicationId={applicationId}
 						mode="add"
 						campaigns={campaigns}
-						universities={universities}
 						programs={programs}
-						coaches={coaches}
 					/>
 				</div>
 			</CardHeader>

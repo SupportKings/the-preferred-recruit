@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import * as Dialog from "@radix-ui/react-dialog";
+
 import { Constants } from "@/utils/supabase/database.types";
 
 import { DataTableFilter } from "@/components/data-table-filter";
@@ -20,6 +22,8 @@ import { UniversalDataTable } from "@/components/universal-data-table/universal-
 import { UniversalDataTableWrapper } from "@/components/universal-data-table/universal-data-table-wrapper";
 import { createUniversalColumnHelper } from "@/components/universal-data-table/utils/column-helpers";
 
+import { deleteAthleteApplication } from "@/features/athlete-applications/actions/deleteAthleteApplication";
+
 import { createColumnHelper } from "@tanstack/react-table";
 import { format } from "date-fns";
 import {
@@ -31,7 +35,10 @@ import {
 	TrashIcon,
 	UniversityIcon,
 	User2Icon,
+	X,
 } from "lucide-react";
+import { useAction } from "next-safe-action/hooks";
+import { toast } from "sonner";
 import {
 	useApplicationsWithFaceted,
 	useAthletes,
@@ -283,6 +290,9 @@ function ApplicationsTableContent({
 	const router = useRouter();
 	const [currentPage, setCurrentPage] = useState(0);
 	const [sorting, setSorting] = useState<any[]>([]);
+	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+	const [applicationToDelete, setApplicationToDelete] =
+		useState<Application | null>(null);
 
 	// Reset to first page when filters change
 	useEffect(() => {
@@ -320,6 +330,28 @@ function ApplicationsTableContent({
 	const universityFaceted = applicationsWithFaceted?.facetedData?.university_id;
 	const programFaceted = applicationsWithFaceted?.facetedData?.program_id;
 	const stageFaceted = applicationsWithFaceted?.facetedData?.stage;
+
+	// Delete action hook
+	const { execute: executeDeleteApplication, isExecuting } = useAction(
+		deleteAthleteApplication,
+		{
+			onSuccess: () => {
+				setIsDeleteDialogOpen(false);
+				setApplicationToDelete(null);
+				toast.success("Application deleted successfully");
+			},
+			onError: (error) => {
+				console.error("Failed to delete application:", error);
+				toast.error("Failed to delete application. Please try again.");
+			},
+		},
+	);
+
+	const handleDeleteApplication = () => {
+		if (applicationToDelete) {
+			executeDeleteApplication({ id: applicationToDelete.id });
+		}
+	};
 
 	// Create dynamic filter config with proper types based on database schema
 	const dynamicFilterConfig = [
@@ -399,8 +431,8 @@ function ApplicationsTableContent({
 			icon: TrashIcon,
 			variant: "destructive" as const,
 			onClick: (application: Application) => {
-				// TODO: Implement delete confirmation modal
-				console.log("Delete", application.id);
+				setApplicationToDelete(application);
+				setIsDeleteDialogOpen(true);
 			},
 		},
 	];
@@ -451,6 +483,11 @@ function ApplicationsTableContent({
 		);
 	}
 
+	const athleteName =
+		applicationToDelete?.athlete?.full_name || "Unknown Athlete";
+	const universityName =
+		applicationToDelete?.university?.name || "Unknown University";
+
 	return (
 		<div className="w-full">
 			<div className="flex items-center gap-2 pb-4">
@@ -488,6 +525,45 @@ function ApplicationsTableContent({
 					}
 				/>
 			)}
+
+			<Dialog.Root
+				open={isDeleteDialogOpen}
+				onOpenChange={setIsDeleteDialogOpen}
+			>
+				<Dialog.Portal>
+					<Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
+					<Dialog.Content className="-translate-x-1/2 -translate-y-1/2 fixed top-1/2 left-1/2 z-50 w-full max-w-md transform rounded-lg bg-white p-6 shadow-lg dark:bg-gray-800">
+						<Dialog.Title className="mb-4 font-semibold text-lg">
+							Delete Application
+						</Dialog.Title>
+						<Dialog.Description className="mb-6 text-gray-600 dark:text-gray-300">
+							Are you sure you want to delete the application for {athleteName}{" "}
+							to {universityName}? This action cannot be undone.
+						</Dialog.Description>
+						<div className="flex justify-end gap-3">
+							<Dialog.Close asChild>
+								<Button variant="outline">Cancel</Button>
+							</Dialog.Close>
+							<Button
+								variant="destructive"
+								onClick={handleDeleteApplication}
+								disabled={isExecuting}
+							>
+								{isExecuting ? "Deleting..." : "Delete"}
+							</Button>
+						</div>
+						<Dialog.Close asChild>
+							<Button
+								variant="ghost"
+								size="sm"
+								className="absolute top-3 right-3 p-1"
+							>
+								<X className="h-4 w-4" />
+							</Button>
+						</Dialog.Close>
+					</Dialog.Content>
+				</Dialog.Portal>
+			</Dialog.Root>
 		</div>
 	);
 }

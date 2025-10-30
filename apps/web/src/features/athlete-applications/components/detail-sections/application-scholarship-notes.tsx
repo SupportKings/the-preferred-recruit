@@ -36,14 +36,21 @@ export function ApplicationScholarshipNotes({
 	});
 
 	const handleSave = () => {
-		// Convert string numbers to actual numbers
+		// Convert string numbers to actual numbers and validate
+		const amount = formData.scholarship_amount_per_year
+			? Number(formData.scholarship_amount_per_year)
+			: null;
+		const percent = formData.scholarship_percent
+			? Number(formData.scholarship_percent)
+			: null;
+
+		// Validate that values are not negative
+		if (amount !== null && amount < 0) return;
+		if (percent !== null && percent < 0) return;
+
 		onSave?.({
-			scholarship_amount_per_year: formData.scholarship_amount_per_year
-				? Number(formData.scholarship_amount_per_year)
-				: null,
-			scholarship_percent: formData.scholarship_percent
-				? Number(formData.scholarship_percent)
-				: null,
+			scholarship_amount_per_year: amount,
+			scholarship_percent: percent,
 			offer_notes: formData.offer_notes || null,
 			internal_notes: formData.internal_notes || null,
 		});
@@ -116,6 +123,7 @@ export function ApplicationScholarshipNotes({
 								}))
 							}
 							placeholder="Enter amount"
+							min="0"
 							className="mt-1"
 						/>
 					) : (

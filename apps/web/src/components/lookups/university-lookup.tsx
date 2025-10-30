@@ -8,103 +8,67 @@ import {
 } from "@/components/server-search-combobox";
 import { Label } from "@/components/ui/label";
 
-import { searchUniversityJobs } from "@/features/university-jobs/actions/searchUniversityJobs";
+import { searchUniversities } from "@/features/universities/actions/searchUniversities";
 
-interface UniversityJobLookupProps {
-	universityId?: string;
+interface UniversityLookupProps {
 	value?: string;
 	onChange: (value: string) => void;
 	label?: string;
 	required?: boolean;
 	disabled?: boolean;
+	placeholder?: string;
 }
 
-interface UniversityJob {
+interface University {
 	id: string;
-	job_title: string | null;
-	work_email: string | null;
-	coach: {
-		id: string;
-		full_name: string;
-	} | null;
-	university: {
-		id: string;
-		name: string;
-		city: string | null;
-		state: string | null;
-	} | null;
-	program: {
-		id: string;
-		gender: string | null;
-	} | null;
+	name: string;
+	city: string | null;
+	state: string | null;
 }
 
-export function UniversityJobLookup({
-	universityId,
+export function UniversityLookup({
 	value,
 	onChange,
-	label = "Coach/Job",
+	label = "University",
 	required = false,
 	disabled = false,
-}: UniversityJobLookupProps) {
+	placeholder = "Select university...",
+}: UniversityLookupProps) {
 	const [searchTerm, setSearchTerm] = useState("");
 	const [options, setOptions] = useState<ServerSearchComboboxOption[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [hasMore, setHasMore] = useState(false);
 	const [page, setPage] = useState(0);
 
-	const getDisplayText = useCallback((job: UniversityJob) => {
-		const parts = [];
+	const getDisplayText = useCallback((university: University) => {
+		const parts = [university.name];
 
-		// Priority: Coach name or job title
-		if (job.coach?.full_name) {
-			parts.push(job.coach.full_name);
-		} else if (job.job_title) {
-			parts.push(job.job_title);
+		if (university.city && university.state) {
+			parts.push(`${university.city}, ${university.state}`);
+		} else if (university.state) {
+			parts.push(university.state);
+		} else if (university.city) {
+			parts.push(university.city);
 		}
 
-		// Add job title if we have coach name
-		if (job.coach?.full_name && job.job_title) {
-			parts.push(`- ${job.job_title}`);
-		}
-
-		// Program gender
-		if (job.program?.gender) {
-			const gender =
-				job.program.gender === "men"
-					? "Men's"
-					: job.program.gender === "women"
-						? "Women's"
-						: job.program.gender;
-			parts.push(`• ${gender}`);
-		}
-
-		// University name
-		if (job.university?.name) {
-			parts.push(`• ${job.university.name}`);
-		}
-
-		return parts.join(" ") || "Unknown";
+		return parts.join(" • ");
 	}, []);
 
-	const fetchJobs = useCallback(
+	const fetchUniversities = useCallback(
 		async (searchQuery: string, pageNumber: number, append = false) => {
 			setIsLoading(true);
 			try {
-				const result = await searchUniversityJobs({
+				const result = await searchUniversities({
 					searchTerm: searchQuery,
-					universityId,
 					page: pageNumber,
 					pageSize: 50,
 				});
 
-				const newOptions: ServerSearchComboboxOption[] = result.jobs.map(
-					(job) => ({
-						value: job.id,
-						label: getDisplayText(job),
-						subtitle: job.work_email || undefined,
-					}),
-				);
+				const newOptions: ServerSearchComboboxOption[] =
+					result.universities.map((university) => ({
+						value: university.id,
+						label: getDisplayText(university),
+					}));
 
 				if (append) {
 					setOptions((prev) => {
@@ -121,27 +85,27 @@ export function UniversityJobLookup({
 
 				setHasMore(result.hasMore);
 			} catch (error) {
-				console.error("Error fetching university jobs:", error);
+				console.error("Error fetching universities:", error);
 				setOptions([]);
 				setHasMore(false);
 			} finally {
 				setIsLoading(false);
 			}
 		},
-		[universityId, getDisplayText],
+		[getDisplayText],
 	);
 
 	// Initial load and search term changes
 	useEffect(() => {
 		setPage(0);
-		fetchJobs(searchTerm, 0, false);
-	}, [searchTerm, fetchJobs]);
+		fetchUniversities(searchTerm, 0, false);
+	}, [searchTerm, fetchUniversities]);
 
 	const handleLoadMore = useCallback(() => {
 		const nextPage = page + 1;
 		setPage(nextPage);
-		fetchJobs(searchTerm, nextPage, true);
-	}, [page, searchTerm, fetchJobs]);
+		fetchUniversities(searchTerm, nextPage, true);
+	}, [page, searchTerm, fetchUniversities]);
 
 	const handleSearchChange = (newSearchTerm: string) => {
 		setSearchTerm(newSearchTerm);
@@ -166,9 +130,9 @@ export function UniversityJobLookup({
 				onSearchChange={handleSearchChange}
 				options={options}
 				isLoading={isLoading}
-				placeholder="Search for a coach or job..."
-				searchPlaceholder="Search by name, title, email, university..."
-				emptyText="No jobs found matching your search."
+				placeholder={placeholder}
+				searchPlaceholder="Search by name, city, or state..."
+				emptyText="No universities found matching your search."
 				disabled={disabled}
 				hasMore={hasMore}
 				onLoadMore={handleLoadMore}

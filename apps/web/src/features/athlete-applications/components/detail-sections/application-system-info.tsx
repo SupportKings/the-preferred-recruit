@@ -6,7 +6,7 @@ import { Clock } from "lucide-react";
 const formatDate = (dateString: string | null) => {
 	if (!dateString) return "Not set";
 	try {
-		return format(new Date(dateString), "MMM dd, yyyy");
+		return format(new Date(dateString), "MMM dd, yyyy hh:mm a");
 	} catch {
 		return "Invalid date";
 	}
