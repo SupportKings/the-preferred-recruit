@@ -267,6 +267,8 @@ export default function CampaignDetailView({
 
 				<TabsContent value="derived">
 					<DerivedCampaignsTab
+						campaignId={campaignId}
+						athleteId={campaign.athlete?.id || ""}
 						derivedCampaigns={campaign.derived_campaigns || []}
 					/>
 				</TabsContent>

@@ -26,8 +26,6 @@ export async function createSendingToolLeadList(data: {
 			row_count: data.row_count,
 			file_url: data.file_url,
 			internal_notes: data.internal_notes,
-			generated_by: user.user.id,
-			generated_at: new Date().toISOString(),
 		})
 		.select()
 		.single();
@@ -57,14 +55,17 @@ export async function updateSendingToolLeadList(
 		throw new Error("Authentication required");
 	}
 
+	// Build update object with only provided fields
+	const updateData: Record<string, string | number | null | undefined> = {};
+	if (data.format !== undefined) updateData.format = data.format;
+	if (data.row_count !== undefined) updateData.row_count = data.row_count;
+	if (data.file_url !== undefined) updateData.file_url = data.file_url;
+	if (data.internal_notes !== undefined)
+		updateData.internal_notes = data.internal_notes;
+
 	const { data: list, error } = await supabase
 		.from("sending_tool_lead_lists")
-		.update({
-			format: data.format,
-			row_count: data.row_count,
-			file_url: data.file_url,
-			internal_notes: data.internal_notes,
-		})
+		.update(updateData)
 		.eq("id", listId)
 		.select()
 		.single();

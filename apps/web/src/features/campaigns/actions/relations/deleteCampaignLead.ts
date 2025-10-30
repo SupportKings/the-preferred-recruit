@@ -18,6 +18,22 @@ export const deleteCampaignLead = actionClient
 		try {
 			const supabase = await createClient();
 
+			// Get current user to set deleted_by
+			const {
+				data: { user },
+			} = await supabase.auth.getUser();
+
+			if (!user) {
+				return { success: false, error: "Authentication required" };
+			}
+
+			// Get team member ID for the current user
+			const { data: teamMember } = await supabase
+				.from("team_members")
+				.select("id")
+				.eq("user_id", user.id)
+				.maybeSingle();
+
 			// First check if the record exists and is not already deleted
 			const { data: existing, error: fetchError } = await supabase
 				.from("campaign_leads")
@@ -38,8 +54,13 @@ export const deleteCampaignLead = actionClient
 			// Perform soft delete
 			const { error } = await supabase
 				.from("campaign_leads")
-				.update({ is_deleted: true, deleted_at: new Date().toISOString() })
-				.eq("id", id);
+				.update({
+					is_deleted: true,
+					deleted_at: new Date().toISOString(),
+					deleted_by: teamMember?.id || null,
+				})
+				.eq("id", id)
+				.eq("is_deleted", false); // Only update if not already deleted
 
 			if (error) {
 				console.error("Failed to delete campaign lead:", error);

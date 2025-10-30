@@ -192,6 +192,9 @@ export function ManageSendingToolLeadListModal({
 								<SelectItem value="json">JSON</SelectItem>
 							</SelectContent>
 						</Select>
+						<p className="text-muted-foreground text-xs">
+							Export format (CSV recommended)
+						</p>
 					</div>
 
 					<div className="space-y-2">
@@ -199,31 +202,37 @@ export function ManageSendingToolLeadListModal({
 						<Input
 							id="row_count"
 							type="number"
-							placeholder="Number of rows in the file"
+							placeholder="How many rows are in the file"
 							value={formData.row_count}
 							onChange={(e) =>
 								setFormData({ ...formData, row_count: e.target.value })
 							}
 						/>
+						<p className="text-muted-foreground text-xs">
+							How many rows are in the file
+						</p>
 					</div>
 
 					<div className="space-y-2">
 						<Label htmlFor="file_url">File URL</Label>
 						<Input
 							id="file_url"
-							placeholder="URL to the generated file"
+							placeholder="Storage link (e.g., Drive, S3)"
 							value={formData.file_url}
 							onChange={(e) =>
 								setFormData({ ...formData, file_url: e.target.value })
 							}
 						/>
+						<p className="text-muted-foreground text-xs">
+							Storage link (e.g., Drive, S3)
+						</p>
 					</div>
 
 					<div className="space-y-2">
 						<Label htmlFor="internal_notes">Internal Notes</Label>
 						<Textarea
 							id="internal_notes"
-							placeholder="Notes about this export"
+							placeholder="Notes about this export batch"
 							value={formData.internal_notes}
 							onChange={(e) =>
 								setFormData({ ...formData, internal_notes: e.target.value })

@@ -15,7 +15,8 @@ const formatDate = (dateString: string | null | undefined) => {
 interface CampaignSystemInfoProps {
 	campaign: {
 		id: string;
-		deleted_at?: string | null;
+		created_at?: string | null;
+		updated_at?: string | null;
 	};
 }
 
@@ -37,9 +38,15 @@ export function CampaignSystemInfo({ campaign }: CampaignSystemInfoProps) {
 				</div>
 				<div>
 					<label className="font-medium text-muted-foreground text-sm">
-						Last Updated
+						Created At
 					</label>
-					<p className="text-sm">{formatDate(campaign.deleted_at)}</p>
+					<p className="text-sm">{formatDate(campaign.created_at)}</p>
+				</div>
+				<div>
+					<label className="font-medium text-muted-foreground text-sm">
+						Updated At
+					</label>
+					<p className="text-sm">{formatDate(campaign.updated_at)}</p>
 				</div>
 			</CardContent>
 		</Card>

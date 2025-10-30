@@ -4,6 +4,7 @@ import { type ReactNode, useEffect, useId, useState } from "react";
 
 import type { Tables } from "@/utils/supabase/database.types";
 
+import { LeadListLookup } from "@/components/lookups/lead-list-lookup";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -23,7 +24,6 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
-import { LeadListLookup } from "@/features/athletes/components/lookups/lead-list-lookup";
 import { ProgramLookup } from "@/features/athletes/components/lookups/program-lookup";
 import {
 	createSchoolLeadListEntry,

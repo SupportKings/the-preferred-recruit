@@ -28,6 +28,13 @@ type LeadListEntry = Tables<"school_lead_list_entries"> & {
 		id: string;
 		name: string | null;
 		priority: string | null;
+		athlete_id: string | null;
+		athlete: {
+			id: string;
+			full_name: string;
+			contact_email: string | null;
+			graduation_year: number | null;
+		} | null;
 	} | null;
 	programs: {
 		id: string;
@@ -49,35 +56,6 @@ interface LeadListEntriesTabProps {
 	>;
 	onRefresh: () => void;
 }
-
-// Format status with proper capitalization
-const formatStatus = (status: string | null | undefined): string => {
-	if (!status || typeof status !== "string") return "Unknown";
-
-	const statusMap: Record<string, string> = {
-		included: "Included",
-		excluded: "Excluded",
-		pending: "Pending",
-		contacted: "Contacted",
-		responded: "Responded",
-	};
-
-	return statusMap[status.toLowerCase()] || status;
-};
-
-// Format priority with proper capitalization
-const formatPriority = (priority: string | null | undefined): string => {
-	if (!priority || typeof priority !== "string") return "Not Set";
-
-	const priorityMap: Record<string, string> = {
-		low: "Low",
-		medium: "Medium",
-		high: "High",
-		urgent: "Urgent",
-	};
-
-	return priorityMap[priority.toLowerCase()] || priority;
-};
 
 export function LeadListEntriesTab({
 	entries,
@@ -128,7 +106,7 @@ export function LeadListEntriesTab({
 							<TableHeader>
 								<TableRow>
 									<TableHead>Lead List</TableHead>
-									<TableHead>Priority</TableHead>
+									<TableHead>Athlete</TableHead>
 									<TableHead>Program</TableHead>
 									<TableHead>Status</TableHead>
 									<TableHead>Added At</TableHead>
@@ -163,9 +141,31 @@ export function LeadListEntriesTab({
 											)}
 										</TableCell>
 										<TableCell>
-											<StatusBadge>
-												{formatPriority(entry.school_lead_lists?.priority)}
-											</StatusBadge>
+											{entry.school_lead_lists?.athlete ? (
+												<div className="flex items-center gap-2">
+													<Link
+														href={`/dashboard/athletes/${entry.school_lead_lists.athlete.id}`}
+														className="text-primary hover:underline"
+													>
+														{entry.school_lead_lists.athlete.full_name}
+													</Link>
+													<Link
+														href={`/dashboard/athletes/${entry.school_lead_lists.athlete.id}`}
+														className="text-muted-foreground hover:text-primary"
+														title="View athlete profile"
+													>
+														<ExternalLink className="h-3.5 w-3.5" />
+													</Link>
+													{entry.school_lead_lists.athlete.graduation_year && (
+														<span className="text-muted-foreground text-xs">
+															• Class of{" "}
+															{entry.school_lead_lists.athlete.graduation_year}
+														</span>
+													)}
+												</div>
+											) : (
+												<span className="text-muted-foreground">-</span>
+											)}
 										</TableCell>
 										<TableCell>
 											{entry.programs ? (
@@ -197,7 +197,7 @@ export function LeadListEntriesTab({
 											)}
 										</TableCell>
 										<TableCell>
-											<StatusBadge>{formatStatus(entry.status)}</StatusBadge>
+											<StatusBadge>{entry.status}</StatusBadge>
 										</TableCell>
 										<TableCell>
 											{entry.added_at

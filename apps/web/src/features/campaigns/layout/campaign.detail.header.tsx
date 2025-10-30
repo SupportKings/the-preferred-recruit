@@ -36,7 +36,7 @@ export default function CampaignDetailHeader({
 				toast.success(
 					`${campaign?.name || "Campaign"} has been deleted successfully`,
 				);
-				router.push("/dashboard/campaigns");
+				router.back();
 			},
 			onError: (error) => {
 				console.error("Failed to delete campaign:", error);

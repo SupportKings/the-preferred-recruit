@@ -87,5 +87,12 @@ export async function getUniversityJob(
 		return null;
 	}
 
+	// Filter out soft-deleted campaign leads
+	if (data?.campaign_leads) {
+		data.campaign_leads = data.campaign_leads.filter(
+			(lead: any) => !lead.is_deleted,
+		);
+	}
+
 	return data as UniversityJobWithRelations;
 }

@@ -106,4 +106,122 @@ import { UniversityLookup } from "@/components/lookups/university-lookup";
 
 ---
 
+## AthleteLookup
+
+**Location**: `apps/web/src/components/lookups/athlete-lookup.tsx`
+
+**Purpose**: A global, searchable dropdown component for selecting athletes with infinite scroll support.
+
+**Features**:
+- **Server-side search** with pagination
+- **Infinite scroll** - loads 50 athletes at a time
+- **Real-time search** across multiple fields:
+  - Athlete name
+  - Email
+  - High school
+  - State
+- **Smart display format**: Shows "Athlete Name • Class of YYYY • High School" or fallback variations
+- **Email subtitle**: Displays contact email and location below the main label for context
+- **Fully integrated** with `ServerSearchCombobox` for consistent UX
+
+**Technical Details**:
+- Built on top of `ServerSearchCombobox` component
+- Uses `searchAthletes` server action for data fetching
+- Server-side pagination with proper `hasMore` flag calculation
+- Prevents duplicate keys when appending results during infinite scroll
+- Sorted alphabetically by athlete name
+- Displays graduation year and high school in label for better identification
+- Shows email and location (high school + state) in subtitle
+
+**Usage**:
+```tsx
+import { AthleteLookup } from "@/components/lookups/athlete-lookup";
+
+<AthleteLookup
+  label="Athlete"
+  value={formData.athlete_id || ""}
+  onChange={(value) => {
+    setFormData({
+      ...formData,
+      athlete_id: value,
+      lead_list_id: "" // Reset dependent fields
+    });
+  }}
+  placeholder="Search for an athlete..."
+  required={true}
+  disabled={false}
+/>
+```
+
+**Used In**:
+- Universities → Add to Lead List Modal
+
+**Migration Note**: This component provides a consistent, searchable interface for athlete selection across the application. It replaces manual athlete selection patterns with server-side search and pagination, improving performance and user experience.
+
+**Related Files**:
+- Action: `apps/web/src/features/athletes/actions/searchAthletes.ts`
+- Base Component: `apps/web/src/components/server-search-combobox.tsx`
+
+---
+
+## LeadListLookup
+
+**Location**: `apps/web/src/components/lookups/lead-list-lookup.tsx`
+
+**Purpose**: A global, searchable dropdown component for selecting athlete lead lists with infinite scroll support and athlete name search.
+
+**Features**:
+- **Server-side search** with pagination
+- **Infinite scroll** - loads 50 lead lists at a time
+- **Real-time search** across multiple fields:
+  - Lead list name
+  - List type (D1, D2, D3, NAIA, etc.)
+  - Priority
+  - Season label
+  - **Athlete name** (shows which athlete owns the list)
+  - Athlete email
+- **Smart display format**: Shows "List Name • Type • Priority • Season" with athlete info in subtitle
+- **Athlete subtitle**: Displays "Athlete Name • Class of YYYY" below the lead list name for context
+- **Fully integrated** with `ServerSearchCombobox` for consistent UX
+
+**Technical Details**:
+- Built on top of `ServerSearchCombobox` component
+- Uses `searchLeadLists` server action for data fetching
+- Joins with `athletes` table to enable search by athlete name
+- Server-side pagination with proper `hasMore` flag calculation
+- Client-side filtering for nested athlete fields (name, email) after initial query
+- Prevents duplicate keys when appending results during infinite scroll
+- Sorted alphabetically by lead list name
+- Formats list type from codes (d1 → "Division I", etc.)
+
+**Usage**:
+```tsx
+import { LeadListLookup } from "@/components/lookups/lead-list-lookup";
+
+<LeadListLookup
+  label="Lead List"
+  value={formData.lead_list_id || ""}
+  onChange={(value) => {
+    setFormData({
+      ...formData,
+      lead_list_id: value
+    });
+  }}
+  placeholder="Search for a lead list..."
+  required={true}
+  disabled={false}
+/>
+```
+
+**Used In**:
+- Universities → Add to Lead List Modal
+
+**Key Benefit**: Users can search for lead lists by typing the athlete's name, making it easy to find the right list without knowing the exact list name. The component shows both the list details and which athlete it belongs to.
+
+**Related Files**:
+- Action: `apps/web/src/features/school-lead-lists/actions/searchLeadLists.ts`
+- Base Component: `apps/web/src/components/server-search-combobox.tsx`
+
+---
+
 *Last Updated: 2025-01-30*

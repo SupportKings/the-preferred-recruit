@@ -59,6 +59,7 @@ export async function getSchoolLeadList(id: string) {
 					first_reply_at,
 					include_reason,
 					internal_notes,
+					is_deleted,
 					campaign:campaigns(
 						id,
 						name,
@@ -118,6 +119,13 @@ export async function getSchoolLeadList(id: string) {
 		if (error) {
 			console.error("Error fetching school lead list:", error);
 			throw new Error("Failed to fetch school lead list");
+		}
+
+		// Filter out soft-deleted campaign leads
+		if (leadList?.campaign_leads) {
+			leadList.campaign_leads = leadList.campaign_leads.filter(
+				(lead: any) => !lead.is_deleted,
+			);
 		}
 
 		return leadList;

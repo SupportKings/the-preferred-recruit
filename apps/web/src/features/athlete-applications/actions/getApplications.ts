@@ -92,6 +92,7 @@ export async function getApplication(id: string) {
 					university_id,
 					program_id,
 					university_job_id,
+					is_deleted,
 					campaigns (
 						id,
 						name,
@@ -122,6 +123,13 @@ export async function getApplication(id: string) {
 		if (error) {
 			console.error("Error fetching application:", error);
 			return null;
+		}
+
+		// Filter out soft-deleted campaign leads
+		if (application?.campaign_leads) {
+			application.campaign_leads = application.campaign_leads.filter(
+				(lead: any) => !lead.is_deleted,
+			);
 		}
 
 		return application;

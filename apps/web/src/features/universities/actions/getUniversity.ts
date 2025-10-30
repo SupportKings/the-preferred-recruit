@@ -98,7 +98,14 @@ export async function getUniversity(id: string) {
 					school_lead_lists (
 						id,
 						name,
-						priority
+						priority,
+						athlete_id,
+						athlete:athletes!school_lead_lists_athlete_id_fkey (
+							id,
+							full_name,
+							contact_email,
+							graduation_year
+						)
 					),
 					programs (
 						id,
