@@ -1,10 +1,10 @@
 import { useState } from "react";
 
+import { Edit3, Link2, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-
-import { Edit3, Link2, Save, X } from "lucide-react";
+import { UrlActions } from "@/components/url-actions";
 
 interface AthleteProfileResourcesProps {
 	athlete: any;
@@ -98,21 +98,10 @@ export function AthleteProfileResources({
 							placeholder="https://www.athletic.net/..."
 							className="mt-1"
 						/>
+					) : athlete.athlete_net_url ? (
+						<UrlActions url={athlete.athlete_net_url} className="mt-1" />
 					) : (
-						<p className="text-sm">
-							{athlete.athlete_net_url ? (
-								<a
-									href={athlete.athlete_net_url}
-									target="_blank"
-									rel="noopener noreferrer"
-									className="text-blue-600 hover:underline"
-								>
-									{athlete.athlete_net_url}
-								</a>
-							) : (
-								"Not provided"
-							)}
-						</p>
+						<p className="mt-1 text-sm">Not provided</p>
 					)}
 				</div>
 				<div>
@@ -132,21 +121,10 @@ export function AthleteProfileResources({
 							placeholder="https://www.milesplit.com/..."
 							className="mt-1"
 						/>
+					) : athlete.milesplit_url ? (
+						<UrlActions url={athlete.milesplit_url} className="mt-1" />
 					) : (
-						<p className="text-sm">
-							{athlete.milesplit_url ? (
-								<a
-									href={athlete.milesplit_url}
-									target="_blank"
-									rel="noopener noreferrer"
-									className="text-blue-600 hover:underline"
-								>
-									{athlete.milesplit_url}
-								</a>
-							) : (
-								"Not provided"
-							)}
-						</p>
+						<p className="mt-1 text-sm">Not provided</p>
 					)}
 				</div>
 				<div>
@@ -166,21 +144,10 @@ export function AthleteProfileResources({
 							placeholder="https://drive.google.com/..."
 							className="mt-1"
 						/>
+					) : athlete.google_drive_folder_url ? (
+						<UrlActions url={athlete.google_drive_folder_url} className="mt-1" />
 					) : (
-						<p className="text-sm">
-							{athlete.google_drive_folder_url ? (
-								<a
-									href={athlete.google_drive_folder_url}
-									target="_blank"
-									rel="noopener noreferrer"
-									className="text-blue-600 hover:underline"
-								>
-									Open Folder
-								</a>
-							) : (
-								"Not provided"
-							)}
-						</p>
+						<p className="mt-1 text-sm">Not provided</p>
 					)}
 				</div>
 			</CardContent>

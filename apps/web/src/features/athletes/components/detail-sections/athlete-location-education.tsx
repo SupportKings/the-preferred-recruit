@@ -1,21 +1,9 @@
 import { useMemo, useState } from "react";
 
+import { ServerSearchCombobox } from "@/components/server-search-combobox";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-	Command,
-	CommandEmpty,
-	CommandGroup,
-	CommandInput,
-	CommandItem,
-	CommandList,
-} from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@/components/ui/popover";
 import {
 	Select,
 	SelectContent,
@@ -25,7 +13,7 @@ import {
 } from "@/components/ui/select";
 
 import { City, State } from "country-state-city";
-import { Check, ChevronsUpDown, Edit3, MapPin, Save, X } from "lucide-react";
+import { Edit3, MapPin, Save, X } from "lucide-react";
 
 interface AthleteLocationEducationProps {
 	athlete: any;
@@ -66,16 +54,26 @@ export function AthleteLocationEducation({
 		act_score: athlete.act_score || "",
 	});
 
-	const [stateComboOpen, setStateComboOpen] = useState(false);
-	const [cityComboOpen, setCityComboOpen] = useState(false);
+	const [stateSearch, setStateSearch] = useState("");
+	const [citySearch, setCitySearch] = useState("");
 
-	// Get cities for selected state
-	const cities = useMemo(() => {
-		if (!formData.state) return [];
-		return City.getCitiesOfState("US", formData.state).sort((a, b) =>
-			a.name.localeCompare(b.name),
+	// Get filtered states based on search
+	const filteredStates = useMemo(() => {
+		return usStates.filter((state) =>
+			state.name.toLowerCase().includes(stateSearch.toLowerCase()),
 		);
-	}, [formData.state]);
+	}, [usStates, stateSearch]);
+
+	// Get filtered cities for selected state based on search
+	const filteredCities = useMemo(() => {
+		if (!formData.state) return [];
+		const cities = City.getCitiesOfState("US", formData.state);
+		return cities
+			.filter((city) =>
+				city.name.toLowerCase().includes(citySearch.toLowerCase()),
+			)
+			.sort((a, b) => a.name.localeCompare(b.name));
+	}, [formData.state, citySearch]);
 
 	const handleSave = () => {
 		// Convert state ISO code back to state name before saving
@@ -188,55 +186,28 @@ export function AthleteLocationEducation({
 						State
 					</label>
 					{isEditing ? (
-						<Popover open={stateComboOpen} onOpenChange={setStateComboOpen}>
-							<PopoverTrigger asChild>
-								<Button
-									variant="outline"
-									role="combobox"
-									aria-expanded={stateComboOpen}
-									className="mt-1 w-full justify-between"
-									type="button"
-								>
-									{formData.state
-										? usStates.find((s) => s.isoCode === formData.state)?.name
-										: "Select state..."}
-									<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-								</Button>
-							</PopoverTrigger>
-							<PopoverContent className="w-full p-0" align="start">
-								<Command>
-									<CommandInput placeholder="Search states..." />
-									<CommandList>
-										<CommandEmpty>No state found.</CommandEmpty>
-										<CommandGroup>
-											{usStates.map((state) => (
-												<CommandItem
-													key={state.isoCode}
-													value={state.name}
-													onSelect={() => {
-														setFormData((prev) => ({
-															...prev,
-															state: state.isoCode,
-															city: "", // Clear city when state changes
-														}));
-														setStateComboOpen(false);
-													}}
-												>
-													<Check
-														className={`mr-2 h-4 w-4 ${
-															formData.state === state.isoCode
-																? "opacity-100"
-																: "opacity-0"
-														}`}
-													/>
-													{state.name}
-												</CommandItem>
-											))}
-										</CommandGroup>
-									</CommandList>
-								</Command>
-							</PopoverContent>
-						</Popover>
+						<ServerSearchCombobox
+							value={formData.state}
+							onValueChange={(value) => {
+								setFormData((prev) => ({
+									...prev,
+									state: value,
+									city: "", // Clear city when state changes
+								}));
+								setCitySearch(""); // Reset city search
+							}}
+							searchTerm={stateSearch}
+							onSearchChange={setStateSearch}
+							options={filteredStates.map((state) => ({
+								value: state.isoCode,
+								label: state.name,
+							}))}
+							placeholder="Select state..."
+							searchPlaceholder="Search states..."
+							emptyText="No state found."
+							className="mt-1"
+							showInitialResults
+						/>
 					) : (
 						<p className="text-sm">{athlete.state || "Not provided"}</p>
 					)}
@@ -246,57 +217,29 @@ export function AthleteLocationEducation({
 						City
 					</label>
 					{isEditing ? (
-						<Popover open={cityComboOpen} onOpenChange={setCityComboOpen}>
-							<PopoverTrigger asChild>
-								<Button
-									variant="outline"
-									role="combobox"
-									aria-expanded={cityComboOpen}
-									className="mt-1 w-full justify-between"
-									type="button"
-									disabled={!formData.state}
-								>
-									{formData.city
-										? formData.city
-										: formData.state
-											? "Select city..."
-											: "Select state first..."}
-									<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-								</Button>
-							</PopoverTrigger>
-							<PopoverContent className="w-full p-0" align="start">
-								<Command>
-									<CommandInput placeholder="Search cities..." />
-									<CommandList>
-										<CommandEmpty>No city found.</CommandEmpty>
-										<CommandGroup>
-											{cities.map((city) => (
-												<CommandItem
-													key={city.name}
-													value={city.name}
-													onSelect={() => {
-														setFormData((prev) => ({
-															...prev,
-															city: city.name,
-														}));
-														setCityComboOpen(false);
-													}}
-												>
-													<Check
-														className={`mr-2 h-4 w-4 ${
-															formData.city === city.name
-																? "opacity-100"
-																: "opacity-0"
-														}`}
-													/>
-													{city.name}
-												</CommandItem>
-											))}
-										</CommandGroup>
-									</CommandList>
-								</Command>
-							</PopoverContent>
-						</Popover>
+						<ServerSearchCombobox
+							value={formData.city}
+							onValueChange={(value) => {
+								setFormData((prev) => ({
+									...prev,
+									city: value,
+								}));
+							}}
+							searchTerm={citySearch}
+							onSearchChange={setCitySearch}
+							options={filteredCities.map((city) => ({
+								value: city.name,
+								label: city.name,
+							}))}
+							placeholder={
+								formData.state ? "Select city..." : "Select state first..."
+							}
+							searchPlaceholder="Search cities..."
+							emptyText="No city found."
+							className="mt-1"
+							disabled={!formData.state}
+							showInitialResults
+						/>
 					) : (
 						<p className="text-sm">{athlete.city || "Not provided"}</p>
 					)}

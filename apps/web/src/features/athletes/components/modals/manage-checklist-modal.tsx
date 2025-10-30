@@ -106,7 +106,7 @@ export function ManageChecklistModal({
 				is_applicable: true,
 			});
 		}
-	}, [isEdit, checklistItem]);
+	}, [isEdit, checklistItem, open]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();

@@ -94,7 +94,7 @@ export function ManageCampaignModal({
 				internal_notes: "",
 			});
 		}
-	}, [isEdit, campaign]);
+	}, [isEdit, campaign, open]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();

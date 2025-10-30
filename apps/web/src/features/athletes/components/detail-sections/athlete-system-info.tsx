@@ -15,7 +15,7 @@ const formatDate = (dateString: string | null | undefined) => {
 interface AthleteSystemInfoProps {
 	athlete: {
 		id: string;
-		deleted_at?: string | null;
+		updated_at?: string | null;
 	};
 }
 
@@ -39,7 +39,7 @@ export function AthleteSystemInfo({ athlete }: AthleteSystemInfoProps) {
 					<label className="font-medium text-muted-foreground text-sm">
 						Last Updated
 					</label>
-					<p className="text-sm">{formatDate(athlete.deleted_at)}</p>
+					<p className="text-sm">{formatDate(athlete.updated_at)}</p>
 				</div>
 			</CardContent>
 		</Card>

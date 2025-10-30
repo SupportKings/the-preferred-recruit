@@ -2,12 +2,12 @@ import { useState } from "react";
 
 import type { Tables } from "@/utils/supabase/database.types";
 
+import { BookOpen, Edit3, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-
-import { BookOpen, Edit3, Save, X } from "lucide-react";
+import { UrlActions } from "@/components/url-actions";
 
 interface UniversityAcademicsSectionProps {
 	university: Tables<"universities">;
@@ -335,21 +335,10 @@ export function UniversityAcademicsSection({
 							placeholder="https://..."
 							className="mt-1"
 						/>
+					) : university.majors_offered_url ? (
+						<UrlActions url={university.majors_offered_url} className="mt-1" />
 					) : (
-						<p className="text-sm">
-							{university.majors_offered_url ? (
-								<a
-									href={university.majors_offered_url}
-									target="_blank"
-									rel="noopener noreferrer"
-									className="text-blue-600 hover:underline"
-								>
-									View Majors
-								</a>
-							) : (
-								"Not provided"
-							)}
-						</p>
+						<p className="mt-1 text-sm">Not provided</p>
 					)}
 				</div>
 				<div>

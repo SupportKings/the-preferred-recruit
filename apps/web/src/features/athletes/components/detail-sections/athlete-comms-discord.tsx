@@ -1,10 +1,10 @@
 import { useState } from "react";
 
+import { Edit3, MessageSquare, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-
-import { Edit3, MessageSquare, Save, X } from "lucide-react";
+import { UrlActions } from "@/components/url-actions";
 
 interface AthleteCommsDiscordProps {
 	athlete: any;
@@ -108,10 +108,10 @@ export function AthleteCommsDiscord({
 							placeholder="https://discord.com/channels/..."
 							className="mt-1"
 						/>
+					) : athlete.discord_channel_url ? (
+						<UrlActions url={athlete.discord_channel_url} className="mt-1" />
 					) : (
-						<p className="text-sm">
-							{athlete.discord_channel_url || "Not provided"}
-						</p>
+						<p className="mt-1 text-sm">Not provided</p>
 					)}
 				</div>
 				<div>

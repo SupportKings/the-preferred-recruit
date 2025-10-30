@@ -83,7 +83,7 @@ export function ManageLeadListModal({
 				internal_notes: "",
 			});
 		}
-	}, [isEdit, leadList]);
+	}, [isEdit, leadList, open]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();

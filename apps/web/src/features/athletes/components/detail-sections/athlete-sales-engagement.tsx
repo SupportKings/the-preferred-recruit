@@ -1,27 +1,16 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
+import { ServerSearchCombobox } from "@/components/server-search-combobox";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-	Command,
-	CommandEmpty,
-	CommandGroup,
-	CommandInput,
-	CommandItem,
-	CommandList,
-} from "@/components/ui/command";
 import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
-import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
+import { UrlActions } from "@/components/url-actions";
 
 import { useTeamMembers } from "@/features/athletes/queries/useAthletes";
 
-import { Check, ChevronsUpDown, Edit3, Save, Users, X } from "lucide-react";
+import { Edit3, Save, Users, X } from "lucide-react";
 
 interface AthleteSalesEngagementProps {
 	athlete: any;
@@ -39,8 +28,8 @@ export function AthleteSalesEngagement({
 	onCancel,
 }: AthleteSalesEngagementProps) {
 	const { data: teamMembers = [] } = useTeamMembers();
-	const [salesSetterOpen, setSalesSetterOpen] = useState(false);
-	const [salesCloserOpen, setSalesCloserOpen] = useState(false);
+	const [salesSetterSearch, setSalesSetterSearch] = useState("");
+	const [salesCloserSearch, setSalesCloserSearch] = useState("");
 
 	const [formData, setFormData] = useState({
 		lead_source: athlete.lead_source || "",
@@ -50,6 +39,22 @@ export function AthleteSalesEngagement({
 		sales_call_note: athlete.sales_call_note || "",
 		sales_call_recording_url: athlete.sales_call_recording_url || "",
 	});
+
+	// Get filtered team members for sales setter based on search
+	const filteredSalesSetters = useMemo(() => {
+		return teamMembers.filter((member: any) => {
+			const fullName = `${member.first_name} ${member.last_name}`.toLowerCase();
+			return fullName.includes(salesSetterSearch.toLowerCase());
+		});
+	}, [teamMembers, salesSetterSearch]);
+
+	// Get filtered team members for sales closer based on search
+	const filteredSalesClosers = useMemo(() => {
+		return teamMembers.filter((member: any) => {
+			const fullName = `${member.first_name} ${member.last_name}`.toLowerCase();
+			return fullName.includes(salesCloserSearch.toLowerCase());
+		});
+	}, [teamMembers, salesCloserSearch]);
 
 	const handleSave = () => {
 		// Helper function to ensure date is in YYYY-MM-DD format
@@ -151,59 +156,27 @@ export function AthleteSalesEngagement({
 						Sales Setter
 					</label>
 					{isEditing ? (
-						<Popover open={salesSetterOpen} onOpenChange={setSalesSetterOpen}>
-							<PopoverTrigger asChild>
-								<Button
-									variant="outline"
-									role="combobox"
-									aria-expanded={salesSetterOpen}
-									className="mt-1 w-full justify-between"
-									type="button"
-								>
-									{formData.sales_setter_id
-										? teamMembers.find(
-												(m: any) => m.id === formData.sales_setter_id,
-											)
-											? `${teamMembers.find((m: any) => m.id === formData.sales_setter_id)?.first_name} ${teamMembers.find((m: any) => m.id === formData.sales_setter_id)?.last_name}`
-											: "Select team member..."
-										: "Select team member..."}
-									<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-								</Button>
-							</PopoverTrigger>
-							<PopoverContent className="w-full p-0" align="start">
-								<Command>
-									<CommandInput placeholder="Search team members..." />
-									<CommandList>
-										<CommandEmpty>No team member found.</CommandEmpty>
-										<CommandGroup>
-											{teamMembers.map((member: any) => (
-												<CommandItem
-													key={member.id}
-													value={`${member.first_name} ${member.last_name}`}
-													onSelect={() => {
-														setFormData((prev) => ({
-															...prev,
-															sales_setter_id: member.id,
-														}));
-														setSalesSetterOpen(false);
-													}}
-												>
-													<Check
-														className={`mr-2 h-4 w-4 ${
-															formData.sales_setter_id === member.id
-																? "opacity-100"
-																: "opacity-0"
-														}`}
-													/>
-													{member.first_name} {member.last_name}
-													{member.job_title && ` - ${member.job_title}`}
-												</CommandItem>
-											))}
-										</CommandGroup>
-									</CommandList>
-								</Command>
-							</PopoverContent>
-						</Popover>
+						<ServerSearchCombobox
+							value={formData.sales_setter_id}
+							onValueChange={(value) => {
+								setFormData((prev) => ({
+									...prev,
+									sales_setter_id: value,
+								}));
+							}}
+							searchTerm={salesSetterSearch}
+							onSearchChange={setSalesSetterSearch}
+							options={filteredSalesSetters.map((member: any) => ({
+								value: member.id,
+								label: `${member.first_name} ${member.last_name}`,
+								subtitle: member.job_title,
+							}))}
+							placeholder="Select team member..."
+							searchPlaceholder="Search team members..."
+							emptyText="No team member found."
+							className="mt-1"
+							showInitialResults
+						/>
 					) : (
 						<p className="text-sm">
 							{athlete.sales_setter
@@ -217,59 +190,27 @@ export function AthleteSalesEngagement({
 						Sales Closer
 					</label>
 					{isEditing ? (
-						<Popover open={salesCloserOpen} onOpenChange={setSalesCloserOpen}>
-							<PopoverTrigger asChild>
-								<Button
-									variant="outline"
-									role="combobox"
-									aria-expanded={salesCloserOpen}
-									className="mt-1 w-full justify-between"
-									type="button"
-								>
-									{formData.sales_closer_id
-										? teamMembers.find(
-												(m: any) => m.id === formData.sales_closer_id,
-											)
-											? `${teamMembers.find((m: any) => m.id === formData.sales_closer_id)?.first_name} ${teamMembers.find((m: any) => m.id === formData.sales_closer_id)?.last_name}`
-											: "Select team member..."
-										: "Select team member..."}
-									<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-								</Button>
-							</PopoverTrigger>
-							<PopoverContent className="w-full p-0" align="start">
-								<Command>
-									<CommandInput placeholder="Search team members..." />
-									<CommandList>
-										<CommandEmpty>No team member found.</CommandEmpty>
-										<CommandGroup>
-											{teamMembers.map((member: any) => (
-												<CommandItem
-													key={member.id}
-													value={`${member.first_name} ${member.last_name}`}
-													onSelect={() => {
-														setFormData((prev) => ({
-															...prev,
-															sales_closer_id: member.id,
-														}));
-														setSalesCloserOpen(false);
-													}}
-												>
-													<Check
-														className={`mr-2 h-4 w-4 ${
-															formData.sales_closer_id === member.id
-																? "opacity-100"
-																: "opacity-0"
-														}`}
-													/>
-													{member.first_name} {member.last_name}
-													{member.job_title && ` - ${member.job_title}`}
-												</CommandItem>
-											))}
-										</CommandGroup>
-									</CommandList>
-								</Command>
-							</PopoverContent>
-						</Popover>
+						<ServerSearchCombobox
+							value={formData.sales_closer_id}
+							onValueChange={(value) => {
+								setFormData((prev) => ({
+									...prev,
+									sales_closer_id: value,
+								}));
+							}}
+							searchTerm={salesCloserSearch}
+							onSearchChange={setSalesCloserSearch}
+							options={filteredSalesClosers.map((member: any) => ({
+								value: member.id,
+								label: `${member.first_name} ${member.last_name}`,
+								subtitle: member.job_title,
+							}))}
+							placeholder="Select team member..."
+							searchPlaceholder="Search team members..."
+							emptyText="No team member found."
+							className="mt-1"
+							showInitialResults
+						/>
 					) : (
 						<p className="text-sm">
 							{athlete.sales_closer
@@ -337,21 +278,13 @@ export function AthleteSalesEngagement({
 							placeholder="https://..."
 							className="mt-1"
 						/>
+					) : athlete.sales_call_recording_url ? (
+						<UrlActions
+							url={athlete.sales_call_recording_url}
+							className="mt-1"
+						/>
 					) : (
-						<p className="text-sm">
-							{athlete.sales_call_recording_url ? (
-								<a
-									href={athlete.sales_call_recording_url}
-									target="_blank"
-									rel="noopener noreferrer"
-									className="text-blue-600 hover:underline"
-								>
-									Listen to Recording
-								</a>
-							) : (
-								"No recording"
-							)}
-						</p>
+						<p className="mt-1 text-sm">No recording</p>
 					)}
 				</div>
 			</CardContent>

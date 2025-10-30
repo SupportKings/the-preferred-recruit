@@ -1,10 +1,10 @@
 import { useState } from "react";
 
+import { Edit3, Link as LinkIcon, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-
-import { Edit3, Link as LinkIcon, Save, X } from "lucide-react";
+import { UrlActions } from "@/components/url-actions";
 
 interface ProgramTeamLinksSectionProps {
 	program: any;
@@ -101,16 +101,9 @@ export function ProgramTeamLinksSection({
 							className="mt-1"
 						/>
 					) : program.team_url ? (
-						<a
-							href={program.team_url}
-							target="_blank"
-							rel="noopener noreferrer"
-							className="block text-blue-600 text-sm hover:underline"
-						>
-							{program.team_url}
-						</a>
+						<UrlActions url={program.team_url} className="mt-1" />
 					) : (
-						<p className="text-sm">Not provided</p>
+						<p className="mt-1 text-sm">Not provided</p>
 					)}
 				</div>
 				<div>
@@ -131,16 +124,9 @@ export function ProgramTeamLinksSection({
 							className="mt-1"
 						/>
 					) : program.team_instagram ? (
-						<a
-							href={program.team_instagram}
-							target="_blank"
-							rel="noopener noreferrer"
-							className="block text-blue-600 text-sm hover:underline"
-						>
-							{program.team_instagram}
-						</a>
+						<UrlActions url={program.team_instagram} className="mt-1" />
 					) : (
-						<p className="text-sm">Not provided</p>
+						<p className="mt-1 text-sm">Not provided</p>
 					)}
 				</div>
 				<div>
@@ -161,16 +147,9 @@ export function ProgramTeamLinksSection({
 							className="mt-1"
 						/>
 					) : program.team_twitter ? (
-						<a
-							href={program.team_twitter}
-							target="_blank"
-							rel="noopener noreferrer"
-							className="block text-blue-600 text-sm hover:underline"
-						>
-							{program.team_twitter}
-						</a>
+						<UrlActions url={program.team_twitter} className="mt-1" />
 					) : (
-						<p className="text-sm">Not provided</p>
+						<p className="mt-1 text-sm">Not provided</p>
 					)}
 				</div>
 			</CardContent>
