@@ -11,8 +11,12 @@ import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
 import { deleteTeamMember } from "@/features/team-members/actions/deleteTeamMember";
-import { useTeamMember } from "@/features/team-members/queries/useTeamMembers";
+import {
+	teamMemberQueries,
+	useTeamMember,
+} from "@/features/team-members/queries/useTeamMembers";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { Trash2Icon, X } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "sonner";
@@ -26,6 +30,7 @@ export default function TeamMemberDetailHeader({
 }: TeamMemberDetailHeaderProps) {
 	const { data: teamMember } = useTeamMember(teamMemberId);
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
 	const { execute: executeDeleteTeamMember, isExecuting } = useAction(
@@ -38,6 +43,12 @@ export default function TeamMemberDetailHeader({
 						? `${teamMember.first_name} ${teamMember.last_name}`.trim()
 						: "Team member";
 				toast.success(`${fullName} has been deleted successfully`);
+
+				// Invalidate all team member queries to refresh the list view
+				queryClient.invalidateQueries({
+					queryKey: teamMemberQueries.all,
+				});
+
 				router.push("/dashboard/team-members");
 			},
 			onError: (error) => {
