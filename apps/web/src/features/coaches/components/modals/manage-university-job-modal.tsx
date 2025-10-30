@@ -63,6 +63,20 @@ export function ManageUniversityJobModal({
 		internal_notes: "",
 	});
 
+	const resetForm = () => {
+		setFormData({
+			university_id: "",
+			program_id: "",
+			program_scope: "n/a",
+			job_title: "",
+			work_email: "",
+			work_phone: "",
+			start_date: "",
+			end_date: "",
+			internal_notes: "",
+		});
+	};
+
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
@@ -129,17 +143,7 @@ export function ManageUniversityJobModal({
 				});
 
 				// Reset form
-				setFormData({
-					university_id: "",
-					program_id: "",
-					program_scope: "n/a",
-					job_title: "",
-					work_email: "",
-					work_phone: "",
-					start_date: "",
-					end_date: "",
-					internal_notes: "",
-				});
+				resetForm();
 
 				setOpen(false);
 			} else {
@@ -153,8 +157,20 @@ export function ManageUniversityJobModal({
 		}
 	};
 
+	const handleCancel = () => {
+		resetForm();
+		setOpen(false);
+	};
+
+	const handleOpenChange = (newOpen: boolean) => {
+		if (!newOpen) {
+			resetForm();
+		}
+		setOpen(newOpen);
+	};
+
 	return (
-		<Dialog open={open} onOpenChange={setOpen}>
+		<Dialog open={open} onOpenChange={handleOpenChange}>
 			<DialogTrigger>{children}</DialogTrigger>
 			<DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
 				<DialogHeader>
@@ -299,7 +315,7 @@ export function ManageUniversityJobModal({
 						<Button
 							type="button"
 							variant="outline"
-							onClick={() => setOpen(false)}
+							onClick={handleCancel}
 							disabled={isLoading}
 						>
 							Cancel

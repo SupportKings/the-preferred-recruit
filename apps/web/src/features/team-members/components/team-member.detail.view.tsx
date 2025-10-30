@@ -3,7 +3,6 @@
 import { useState } from "react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -183,19 +182,11 @@ export default function TeamMemberDetailView({
 				/>
 			</div>
 
-			{/* Athletes Tab */}
-			<Tabs defaultValue="athletes" className="w-full">
-				<TabsList className="grid w-full grid-cols-1">
-					<TabsTrigger value="athletes">Athletes</TabsTrigger>
-				</TabsList>
-
-				<TabsContent value="athletes">
-					<TeamMemberAthletesSection
-						teamMemberId={teamMemberId}
-						athletes={uniqueAthletes}
-					/>
-				</TabsContent>
-			</Tabs>
+			{/* Athletes Section */}
+			<TeamMemberAthletesSection
+				teamMemberId={teamMemberId}
+				athletes={uniqueAthletes}
+			/>
 
 			{/* System Information */}
 			<TeamMemberSystemInfo teamMember={teamMember} />

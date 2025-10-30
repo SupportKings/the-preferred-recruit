@@ -43,11 +43,25 @@ import type { Application } from "../types/application";
 // Create column helper for TanStack table
 const columnHelper = createColumnHelper<Application>();
 
-// Get stage options from database constants
+// Define color mapping for application stages
+const stageColorMap: Record<
+	string,
+	"green" | "red" | "yellow" | "blue" | "purple" | "gray" | "orange"
+> = {
+	intro: "blue", // Info/process state
+	ongoing: "orange", // Neutral/waiting state
+	visit: "yellow", // Warning/caution state
+	offer: "purple", // Special/featured state
+	committed: "green", // Success/positive state
+	dropped: "red", // Error/negative state
+};
+
+// Get stage options from database constants with colors
 const stageOptions = Constants.public.Enums.application_stage_enum.map(
 	(stage) => ({
 		value: stage,
 		label: stage.charAt(0).toUpperCase() + stage.slice(1),
+		colorScheme: stageColorMap[stage] || "gray",
 	}),
 );
 
@@ -149,8 +163,9 @@ const applicationTableColumns = [
 		enableSorting: true,
 		cell: ({ row }) => {
 			const stage = row.getValue<string>("stage");
+			const colorScheme = stage ? stageColorMap[stage] || "gray" : "gray";
 			return (
-				<StatusBadge>
+				<StatusBadge colorScheme={colorScheme}>
 					{stage ? stage.charAt(0).toUpperCase() + stage.slice(1) : "—"}
 				</StatusBadge>
 			);

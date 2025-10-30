@@ -35,6 +35,29 @@ body {
 	scrollbar-width: none; /* Firefox */
 }
 
+/* Override scrollbar-hide specifically for command lists */
+.scrollbar-hide[data-slot="command-list"] {
+	-ms-overflow-style: auto !important;
+	scrollbar-width: thin !important;
+	overflow-y: scroll !important; /* Force scrollbar to always show */
+}
+
+.scrollbar-hide[data-slot="command-list"]::-webkit-scrollbar {
+	display: block !important;
+	-webkit-appearance: none !important;
+}
+
+/* Force scrollbar to be always visible (override macOS auto-hide) */
+.scrollbar-hide[data-slot="command-list"]::-webkit-scrollbar-thumb {
+	visibility: visible !important;
+	opacity: 1 !important;
+}
+
+.scrollbar-hide[data-slot="command-list"]::-webkit-scrollbar-track {
+	visibility: visible !important;
+	opacity: 1 !important;
+}
+
 /* Custom scrollbar styles */
 .scrollbar-thin::-webkit-scrollbar {
 	height: 8px;
@@ -60,6 +83,39 @@ body {
 .scrollbar-thin {
 	scrollbar-width: thin;
 	scrollbar-color: hsl(var(--muted-foreground) / 0.2) transparent;
+}
+
+/* Force scrollbar visibility for filter popups - override scrollbar-hide */
+[data-slot="command-list"] {
+	scrollbar-width: thin;
+	scrollbar-color: hsl(var(--border)) hsl(var(--muted) / 0.5);
+	scrollbar-gutter: stable; /* Reserve space for scrollbar */
+}
+
+[data-slot="command-list"]::-webkit-scrollbar {
+	display: block !important;
+	width: 8px !important;
+	height: 8px !important;
+	-webkit-appearance: none !important;
+}
+
+[data-slot="command-list"]::-webkit-scrollbar-track {
+	background: hsl(var(--muted) / 0.5) !important;
+	border-radius: 4px;
+	border: 1px solid hsl(var(--border) / 0.3);
+	visibility: visible !important;
+}
+
+[data-slot="command-list"]::-webkit-scrollbar-thumb {
+	background: hsl(var(--border)) !important;
+	border-radius: 4px;
+	border: 1px solid hsl(var(--border));
+	min-height: 40px !important; /* Ensure thumb is always visible */
+	visibility: visible !important;
+}
+
+[data-slot="command-list"]::-webkit-scrollbar-thumb:hover {
+	background: hsl(var(--muted-foreground) / 0.8) !important;
 }
 
 :root {

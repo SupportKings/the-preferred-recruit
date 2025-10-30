@@ -25,7 +25,6 @@ import { createColumnHelper } from "@tanstack/react-table";
 import {
 	Building2Icon,
 	DollarSignIcon,
-	EditIcon,
 	EyeIcon,
 	HashIcon,
 	MailIcon,
@@ -307,7 +306,7 @@ function UniversitiesTableContent({
 	const typeOptions = typeFaceted
 		? Array.from(typeFaceted.keys()).map((type) => ({
 				value: type,
-				label: type,
+				label: type.charAt(0).toUpperCase() + type.slice(1),
 			}))
 		: [];
 
@@ -384,13 +383,6 @@ function UniversitiesTableContent({
 		{
 			label: "View Details",
 			icon: EyeIcon,
-			onClick: (university: UniversityRow) => {
-				router.push(`/dashboard/universities/${university.id}`);
-			},
-		},
-		{
-			label: "Edit",
-			icon: EditIcon,
 			onClick: (university: UniversityRow) => {
 				router.push(`/dashboard/universities/${university.id}`);
 			},

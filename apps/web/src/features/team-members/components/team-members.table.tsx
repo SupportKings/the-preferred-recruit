@@ -5,6 +5,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
+import * as Dialog from "@radix-ui/react-dialog";
+
 import type { Database } from "@/utils/supabase/database.types";
 
 import { DataTableFilter } from "@/components/data-table-filter";
@@ -24,13 +26,20 @@ import { createColumnHelper } from "@tanstack/react-table";
 import {
 	BriefcaseIcon,
 	ClockIcon,
-	EditIcon,
 	EyeIcon,
 	PlusIcon,
 	TrashIcon,
 	UserIcon,
+	X,
 } from "lucide-react";
-import { useTeamMembersWithFaceted, useUsers } from "../queries/useTeamMembers";
+import { useAction } from "next-safe-action/hooks";
+import { toast } from "sonner";
+import { deleteTeamMember } from "../actions/deleteTeamMember";
+import {
+	teamMemberQueries,
+	useTeamMembersWithFaceted,
+	useUsers,
+} from "../queries/useTeamMembers";
 import { getTeamMemberName } from "../utils/team-member-helpers";
 
 // Type for team member row from Supabase with user relation
@@ -146,9 +155,42 @@ function TeamMembersTableContent({
 	setFilters: any;
 }) {
 	const router = useRouter();
-	const _queryClient = useQueryClient();
+	const queryClient = useQueryClient();
 	const [currentPage, setCurrentPage] = useState(0);
 	const [sorting, setSorting] = useState<any[]>([]);
+	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+	const [teamMemberToDelete, setTeamMemberToDelete] =
+		useState<TeamMemberRow | null>(null);
+
+	const { execute: executeDelete, isExecuting: isDeleting } = useAction(
+		deleteTeamMember,
+		{
+			onSuccess: () => {
+				setIsDeleteDialogOpen(false);
+				setTeamMemberToDelete(null);
+				toast.success("Team member deleted successfully");
+				// Invalidate queries to refresh the list
+				queryClient.invalidateQueries({
+					queryKey: teamMemberQueries.lists(),
+				});
+			},
+			onError: (error) => {
+				console.error("Failed to delete team member:", error);
+				toast.error("Failed to delete team member. Please try again.");
+			},
+		},
+	);
+
+	const handleDeleteClick = (teamMember: TeamMemberRow) => {
+		setTeamMemberToDelete(teamMember);
+		setIsDeleteDialogOpen(true);
+	};
+
+	const handleConfirmDelete = () => {
+		if (teamMemberToDelete) {
+			executeDelete({ id: teamMemberToDelete.id });
+		}
+	};
 
 	// Reset to first page when filters change
 	useEffect(() => {
@@ -227,19 +269,11 @@ function TeamMembersTableContent({
 			},
 		},
 		{
-			label: "Edit",
-			icon: EditIcon,
-			onClick: (teamMember: TeamMemberRow) => {
-				router.push(`/dashboard/team-members/${teamMember.id}`);
-			},
-		},
-		{
 			label: "Delete",
 			icon: TrashIcon,
 			variant: "destructive" as const,
-			onClick: (teamMember: TeamMemberRow) => {
-				router.push(`/dashboard/team-members/${teamMember.id}`);
-			},
+			onClick: handleDeleteClick,
+			disabled: () => isDeleting,
 		},
 	];
 
@@ -323,6 +357,50 @@ function TeamMembersTableContent({
 					}
 				/>
 			)}
+
+			{/* Delete Confirmation Dialog */}
+			<Dialog.Root
+				open={isDeleteDialogOpen}
+				onOpenChange={setIsDeleteDialogOpen}
+			>
+				<Dialog.Portal>
+					<Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
+					<Dialog.Content className="-translate-x-1/2 -translate-y-1/2 fixed top-1/2 left-1/2 z-50 w-full max-w-md transform rounded-lg bg-white p-6 shadow-lg dark:bg-gray-950">
+						<Dialog.Title className="mb-4 font-semibold text-lg">
+							Delete Team Member
+						</Dialog.Title>
+						<Dialog.Description className="mb-6 text-gray-600 dark:text-gray-400">
+							Are you sure you want to delete{" "}
+							{teamMemberToDelete ? getTeamMemberName(teamMemberToDelete) : ""}?
+							This action cannot be undone.
+						</Dialog.Description>
+						<div className="flex justify-end gap-3">
+							<Dialog.Close asChild>
+								<Button variant="outline" disabled={isDeleting}>
+									Cancel
+								</Button>
+							</Dialog.Close>
+							<Button
+								variant="destructive"
+								onClick={handleConfirmDelete}
+								disabled={isDeleting}
+							>
+								{isDeleting ? "Deleting..." : "Delete"}
+							</Button>
+						</div>
+						<Dialog.Close asChild>
+							<Button
+								variant="ghost"
+								size="sm"
+								className="absolute top-3 right-3 p-1"
+								disabled={isDeleting}
+							>
+								<X className="h-4 w-4" />
+							</Button>
+						</Dialog.Close>
+					</Dialog.Content>
+				</Dialog.Portal>
+			</Dialog.Root>
 		</div>
 	);
 }
