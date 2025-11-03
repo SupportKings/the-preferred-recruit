@@ -80,12 +80,36 @@ export type UniversityJobWithRelations = UniversityJob & {
 // Update schema for university jobs
 export const universityJobUpdateSchema = z.object({
 	id: z.string().uuid(),
-	coach_id: z.string().uuid().nullable().optional(),
+	coach_id: z
+		.string()
+		.uuid()
+		.nullable()
+		.optional()
+		.or(z.literal(""))
+		.transform((val) => (val === "" ? null : val)),
 	job_title: z.string().nullable().optional(),
 	program_scope: z.enum(["men", "women", "both", "n/a"]).nullable().optional(),
-	university_id: z.string().uuid().nullable().optional(),
-	program_id: z.string().uuid().nullable().optional(),
-	work_email: z.string().email().nullable().optional(),
+	university_id: z
+		.string()
+		.uuid()
+		.nullable()
+		.optional()
+		.or(z.literal(""))
+		.transform((val) => (val === "" ? null : val)),
+	program_id: z
+		.string()
+		.uuid()
+		.nullable()
+		.optional()
+		.or(z.literal(""))
+		.transform((val) => (val === "" ? null : val)),
+	work_email: z
+		.string()
+		.email()
+		.nullable()
+		.optional()
+		.or(z.literal(""))
+		.transform((val) => (val === "" ? null : val)),
 	work_phone: z.string().nullable().optional(),
 	start_date: z.string().nullable().optional(),
 	end_date: z.string().nullable().optional(),

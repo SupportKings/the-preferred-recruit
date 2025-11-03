@@ -3,7 +3,10 @@
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 
+import { getTodayDateString } from "@/lib/date-utils";
+
 import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
 import {
 	Dialog,
 	DialogContent,
@@ -12,7 +15,6 @@ import {
 	DialogTitle,
 	DialogTrigger,
 } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
 	Select,
@@ -28,7 +30,6 @@ import { CampaignLookup } from "@/features/athletes/components/lookups/campaign-
 import { universityJobQueries } from "@/features/university-jobs/queries/useUniversityJobs";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
 import { Edit, MessageSquare, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { createReply, updateReply } from "../actions/relations/replies";
@@ -58,46 +59,59 @@ export function ManageReplyModal({
 	const [isLoading, setIsLoading] = useState(false);
 	const queryClient = useQueryClient();
 
-	const [formData, setFormData] = useState({
+	const initialFormData = {
 		type: "email" as string,
-		occurred_at: format(new Date(), "yyyy-MM-dd"),
+		occurred_at: getTodayDateString(),
 		summary: "",
 		campaign_id: null as string | null,
 		athlete_id: null as string | null,
 		internal_notes: "",
-	});
+	};
 
+	const [formData, setFormData] = useState(initialFormData);
+
+	// Reset form when modal opens/closes or mode/data changes
 	useEffect(() => {
-		if (isEdit && reply) {
-			const rep = reply as {
-				type?: string | null;
-				occurred_at?: string | null;
-				summary?: string | null;
-				campaigns?: { id: string } | null;
-				athletes?: { id: string } | null;
-				internal_notes?: string | null;
-			};
-			setFormData({
-				type: rep.type || "email",
-				occurred_at: rep.occurred_at
-					? format(new Date(rep.occurred_at), "yyyy-MM-dd")
-					: format(new Date(), "yyyy-MM-dd"),
-				summary: rep.summary || "",
-				campaign_id: rep.campaigns?.id || null,
-				athlete_id: rep.athletes?.id || null,
-				internal_notes: rep.internal_notes || "",
-			});
-		} else if (!isEdit) {
+		if (open) {
+			if (isEdit && reply) {
+				const rep = reply as {
+					type?: string | null;
+					occurred_at?: string | null;
+					summary?: string | null;
+					campaigns?: { id: string } | null;
+					athletes?: { id: string } | null;
+					internal_notes?: string | null;
+				};
+				setFormData({
+					type: rep.type || "email",
+					occurred_at: rep.occurred_at || getTodayDateString(),
+					summary: rep.summary || "",
+					campaign_id: rep.campaigns?.id || null,
+					athlete_id: rep.athletes?.id || null,
+					internal_notes: rep.internal_notes || "",
+				});
+			} else if (!isEdit) {
+				setFormData({
+					type: "email",
+					occurred_at: getTodayDateString(),
+					summary: "",
+					campaign_id: null,
+					athlete_id: null,
+					internal_notes: "",
+				});
+			}
+		} else {
+			// Reset form when modal closes
 			setFormData({
 				type: "email",
-				occurred_at: format(new Date(), "yyyy-MM-dd"),
+				occurred_at: getTodayDateString(),
 				summary: "",
 				campaign_id: null,
 				athlete_id: null,
 				internal_notes: "",
 			});
 		}
-	}, [isEdit, reply]);
+	}, [open, isEdit, reply]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -183,22 +197,19 @@ export function ManageReplyModal({
 					</div>
 
 					<div className="space-y-2">
-						<Label htmlFor="occurred_at">Occurred At *</Label>
-						<Input
-							id="occurred_at"
-							type="date"
+						<Label>Occurred At *</Label>
+						<DatePicker
 							value={formData.occurred_at}
-							onChange={(e) =>
-								setFormData({ ...formData, occurred_at: e.target.value })
+							onChange={(value) =>
+								setFormData({ ...formData, occurred_at: value })
 							}
-							required
+							placeholder="Select date"
 						/>
 					</div>
 
 					<div className="space-y-2">
-						<Label htmlFor="summary">Summary</Label>
+						<Label>Summary</Label>
 						<Textarea
-							id="summary"
 							placeholder="Brief summary of the reply..."
 							value={formData.summary}
 							onChange={(e) =>
@@ -235,9 +246,8 @@ export function ManageReplyModal({
 					)}
 
 					<div className="space-y-2">
-						<Label htmlFor="internal_notes">Internal Notes</Label>
+						<Label>Internal Notes</Label>
 						<Textarea
-							id="internal_notes"
 							placeholder="Private notes about this reply..."
 							value={formData.internal_notes}
 							onChange={(e) =>

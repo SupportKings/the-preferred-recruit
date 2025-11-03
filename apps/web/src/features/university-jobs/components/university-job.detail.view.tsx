@@ -64,10 +64,8 @@ export default function UniversityJobDetailView({
 		try {
 			const updateData: {
 				id: string;
-				coach_id?: string | null;
 				job_title?: string | null;
 				program_scope?: "men" | "women" | "both" | "n/a" | null;
-				university_id?: string | null;
 				program_id?: string | null;
 				work_email?: string | null;
 				work_phone?: string | null;
@@ -80,13 +78,10 @@ export default function UniversityJobDetailView({
 
 			if (editState.section === "basic") {
 				const basicData = data as {
-					coach_id: string | null;
 					job_title: string;
 					program_scope: string;
-					university_id: string | null;
 					program_id: string | null;
 				};
-				updateData.coach_id = basicData.coach_id;
 				updateData.job_title = basicData.job_title;
 				updateData.program_scope = basicData.program_scope as
 					| "men"
@@ -94,7 +89,6 @@ export default function UniversityJobDetailView({
 					| "both"
 					| "n/a"
 					| null;
-				updateData.university_id = basicData.university_id;
 				updateData.program_id = basicData.program_id;
 			} else if (editState.section === "operations") {
 				const opsData = data as {

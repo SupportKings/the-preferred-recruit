@@ -11,9 +11,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 
-import { CoachLookup } from "@/features/athletes/components/lookups/coach-lookup";
 import { ProgramLookup } from "@/features/athletes/components/lookups/program-lookup";
-import { UniversityLookup } from "@/features/athletes/components/lookups/university-lookup";
 
 import { Edit3, Save, UserSquare2, X } from "lucide-react";
 
@@ -54,10 +52,8 @@ export function UniversityJobBasicInfo({
 	onCancel,
 }: UniversityJobBasicInfoProps) {
 	const [formData, setFormData] = useState({
-		coach_id: universityJob.coach_id,
 		job_title: universityJob.job_title || "",
 		program_scope: universityJob.program_scope || "n/a",
-		university_id: universityJob.university_id,
 		program_id: universityJob.program_id,
 	});
 
@@ -68,10 +64,8 @@ export function UniversityJobBasicInfo({
 	const handleCancel = () => {
 		// Reset form data to original values
 		setFormData({
-			coach_id: universityJob.coach_id,
 			job_title: universityJob.job_title || "",
 			program_scope: universityJob.program_scope || "n/a",
-			university_id: universityJob.university_id,
 			program_id: universityJob.program_id,
 		});
 		onCancel?.();
@@ -119,19 +113,9 @@ export function UniversityJobBasicInfo({
 			<CardContent className="space-y-4">
 				<div>
 					<p className="font-medium text-muted-foreground text-sm">Coach</p>
-					{isEditing ? (
-						<CoachLookup
-							value={formData.coach_id || ""}
-							onChange={(value) =>
-								setFormData((prev) => ({ ...prev, coach_id: value || null }))
-							}
-							label=""
-						/>
-					) : (
-						<p className="text-sm">
-							{universityJob.coaches?.full_name || "Not assigned"}
-						</p>
-					)}
+					<p className="text-sm">
+						{universityJob.coaches?.full_name || "Not assigned"}
+					</p>
 				</div>
 				<div>
 					<p className="font-medium text-muted-foreground text-sm">Job Title</p>
@@ -181,49 +165,34 @@ export function UniversityJobBasicInfo({
 					<p className="font-medium text-muted-foreground text-sm">
 						University
 					</p>
-					{isEditing ? (
-						<UniversityLookup
-							value={formData.university_id || ""}
-							onChange={(value) =>
-								setFormData((prev) => ({
-									...prev,
-									university_id: value || null,
-								}))
-							}
-							label=""
-						/>
-					) : (
-						<div className="text-sm">
-							{universityJob.universities ? (
-								<div>
-									<p className="font-medium">
-										{universityJob.universities.name}
-									</p>
-									{universityJob.universities.city &&
-										universityJob.universities.state && (
-											<p className="text-muted-foreground text-xs">
-												{universityJob.universities.city},{" "}
-												{universityJob.universities.state}
-											</p>
-										)}
-								</div>
-							) : (
-								<p>Not assigned</p>
-							)}
-						</div>
-					)}
+					<div className="text-sm">
+						{universityJob.universities ? (
+							<div>
+								<p className="font-medium">{universityJob.universities.name}</p>
+								{universityJob.universities.city &&
+									universityJob.universities.state && (
+										<p className="text-muted-foreground text-xs">
+											{universityJob.universities.city},{" "}
+											{universityJob.universities.state}
+										</p>
+									)}
+							</div>
+						) : (
+							<p>Not assigned</p>
+						)}
+					</div>
 				</div>
 				<div>
 					<p className="font-medium text-muted-foreground text-sm">Program</p>
 					{isEditing ? (
 						<ProgramLookup
-							universityId={formData.university_id || ""}
+							universityId={universityJob.university_id || ""}
 							value={formData.program_id || ""}
 							onChange={(value) =>
 								setFormData((prev) => ({ ...prev, program_id: value || null }))
 							}
 							label=""
-							disabled={!formData.university_id}
+							disabled={!universityJob.university_id}
 						/>
 					) : (
 						<p className="text-sm capitalize">

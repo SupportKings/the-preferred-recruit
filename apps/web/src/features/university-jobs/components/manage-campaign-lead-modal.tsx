@@ -60,34 +60,49 @@ export function ManageCampaignLeadModal({
 	const [isLoading, setIsLoading] = useState(false);
 	const queryClient = useQueryClient();
 
-	const [formData, setFormData] = useState({
+	const initialFormData = {
 		campaign_id: null as string | null,
 		university_id: null as string | null,
 		program_id: null as string | null,
 		status: "pending" as string,
 		include_reason: "",
 		internal_notes: "",
-	});
+	};
 
+	const [formData, setFormData] = useState(initialFormData);
+
+	// Reset form when modal opens/closes or mode/data changes
 	useEffect(() => {
-		if (isEdit && campaignLead) {
-			const lead = campaignLead as {
-				campaigns?: { id: string } | null;
-				universities?: { id: string } | null;
-				programs?: { id: string } | null;
-				status?: string | null;
-				include_reason?: string | null;
-				internal_notes?: string | null;
-			};
-			setFormData({
-				campaign_id: lead.campaigns?.id || null,
-				university_id: lead.universities?.id || null,
-				program_id: lead.programs?.id || null,
-				status: lead.status || "pending",
-				include_reason: lead.include_reason || "",
-				internal_notes: lead.internal_notes || "",
-			});
-		} else if (!isEdit) {
+		if (open) {
+			if (isEdit && campaignLead) {
+				const lead = campaignLead as {
+					campaigns?: { id: string } | null;
+					universities?: { id: string } | null;
+					programs?: { id: string } | null;
+					status?: string | null;
+					include_reason?: string | null;
+					internal_notes?: string | null;
+				};
+				setFormData({
+					campaign_id: lead.campaigns?.id || null,
+					university_id: lead.universities?.id || null,
+					program_id: lead.programs?.id || null,
+					status: lead.status || "pending",
+					include_reason: lead.include_reason || "",
+					internal_notes: lead.internal_notes || "",
+				});
+			} else if (!isEdit) {
+				setFormData({
+					campaign_id: null,
+					university_id: null,
+					program_id: null,
+					status: "pending",
+					include_reason: "",
+					internal_notes: "",
+				});
+			}
+		} else {
+			// Reset form when modal closes
 			setFormData({
 				campaign_id: null,
 				university_id: null,
@@ -97,7 +112,7 @@ export function ManageCampaignLeadModal({
 				internal_notes: "",
 			});
 		}
-	}, [isEdit, campaignLead]);
+	}, [open, isEdit, campaignLead]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -224,9 +239,8 @@ export function ManageCampaignLeadModal({
 					</div>
 
 					<div className="space-y-2">
-						<Label htmlFor="include_reason">Include Reason</Label>
+						<Label>Include Reason</Label>
 						<Textarea
-							id="include_reason"
 							placeholder="Why this lead is included..."
 							value={formData.include_reason}
 							onChange={(e) =>
@@ -237,9 +251,8 @@ export function ManageCampaignLeadModal({
 					</div>
 
 					<div className="space-y-2">
-						<Label htmlFor="internal_notes">Internal Notes</Label>
+						<Label>Internal Notes</Label>
 						<Textarea
-							id="internal_notes"
 							placeholder="Private notes about this lead..."
 							value={formData.internal_notes}
 							onChange={(e) =>
