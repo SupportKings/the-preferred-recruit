@@ -3,7 +3,7 @@ import Link from "next/link";
 import { StatusBadge } from "@/components/ui/status-badge";
 
 import { createColumnHelper } from "@tanstack/react-table";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Eye, Trash2 } from "lucide-react";
 
 // Helper function to format lead list type for display
 const formatLeadListType = (type?: string): string => {
@@ -70,6 +70,13 @@ export const createLeadListRowActions = (
 	setDeleteModal: any,
 	setEditModal: any,
 ) => [
+	{
+		label: "View",
+		icon: Eye,
+		onClick: (leadList: any) => {
+			window.location.href = `/dashboard/school-lead-lists/${leadList.id}`;
+		},
+	},
 	{
 		label: "Edit",
 		icon: Edit,
