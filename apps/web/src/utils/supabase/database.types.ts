@@ -266,6 +266,7 @@ export type Database = {
           contact_email: string | null
           contract_date: string | null
           country: string | null
+          created_at: string | null
           date_of_birth: string | null
           deleted_at: string | null
           deleted_by: string | null
@@ -301,6 +302,7 @@ export type Database = {
           sending_email_id: string | null
           state: string | null
           student_type: Database["public"]["Enums"]["student_type_enum"] | null
+          updated_at: string | null
           year_entering_university: number | null
         }
         Insert: {
@@ -310,6 +312,7 @@ export type Database = {
           contact_email?: string | null
           contract_date?: string | null
           country?: string | null
+          created_at?: string | null
           date_of_birth?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
@@ -345,6 +348,7 @@ export type Database = {
           sending_email_id?: string | null
           state?: string | null
           student_type?: Database["public"]["Enums"]["student_type_enum"] | null
+          updated_at?: string | null
           year_entering_university?: number | null
         }
         Update: {
@@ -354,6 +358,7 @@ export type Database = {
           contact_email?: string | null
           contract_date?: string | null
           country?: string | null
+          created_at?: string | null
           date_of_birth?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
@@ -389,6 +394,7 @@ export type Database = {
           sending_email_id?: string | null
           state?: string | null
           student_type?: Database["public"]["Enums"]["student_type_enum"] | null
+          updated_at?: string | null
           year_entering_university?: number | null
         }
         Relationships: [
@@ -694,6 +700,7 @@ export type Database = {
       campaigns: {
         Row: {
           athlete_id: string | null
+          created_at: string | null
           daily_send_cap: number | null
           deleted_at: string | null
           deleted_by: string | null
@@ -711,9 +718,11 @@ export type Database = {
           start_date: string | null
           status: Database["public"]["Enums"]["campaign_status_enum"] | null
           type: Database["public"]["Enums"]["campaign_type_enum"] | null
+          updated_at: string | null
         }
         Insert: {
           athlete_id?: string | null
+          created_at?: string | null
           daily_send_cap?: number | null
           deleted_at?: string | null
           deleted_by?: string | null
@@ -731,9 +740,11 @@ export type Database = {
           start_date?: string | null
           status?: Database["public"]["Enums"]["campaign_status_enum"] | null
           type?: Database["public"]["Enums"]["campaign_type_enum"] | null
+          updated_at?: string | null
         }
         Update: {
           athlete_id?: string | null
+          created_at?: string | null
           daily_send_cap?: number | null
           deleted_at?: string | null
           deleted_by?: string | null
@@ -751,6 +762,7 @@ export type Database = {
           start_date?: string | null
           status?: Database["public"]["Enums"]["campaign_status_enum"] | null
           type?: Database["public"]["Enums"]["campaign_type_enum"] | null
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -1121,6 +1133,7 @@ export type Database = {
       }
       coaches: {
         Row: {
+          created_at: string | null
           deleted_at: string | null
           deleted_by: string | null
           email: string | null
@@ -1135,8 +1148,10 @@ export type Database = {
             | Database["public"]["Enums"]["event_group_enum"]
             | null
           twitter_profile: string | null
+          updated_at: string | null
         }
         Insert: {
+          created_at?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           email?: string | null
@@ -1151,8 +1166,10 @@ export type Database = {
             | Database["public"]["Enums"]["event_group_enum"]
             | null
           twitter_profile?: string | null
+          updated_at?: string | null
         }
         Update: {
+          created_at?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           email?: string | null
@@ -1167,6 +1184,7 @@ export type Database = {
             | Database["public"]["Enums"]["event_group_enum"]
             | null
           twitter_profile?: string | null
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -1737,6 +1755,7 @@ export type Database = {
       }
       programs: {
         Row: {
+          created_at: string | null
           deleted_at: string | null
           deleted_by: string | null
           gender: Database["public"]["Enums"]["program_gender_enum"] | null
@@ -1747,8 +1766,10 @@ export type Database = {
           team_twitter: string | null
           team_url: string | null
           university_id: string | null
+          updated_at: string | null
         }
         Insert: {
+          created_at?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           gender?: Database["public"]["Enums"]["program_gender_enum"] | null
@@ -1759,8 +1780,10 @@ export type Database = {
           team_twitter?: string | null
           team_url?: string | null
           university_id?: string | null
+          updated_at?: string | null
         }
         Update: {
+          created_at?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           gender?: Database["public"]["Enums"]["program_gender_enum"] | null
@@ -1771,6 +1794,7 @@ export type Database = {
           team_twitter?: string | null
           team_url?: string | null
           university_id?: string | null
+          updated_at?: string | null
         }
         Relationships: [
           {
@@ -2351,6 +2375,7 @@ export type Database = {
           act_composite_75th: number | null
           average_gpa: number | null
           city: string | null
+          created_at: string | null
           deleted_at: string | null
           deleted_by: string | null
           email_blocked: boolean | null
@@ -2374,6 +2399,7 @@ export type Database = {
           total_yearly_cost: number | null
           type_public_private: string | null
           undergraduate_enrollment: number | null
+          updated_at: string | null
           us_news_ranking_liberal_arts_2018: number | null
           us_news_ranking_national_2018: number | null
         }
@@ -2383,6 +2409,7 @@ export type Database = {
           act_composite_75th?: number | null
           average_gpa?: number | null
           city?: string | null
+          created_at?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           email_blocked?: boolean | null
@@ -2406,6 +2433,7 @@ export type Database = {
           total_yearly_cost?: number | null
           type_public_private?: string | null
           undergraduate_enrollment?: number | null
+          updated_at?: string | null
           us_news_ranking_liberal_arts_2018?: number | null
           us_news_ranking_national_2018?: number | null
         }
@@ -2415,6 +2443,7 @@ export type Database = {
           act_composite_75th?: number | null
           average_gpa?: number | null
           city?: string | null
+          created_at?: string | null
           deleted_at?: string | null
           deleted_by?: string | null
           email_blocked?: boolean | null
@@ -2438,6 +2467,7 @@ export type Database = {
           total_yearly_cost?: number | null
           type_public_private?: string | null
           undergraduate_enrollment?: number | null
+          updated_at?: string | null
           us_news_ranking_liberal_arts_2018?: number | null
           us_news_ranking_national_2018?: number | null
         }
@@ -2552,6 +2582,7 @@ export type Database = {
             | null
           start_date: string | null
           university_id: string | null
+          updated_at: string | null
           work_email: string | null
           work_phone: string | null
         }
@@ -2571,6 +2602,7 @@ export type Database = {
             | null
           start_date?: string | null
           university_id?: string | null
+          updated_at?: string | null
           work_email?: string | null
           work_phone?: string | null
         }
@@ -2590,6 +2622,7 @@ export type Database = {
             | null
           start_date?: string | null
           university_id?: string | null
+          updated_at?: string | null
           work_email?: string | null
           work_phone?: string | null
         }
