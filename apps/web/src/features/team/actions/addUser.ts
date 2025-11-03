@@ -52,7 +52,7 @@ export const addUser = actionClient
 			const inviterEmail = session.user.email;
 
 			// Generate invite URL
-			const inviteUrl = `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
+			const inviteUrl = `${process.env.NEXT_PUBLIC_VERCEL_URL}`;
 
 			// 1. Create the user first
 			const password = generateSecurePassword();

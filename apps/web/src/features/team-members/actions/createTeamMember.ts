@@ -47,7 +47,7 @@ export const createTeamMemberAction = actionClient
 			const inviterEmail = session.user.email;
 
 			// Generate invite URL
-			const inviteUrl = `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
+			const inviteUrl = `${process.env.NEXT_PUBLIC_VERCEL_URL}`;
 
 			// Split full name into first and last name
 			const { first_name, last_name } = splitFullName(parsedInput.name);
