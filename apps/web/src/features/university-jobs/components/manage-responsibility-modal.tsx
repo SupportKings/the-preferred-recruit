@@ -58,32 +58,44 @@ export function ManageResponsibilityModal({
 	const [isLoading, setIsLoading] = useState(false);
 	const queryClient = useQueryClient();
 
-	const [formData, setFormData] = useState({
+	const initialFormData = {
 		event_group: null as string | null,
 		event_id: null as string | null,
 		internal_notes: "",
-	});
+	};
 
+	const [formData, setFormData] = useState(initialFormData);
+
+	// Reset form when modal opens/closes or mode/data changes
 	useEffect(() => {
-		if (isEdit && responsibility) {
-			const resp = responsibility as {
-				event_group?: string | null;
-				events?: { id: string } | null;
-				internal_notes?: string | null;
-			};
-			setFormData({
-				event_group: resp.event_group || null,
-				event_id: resp.events?.id || null,
-				internal_notes: resp.internal_notes || "",
-			});
-		} else if (!isEdit) {
+		if (open) {
+			if (isEdit && responsibility) {
+				const resp = responsibility as {
+					event_group?: string | null;
+					events?: { id: string } | null;
+					internal_notes?: string | null;
+				};
+				setFormData({
+					event_group: resp.event_group || null,
+					event_id: resp.events?.id || null,
+					internal_notes: resp.internal_notes || "",
+				});
+			} else if (!isEdit) {
+				setFormData({
+					event_group: null,
+					event_id: null,
+					internal_notes: "",
+				});
+			}
+		} else {
+			// Reset form when modal closes
 			setFormData({
 				event_group: null,
 				event_id: null,
 				internal_notes: "",
 			});
 		}
-	}, [isEdit, responsibility]);
+	}, [open, isEdit, responsibility]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();

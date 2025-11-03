@@ -39,6 +39,7 @@ export async function getTeamMember(id: string) {
 				)
 			`)
 			.eq("id", id)
+			.eq("is_deleted", false)
 			.single();
 
 		if (error) {
@@ -66,6 +67,7 @@ export async function getAllTeamMembers() {
 					email
 				)
 			`)
+			.eq("is_deleted", false)
 			.order("id", { ascending: false });
 
 		if (error) {
@@ -99,6 +101,9 @@ export async function getTeamMembersWithFilters(
 			`,
 			{ count: "exact" },
 		);
+
+		// Filter out soft-deleted records
+		query = query.eq("is_deleted", false);
 
 		// Apply filters with proper operator support
 		filters.forEach((filter) => {
@@ -193,6 +198,9 @@ export async function getTeamMembersWithFaceted(
 				let facetQuery = (supabase as any)
 					.from("team_members")
 					.select(columnId, { count: "exact" });
+
+				// Filter out soft-deleted records
+				facetQuery = facetQuery.eq("is_deleted", false);
 
 				// Apply existing filters (excluding the column we're faceting)
 				filters
@@ -297,6 +305,9 @@ export async function getTeamMembersFaceted(
 		let query = (supabase as any)
 			.from("team_members")
 			.select(columnId, { count: "exact" });
+
+		// Filter out soft-deleted records
+		query = query.eq("is_deleted", false);
 
 		// Apply existing filters (excluding the column we're faceting)
 		filters

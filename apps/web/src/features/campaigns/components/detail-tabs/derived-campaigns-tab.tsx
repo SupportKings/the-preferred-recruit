@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { UniversalDataTable } from "@/components/universal-data-table/universal-data-table";
 
+import { ManageDerivedCampaignModal } from "@/features/campaigns/components/modals/manage-derived-campaign-modal";
+
 import {
 	createColumnHelper,
 	getCoreRowModel,
@@ -104,10 +106,14 @@ const createDerivedCampaignColumns = () => {
 };
 
 interface DerivedCampaignsTabProps {
+	campaignId: string;
+	athleteId: string;
 	derivedCampaigns: any[];
 }
 
 export function DerivedCampaignsTab({
+	campaignId,
+	athleteId,
 	derivedCampaigns,
 }: DerivedCampaignsTabProps) {
 	const campaignColumns = createDerivedCampaignColumns();
@@ -128,6 +134,10 @@ export function DerivedCampaignsTab({
 							<GitBranch className="h-5 w-5" />
 							Derived Campaigns
 						</CardTitle>
+						<ManageDerivedCampaignModal
+							campaignId={campaignId}
+							athleteId={athleteId}
+						/>
 					</div>
 				</CardHeader>
 				<CardContent>
@@ -151,6 +161,10 @@ export function DerivedCampaignsTab({
 						<GitBranch className="h-5 w-5" />
 						Derived Campaigns
 					</CardTitle>
+					<ManageDerivedCampaignModal
+						campaignId={campaignId}
+						athleteId={athleteId}
+					/>
 				</div>
 			</CardHeader>
 			<CardContent>

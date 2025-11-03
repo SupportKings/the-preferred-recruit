@@ -19,9 +19,6 @@ export async function sendOTP(data: z.infer<typeof OTPInput>) {
 		// Validate input
 		const validatedData = OTPInput.parse(data);
 
-		// TEMPORARY: Log OTP to console when Resend is disabled
-		console.log(`🔐 OTP Code for ${validatedData.email}: ${validatedData.otp}`);
-
 		const { error } = await resend.emails.send({
 			from: `${siteConfig.name} <${siteConfig.email.from}>`,
 			to: [validatedData.email],
@@ -36,16 +33,11 @@ export async function sendOTP(data: z.infer<typeof OTPInput>) {
 		});
 
 		if (error) {
-			console.error("Error sending email:", error);
-			// Don't throw error - allow login to continue with console-logged OTP
-			console.warn("⚠️ Email failed but OTP is logged above - use it to login");
+			throw new Error("Failed to send OTP email");
 		}
 
 		return { success: true, message: "OTP sent successfully" };
-	} catch (error) {
-		console.error("Error sending OTP email:", error);
-		// Don't throw error - allow login to continue with console-logged OTP
-		console.warn("⚠️ Email failed but OTP is logged above - use it to login");
-		return { success: true, message: "OTP logged to console" };
+	} catch (_error) {
+		throw new Error("Failed to send OTP email");
 	}
 }

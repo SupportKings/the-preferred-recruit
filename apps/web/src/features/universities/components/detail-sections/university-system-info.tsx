@@ -2,17 +2,7 @@ import type { Tables } from "@/utils/supabase/database.types";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { format } from "date-fns";
 import { Clock } from "lucide-react";
-
-const _formatDate = (dateString: string | null) => {
-	if (!dateString) return "Not set";
-	try {
-		return format(new Date(dateString), "MMM dd, yyyy");
-	} catch {
-		return "Invalid date";
-	}
-};
 
 interface UniversitySystemInfoProps {
 	university: Pick<Tables<"universities">, "id" | "name">;
@@ -31,10 +21,10 @@ export function UniversitySystemInfo({
 			</CardHeader>
 			<CardContent className="space-y-4">
 				<div>
-					<label className="font-medium text-muted-foreground text-sm">
+					<div className="font-medium text-muted-foreground text-sm">
 						University ID
-					</label>
-					<p className="font-mono text-xs">{university.id}</p>
+					</div>
+					<p className="font-mono text-sm">{university.id}</p>
 				</div>
 			</CardContent>
 		</Card>

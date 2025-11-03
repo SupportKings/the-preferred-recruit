@@ -523,7 +523,7 @@ export function FilterValueOptionController<TData>({
 		<Command loop>
 			<CommandInput autoFocus placeholder={t("search", locale)} />
 			<CommandEmpty>{t("noresults", locale)}</CommandEmpty>
-			<CommandList className="max-h-fit">
+			<CommandList className="max-h-[300px] overflow-y-auto">
 				<CommandGroup className={cn(selectedOptions.length === 0 && "hidden")}>
 					{selectedOptions.map((option) => (
 						<OptionItem
@@ -602,7 +602,7 @@ export function FilterValueMultiOptionController<TData>({
 		<Command loop>
 			<CommandInput autoFocus placeholder={t("search", locale)} />
 			<CommandEmpty>{t("noresults", locale)}</CommandEmpty>
-			<CommandList>
+			<CommandList className="max-h-[300px] overflow-y-auto">
 				<CommandGroup className={cn(selectedOptions.length === 0 && "hidden")}>
 					{selectedOptions.map((option) => (
 						<OptionItem

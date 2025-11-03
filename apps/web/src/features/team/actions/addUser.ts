@@ -52,7 +52,7 @@ export const addUser = actionClient
 			const inviterEmail = session.user.email;
 
 			// Generate invite URL
-			const inviteUrl = `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
+			const inviteUrl = `${process.env.NEXT_PUBLIC_VERCEL_URL}`;
 
 			// 1. Create the user first
 			const password = generateSecurePassword();
@@ -73,7 +73,10 @@ export const addUser = actionClient
 						typeof createUserError === "object" &&
 						"status" in createUserError
 					) {
-						const apiError = createUserError as { status: string; body?: any };
+						const apiError = createUserError as {
+							status: string;
+							body?: { message?: string };
+						};
 
 						// Check if it's a BAD_REQUEST and contains "User already exists" message
 						if (apiError.status === "BAD_REQUEST") {
@@ -110,8 +113,8 @@ export const addUser = actionClient
 											return existingUser;
 										}
 									}
-								} catch (unbanError) {
-									console.error("Error checking/unbanning user:", unbanError);
+								} catch (_unbanError) {
+									// Silently handle unban errors - user already exists error will be thrown
 								}
 
 								throw new Error("USER_ALREADY_EXISTS");
@@ -119,7 +122,6 @@ export const addUser = actionClient
 						}
 					}
 
-					console.error("Error creating user:", createUserError);
 					throw new Error("CREATE_USER_FAILED");
 				});
 
@@ -164,18 +166,13 @@ export const addUser = actionClient
 				});
 
 				if (error) {
-					console.error("Error sending invite email:", error);
-					// Note: User was created successfully, but email failed
-					// You might want to handle this differently (e.g., retry email later)
 					return returnValidationErrors(inputSchema, {
 						_errors: [
 							"User created but failed to send invite email. Please try again.",
 						],
 					});
 				}
-			} catch (emailError) {
-				console.error("Error sending invite email:", emailError);
-				// Note: User was created successfully, but email failed
+			} catch (_emailError) {
 				return returnValidationErrors(inputSchema, {
 					_errors: [
 						"User created but failed to send invite email. Please try again.",
@@ -189,8 +186,6 @@ export const addUser = actionClient
 				teamMember,
 			};
 		} catch (error) {
-			console.error("Unexpected error in addUser:", error);
-
 			// Handle specific error types
 			if (error instanceof Error) {
 				if (error.message === "USER_ALREADY_EXISTS") {

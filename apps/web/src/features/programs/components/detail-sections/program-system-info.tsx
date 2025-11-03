@@ -14,7 +14,8 @@ const formatDate = (dateString: string | null) => {
 
 interface ProgramSystemInfoProps {
 	program: {
-		deleted_at: string | null;
+		created_at: string | null;
+		updated_at: string | null;
 	};
 }
 
@@ -32,13 +33,13 @@ export function ProgramSystemInfo({ program }: ProgramSystemInfoProps) {
 					<label className="font-medium text-muted-foreground text-sm">
 						Created At
 					</label>
-					<p className="text-sm">{formatDate(program.deleted_at)}</p>
+					<p className="text-sm">{formatDate(program.created_at)}</p>
 				</div>
 				<div>
 					<label className="font-medium text-muted-foreground text-sm">
 						Last Updated
 					</label>
-					<p className="text-sm">{formatDate(program.deleted_at)}</p>
+					<p className="text-sm">{formatDate(program.updated_at)}</p>
 				</div>
 			</CardContent>
 		</Card>

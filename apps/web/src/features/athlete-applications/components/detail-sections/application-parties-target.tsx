@@ -33,12 +33,6 @@ interface ApplicationPartiesTargetProps {
 			team_url: string | null;
 		};
 	};
-	athletes: Array<{
-		id: string;
-		full_name: string;
-		graduation_year: number | null;
-	}>;
-	universities: Array<{ id: string; name: string; city: string | null }>;
 	programs: Array<{ id: string; gender: string; university_id: string }>;
 	isEditing?: boolean;
 	onEditToggle?: () => void;
@@ -48,8 +42,6 @@ interface ApplicationPartiesTargetProps {
 
 export function ApplicationPartiesTarget({
 	application,
-	athletes = [],
-	universities = [],
 	programs = [],
 	isEditing = false,
 	onEditToggle,
@@ -57,28 +49,29 @@ export function ApplicationPartiesTarget({
 	onCancel,
 }: ApplicationPartiesTargetProps) {
 	const [formData, setFormData] = useState({
-		athlete_id: application.athlete_id || "",
-		university_id: application.university_id || "",
 		program_id: application.program_id || "",
 	});
 
 	const handleSave = () => {
+		// Validate that program is selected
+		if (!formData.program_id) {
+			// You can add a toast notification here if needed
+			return;
+		}
 		onSave?.(formData);
 	};
 
 	const handleCancel = () => {
 		// Reset form data to original values
 		setFormData({
-			athlete_id: application.athlete_id || "",
-			university_id: application.university_id || "",
 			program_id: application.program_id || "",
 		});
 		onCancel?.();
 	};
 
-	// Filter programs based on selected university
-	const filteredPrograms = formData.university_id
-		? programs.filter((p) => p.university_id === formData.university_id)
+	// Filter programs based on the application's university
+	const filteredPrograms = application.university_id
+		? programs.filter((p) => p.university_id === application.university_id)
 		: programs;
 
 	return (
@@ -105,6 +98,10 @@ export function ApplicationPartiesTarget({
 								size="sm"
 								onClick={handleSave}
 								className="h-8 w-8 p-0"
+								disabled={!formData.program_id}
+								title={
+									!formData.program_id ? "Program is required" : "Save changes"
+								}
 							>
 								<Save className="h-4 w-4" />
 							</Button>
@@ -125,67 +122,21 @@ export function ApplicationPartiesTarget({
 					<label className="font-medium text-muted-foreground text-sm">
 						Athlete
 					</label>
-					{isEditing ? (
-						<Select
-							value={formData.athlete_id}
-							onValueChange={(value) =>
-								setFormData((prev) => ({ ...prev, athlete_id: value }))
-							}
-						>
-							<SelectTrigger className="mt-1">
-								<SelectValue />
-							</SelectTrigger>
-							<SelectContent>
-								{athletes.map((athlete) => (
-									<SelectItem key={athlete.id} value={athlete.id}>
-										{athlete.full_name}
-										{athlete.graduation_year && ` (${athlete.graduation_year})`}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					) : (
-						<p className="text-sm">
-							{application.athletes?.full_name || "Not set"}
-							{application.athletes?.graduation_year &&
-								` (Class of ${application.athletes.graduation_year})`}
-						</p>
-					)}
+					<p className="text-sm">
+						{application.athletes?.full_name || "Not set"}
+						{application.athletes?.graduation_year &&
+							` (Class of ${application.athletes.graduation_year})`}
+					</p>
 				</div>
 				<div>
 					<label className="font-medium text-muted-foreground text-sm">
 						University
 					</label>
-					{isEditing ? (
-						<Select
-							value={formData.university_id}
-							onValueChange={(value) =>
-								setFormData((prev) => ({
-									...prev,
-									university_id: value,
-									program_id: "", // Reset program when university changes
-								}))
-							}
-						>
-							<SelectTrigger className="mt-1">
-								<SelectValue />
-							</SelectTrigger>
-							<SelectContent>
-								{universities.map((university) => (
-									<SelectItem key={university.id} value={university.id}>
-										{university.name}
-										{university.city && ` (${university.city})`}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
-					) : (
-						<p className="text-sm">
-							{application.universities?.name || "Not set"}
-							{application.universities?.city &&
-								` (${application.universities.city})`}
-						</p>
-					)}
+					<p className="text-sm">
+						{application.universities?.name || "Not set"}
+						{application.universities?.city &&
+							` (${application.universities.city})`}
+					</p>
 				</div>
 				<div>
 					<label className="font-medium text-muted-foreground text-sm">
@@ -197,14 +148,14 @@ export function ApplicationPartiesTarget({
 							onValueChange={(value) =>
 								setFormData((prev) => ({ ...prev, program_id: value }))
 							}
-							disabled={!formData.university_id}
+							disabled={!application.university_id}
 						>
 							<SelectTrigger className="mt-1">
 								<SelectValue
 									placeholder={
-										formData.university_id
+										application.university_id
 											? "Select program"
-											: "Select university first"
+											: "University not set"
 									}
 								/>
 							</SelectTrigger>

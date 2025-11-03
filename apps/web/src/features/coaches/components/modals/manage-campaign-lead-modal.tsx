@@ -124,6 +124,34 @@ export function ManageCampaignLeadModal({
 		}
 	}, [mode, campaignLead]);
 
+	const resetForm = () => {
+		if (mode === "create") {
+			setFormData({
+				campaign_id: "",
+				university_id: "",
+				program_id: "",
+				university_job_id: "",
+				source_lead_list_id: "",
+				include_reason: "",
+				status: "pending",
+				internal_notes: "",
+			});
+			setSelectedCampaignAthleteId(null);
+		} else if (mode === "edit" && campaignLead) {
+			// Reset to original values in edit mode
+			setFormData({
+				campaign_id: campaignLead.campaign_id || "",
+				university_id: campaignLead.university_id || "",
+				program_id: campaignLead.program_id || "",
+				university_job_id: campaignLead.university_job_id || "",
+				source_lead_list_id: "",
+				include_reason: campaignLead.include_reason || "",
+				status: campaignLead.status || "pending",
+				internal_notes: campaignLead.internal_notes || "",
+			});
+		}
+	};
+
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
 
@@ -174,18 +202,8 @@ export function ManageCampaignLeadModal({
 
 				if (result?.success && result.data) {
 					toast.success("Campaign lead created successfully!");
-
 					// Reset form for create mode
-					setFormData({
-						campaign_id: "",
-						university_id: "",
-						program_id: "",
-						university_job_id: "",
-						source_lead_list_id: "",
-						include_reason: "",
-						status: "pending",
-						internal_notes: "",
-					});
+					resetForm();
 				} else {
 					toast.error("Failed to create campaign lead");
 				}
@@ -214,8 +232,20 @@ export function ManageCampaignLeadModal({
 		}
 	};
 
+	const handleCancel = () => {
+		resetForm();
+		setOpen(false);
+	};
+
+	const handleOpenChange = (newOpen: boolean) => {
+		if (!newOpen) {
+			resetForm();
+		}
+		setOpen(newOpen);
+	};
+
 	return (
-		<Dialog open={open} onOpenChange={setOpen}>
+		<Dialog open={open} onOpenChange={handleOpenChange}>
 			<DialogTrigger>{children}</DialogTrigger>
 			<DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
 				<DialogHeader>
@@ -365,7 +395,7 @@ export function ManageCampaignLeadModal({
 						<Button
 							type="button"
 							variant="outline"
-							onClick={() => setOpen(false)}
+							onClick={handleCancel}
 							disabled={isLoading}
 						>
 							Cancel

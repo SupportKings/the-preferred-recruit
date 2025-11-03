@@ -58,22 +58,15 @@ async function AthleteApplicationDetailPageAsync({
 		queryFn: () => getApplication(id),
 	});
 
+	// Get the application to access athlete_id for filtering campaigns
+	const application = await getApplication(id);
+
+	if (!application) {
+		notFound();
+	}
+
 	// Fetch reference data for the form dropdowns
 	const supabase = await createClient();
-
-	// Fetch athletes for dropdown
-	const { data: athletes } = await supabase
-		.from("athletes")
-		.select("id, full_name, graduation_year")
-		.eq("is_deleted", false)
-		.order("full_name");
-
-	// Fetch universities for dropdown
-	const { data: universities } = await supabase
-		.from("universities")
-		.select("id, name, city")
-		.eq("is_deleted", false)
-		.order("name");
 
 	// Fetch programs for dropdown
 	const { data: programs } = await supabase
@@ -89,29 +82,13 @@ async function AthleteApplicationDetailPageAsync({
 		.eq("is_deleted", false)
 		.order("name");
 
-	// Fetch campaigns for dropdown
+	// Fetch campaigns for dropdown - only campaigns belonging to this athlete
 	const { data: campaigns } = await supabase
 		.from("campaigns")
 		.select("id, name, type, status")
 		.eq("is_deleted", false)
+		.eq("athlete_id", application.athlete_id)
 		.order("name");
-
-	// Fetch coaches with their university jobs for dropdown
-	const { data: coaches } = await supabase
-		.from("coaches")
-		.select(
-			`
-			id,
-			full_name,
-			university_jobs (
-				id,
-				job_title,
-				work_email
-			)
-		`,
-		)
-		.eq("is_deleted", false)
-		.order("full_name");
 
 	return (
 		<HydrationBoundary state={dehydrate(queryClient)}>
@@ -125,12 +102,9 @@ async function AthleteApplicationDetailPageAsync({
 			>
 				<AthleteApplicationDetailView
 					applicationId={id}
-					athletes={athletes || []}
-					universities={universities || []}
 					programs={programs || []}
 					leadLists={leadLists || []}
 					campaigns={campaigns || []}
-					coaches={coaches || []}
 				/>
 			</MainLayout>
 		</HydrationBoundary>

@@ -12,10 +12,23 @@ export async function deleteCampaignLead(leadId: string) {
 		throw new Error("Authentication required");
 	}
 
+	// Get team member ID for the current user
+	const { data: teamMember } = await supabase
+		.from("team_members")
+		.select("id")
+		.eq("user_id", user.user.id)
+		.maybeSingle();
+
+	// Soft delete by setting is_deleted flag
 	const { error } = await supabase
 		.from("campaign_leads")
-		.delete()
-		.eq("id", leadId);
+		.update({
+			is_deleted: true,
+			deleted_at: new Date().toISOString(),
+			deleted_by: teamMember?.id || null,
+		})
+		.eq("id", leadId)
+		.eq("is_deleted", false); // Only update if not already deleted
 
 	if (error) {
 		throw new Error(`Failed to delete campaign lead: ${error.message}`);

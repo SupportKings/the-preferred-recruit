@@ -22,11 +22,20 @@ export const deleteTeamMember = actionClient
 
 		try {
 			const supabase = await createClient();
+			const session = await auth.api.getSession({
+				headers: await headers(),
+			});
+
+			if (!session?.user?.id) {
+				return returnValidationErrors(deleteTeamMemberSchema, {
+					_errors: ["Unauthorized: No active session"],
+				});
+			}
 
 			// Check if team member exists and get user_id
 			const { data: existingTeamMember, error: fetchError } = await supabase
 				.from("team_members")
-				.select("id, first_name, last_name, user_id")
+				.select("id, first_name, last_name, user_id, is_deleted")
 				.eq("id", id)
 				.single();
 
@@ -36,7 +45,21 @@ export const deleteTeamMember = actionClient
 				});
 			}
 
-			// If team member has an associated user, ban the user first
+			if (existingTeamMember.is_deleted) {
+				return returnValidationErrors(deleteTeamMemberSchema, {
+					_errors: ["Team member is already deleted"],
+				});
+			}
+
+			// Get the team member ID of the current user (for deleted_by field)
+			const { data: currentTeamMember } = await supabase
+				.from("team_members")
+				.select("id")
+				.eq("user_id", session.user.id)
+				.eq("is_deleted", false)
+				.single();
+
+			// If team member has an associated user, ban the user (deactivate)
 			if (existingTeamMember.user_id) {
 				try {
 					await auth.api.banUser({
@@ -47,19 +70,24 @@ export const deleteTeamMember = actionClient
 					});
 				} catch (banError) {
 					console.error("Error banning user:", banError);
-					// Continue with team member deletion even if ban fails
+					// Continue with team member soft deletion even if ban fails
 					// The user might already be banned or deleted
 				}
 			}
 
-			// Delete the team member record
-			const { error: deleteError } = await supabase
+			// Soft delete the team member record
+			const { error: updateError } = await supabase
 				.from("team_members")
-				.delete()
+				.update({
+					is_deleted: true,
+					deleted_at: new Date().toISOString(),
+					deleted_by: currentTeamMember?.id || null,
+					is_active: false,
+				})
 				.eq("id", id);
 
-			if (deleteError) {
-				console.error("Error deleting team member:", deleteError);
+			if (updateError) {
+				console.error("Error soft deleting team member:", updateError);
 				return returnValidationErrors(deleteTeamMemberSchema, {
 					_errors: ["Failed to delete team member. Please try again."],
 				});

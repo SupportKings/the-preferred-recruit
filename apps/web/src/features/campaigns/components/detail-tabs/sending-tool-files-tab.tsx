@@ -53,6 +53,45 @@ export function SendingToolFilesTab({
 		getSortedRowModel: getSortedRowModel(),
 	});
 
+	if (!sendingToolLeadLists || sendingToolLeadLists.length === 0) {
+		return (
+			<Card>
+				<CardHeader>
+					<div className="flex items-center justify-between">
+						<CardTitle className="flex items-center gap-2">
+							<FileText className="h-5 w-5" />
+							Sending Tool Files
+						</CardTitle>
+						<ManageSendingToolLeadListModal
+							athleteId={athleteId}
+							campaignId={campaignId}
+							mode="add"
+						/>
+					</div>
+				</CardHeader>
+				<CardContent>
+					<div className="py-8 text-center text-muted-foreground">
+						<FileText className="mx-auto mb-4 h-12 w-12 opacity-50" />
+						<p className="text-sm">No sending tool files yet</p>
+						<p className="mt-1 mb-4 text-xs">
+							Files uploaded to sending tools will appear here
+						</p>
+						<ManageSendingToolLeadListModal
+							athleteId={athleteId}
+							campaignId={campaignId}
+							mode="add"
+						>
+							<Button size="sm">
+								<PlusIcon className="h-4 w-4" />
+								Add Sending Tool File
+							</Button>
+						</ManageSendingToolLeadListModal>
+					</div>
+				</CardContent>
+			</Card>
+		);
+	}
+
 	return (
 		<Card>
 			<CardHeader>
@@ -73,18 +112,6 @@ export function SendingToolFilesTab({
 					table={filesTable}
 					rowActions={fileRowActions}
 					emptyStateMessage="No sending tool files found for this campaign"
-					emptyStateAction={
-						<ManageSendingToolLeadListModal
-							athleteId={athleteId}
-							campaignId={campaignId}
-							mode="add"
-						>
-							<Button size="sm">
-								<PlusIcon className="h-4 w-4" />
-								Add Sending Tool File
-							</Button>
-						</ManageSendingToolLeadListModal>
-					}
 				/>
 			</CardContent>
 

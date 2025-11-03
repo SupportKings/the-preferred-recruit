@@ -1,7 +1,13 @@
+"use server";
+
+import { headers } from "next/headers";
+
+import { auth } from "@/lib/auth";
 import { actionClient } from "@/lib/safe-action";
 
-import { createClient } from "@/utils/supabase/client";
+import { createClient } from "@/utils/supabase/server";
 
+import { returnValidationErrors } from "next-safe-action";
 import { z } from "zod";
 
 const deleteUniversitySchema = z.object({
@@ -11,20 +17,45 @@ const deleteUniversitySchema = z.object({
 export const deleteUniversity = actionClient
 	.inputSchema(deleteUniversitySchema)
 	.action(async ({ parsedInput }) => {
-		const supabase = createClient();
+		try {
+			const supabase = await createClient();
+			const session = await auth.api.getSession({
+				headers: await headers(),
+			});
 
-		// Soft delete the university by setting is_deleted flag
-		const { error } = await (supabase as any)
-			.from("universities")
-			.update({
-				is_deleted: true,
-				deleted_at: new Date().toISOString(),
-			})
-			.eq("id", parsedInput.id);
+			if (!session?.user?.id) {
+				return returnValidationErrors(deleteUniversitySchema, {
+					_errors: ["Unauthorized: No active session"],
+				});
+			}
 
-		if (error) {
-			throw new Error(`Failed to delete university: ${error.message}`);
+			// Get the team member ID of the current user (for deleted_by field)
+			const { data: currentTeamMember } = await supabase
+				.from("team_members")
+				.select("id")
+				.eq("user_id", session.user.id)
+				.eq("is_deleted", false)
+				.single();
+
+			// Soft delete the university by setting is_deleted flag
+			const { error } = await supabase
+				.from("universities")
+				.update({
+					is_deleted: true,
+					deleted_at: new Date().toISOString(),
+					deleted_by: currentTeamMember?.id || null,
+				})
+				.eq("id", parsedInput.id);
+
+			if (error) {
+				throw new Error(`Failed to delete university: ${error.message}`);
+			}
+
+			return { success: true };
+		} catch (error) {
+			console.error("Unexpected error in deleteUniversity:", error);
+			return returnValidationErrors(deleteUniversitySchema, {
+				_errors: ["Failed to delete university. Please try again."],
+			});
 		}
-
-		return { success: true };
 	});

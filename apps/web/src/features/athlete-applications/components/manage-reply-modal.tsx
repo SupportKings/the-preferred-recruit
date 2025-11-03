@@ -232,27 +232,39 @@ export function ManageReplyModal({
 						<>
 							<div className="space-y-2">
 								<Label htmlFor="campaign_id">Campaign (Optional)</Label>
-								<Select
-									value={formData.campaign_id || "NONE"}
-									onValueChange={(value) =>
-										setFormData({
-											...formData,
-											campaign_id: value === "NONE" ? null : value,
-										})
-									}
-								>
-									<SelectTrigger>
-										<SelectValue placeholder="Select campaign..." />
-									</SelectTrigger>
-									<SelectContent>
-										<SelectItem value="NONE">None</SelectItem>
-										{campaigns.map((campaign) => (
-											<SelectItem key={campaign.id} value={campaign.id}>
-												{campaign.name} ({campaign.type})
-											</SelectItem>
-										))}
-									</SelectContent>
-								</Select>
+								{campaigns.length === 0 ? (
+									<div className="rounded-md border border-yellow-200 bg-yellow-50 p-3 text-sm dark:border-yellow-900 dark:bg-yellow-950">
+										<p className="font-medium text-yellow-800 dark:text-yellow-200">
+											No campaigns available
+										</p>
+										<p className="mt-1 text-yellow-700 dark:text-yellow-300">
+											This athlete doesn't have any campaigns yet. You can still
+											create a reply without linking it to a campaign.
+										</p>
+									</div>
+								) : (
+									<Select
+										value={formData.campaign_id || "NONE"}
+										onValueChange={(value) =>
+											setFormData({
+												...formData,
+												campaign_id: value === "NONE" ? null : value,
+											})
+										}
+									>
+										<SelectTrigger>
+											<SelectValue placeholder="Select campaign..." />
+										</SelectTrigger>
+										<SelectContent>
+											<SelectItem value="NONE">None</SelectItem>
+											{campaigns.map((campaign) => (
+												<SelectItem key={campaign.id} value={campaign.id}>
+													{campaign.name} ({campaign.type})
+												</SelectItem>
+											))}
+										</SelectContent>
+									</Select>
+								)}
 							</div>
 
 							<UniversityJobLookup

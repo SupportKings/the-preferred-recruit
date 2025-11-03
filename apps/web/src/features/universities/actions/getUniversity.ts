@@ -98,7 +98,14 @@ export async function getUniversity(id: string) {
 					school_lead_lists (
 						id,
 						name,
-						priority
+						priority,
+						athlete_id,
+						athlete:athletes!school_lead_lists_athlete_id_fkey (
+							id,
+							full_name,
+							contact_email,
+							graduation_year
+						)
 					),
 					programs (
 						id,
@@ -307,13 +314,27 @@ export async function getUniversitiesWithFilters(
 					case "undergraduate_enrollment":
 						// Number fields - support numeric operators
 						if (operator === "is") {
-							query = query.eq(columnId, Number(values[0]));
+							query = (query as any).eq(columnId, Number(values[0]));
 						} else if (operator === "is not") {
-							query = query.not(columnId, "eq", Number(values[0]));
-						} else if (operator === "greater than") {
-							query = query.gt(columnId, Number(values[0]));
-						} else if (operator === "less than") {
-							query = query.lt(columnId, Number(values[0]));
+							query = (query as any).not(columnId, "eq", Number(values[0]));
+						} else if (operator === "is greater than") {
+							query = (query as any).gt(columnId, Number(values[0]));
+						} else if (operator === "is greater than or equal to") {
+							query = (query as any).gte(columnId, Number(values[0]));
+						} else if (operator === "is less than") {
+							query = (query as any).lt(columnId, Number(values[0]));
+						} else if (operator === "is less than or equal to") {
+							query = (query as any).lte(columnId, Number(values[0]));
+						} else if (operator === "is between" && values.length === 2) {
+							query = query
+								.gte(columnId, Math.min(Number(values[0]), Number(values[1])))
+								.lte(columnId, Math.max(Number(values[0]), Number(values[1])));
+						} else if (operator === "is not between" && values.length === 2) {
+							const minValue = Math.min(Number(values[0]), Number(values[1]));
+							const maxValue = Math.max(Number(values[0]), Number(values[1]));
+							query = (query as any).or(
+								`${columnId}.lt.${minValue},${columnId}.gt.${maxValue}`,
+							);
 						}
 						break;
 
@@ -621,15 +642,53 @@ export async function getUniversitiesWithFaceted(
 												"eq",
 												Number(values[0]),
 											);
-										} else if (operator === "greater than") {
+										} else if (operator === "is greater than") {
 											facetQuery = facetQuery.gt(
 												filterColumnId,
 												Number(values[0]),
 											);
-										} else if (operator === "less than") {
+										} else if (operator === "is greater than or equal to") {
+											facetQuery = facetQuery.gte(
+												filterColumnId,
+												Number(values[0]),
+											);
+										} else if (operator === "is less than") {
 											facetQuery = facetQuery.lt(
 												filterColumnId,
 												Number(values[0]),
+											);
+										} else if (operator === "is less than or equal to") {
+											facetQuery = facetQuery.lte(
+												filterColumnId,
+												Number(values[0]),
+											);
+										} else if (
+											operator === "is between" &&
+											values.length === 2
+										) {
+											facetQuery = facetQuery
+												.gte(
+													filterColumnId,
+													Math.min(Number(values[0]), Number(values[1])),
+												)
+												.lte(
+													filterColumnId,
+													Math.max(Number(values[0]), Number(values[1])),
+												);
+										} else if (
+											operator === "is not between" &&
+											values.length === 2
+										) {
+											const minValue = Math.min(
+												Number(values[0]),
+												Number(values[1]),
+											);
+											const maxValue = Math.max(
+												Number(values[0]),
+												Number(values[1]),
+											);
+											facetQuery = (facetQuery as any).or(
+												`${filterColumnId}.lt.${minValue},${filterColumnId}.gt.${maxValue}`,
 											);
 										}
 										break;
@@ -836,15 +895,50 @@ export async function getUniversitiesWithFaceted(
 											"eq",
 											Number(values[0]),
 										);
-									} else if (operator === "greater than") {
+									} else if (operator === "is greater than") {
 										facetQuery = facetQuery.gt(
 											filterColumnId,
 											Number(values[0]),
 										);
-									} else if (operator === "less than") {
+									} else if (operator === "is greater than or equal to") {
+										facetQuery = facetQuery.gte(
+											filterColumnId,
+											Number(values[0]),
+										);
+									} else if (operator === "is less than") {
 										facetQuery = facetQuery.lt(
 											filterColumnId,
 											Number(values[0]),
+										);
+									} else if (operator === "is less than or equal to") {
+										facetQuery = facetQuery.lte(
+											filterColumnId,
+											Number(values[0]),
+										);
+									} else if (operator === "is between" && values.length === 2) {
+										facetQuery = facetQuery
+											.gte(
+												filterColumnId,
+												Math.min(Number(values[0]), Number(values[1])),
+											)
+											.lte(
+												filterColumnId,
+												Math.max(Number(values[0]), Number(values[1])),
+											);
+									} else if (
+										operator === "is not between" &&
+										values.length === 2
+									) {
+										const minValue = Math.min(
+											Number(values[0]),
+											Number(values[1]),
+										);
+										const maxValue = Math.max(
+											Number(values[0]),
+											Number(values[1]),
+										);
+										facetQuery = (facetQuery as any).or(
+											`${filterColumnId}.lt.${minValue},${filterColumnId}.gt.${maxValue}`,
 										);
 									}
 									break;

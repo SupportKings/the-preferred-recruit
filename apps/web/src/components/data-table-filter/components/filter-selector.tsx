@@ -107,7 +107,7 @@ function __FilterSelector<TData>({
 						placeholder={t("search", locale)}
 					/>
 					<CommandEmpty>{t("noresults", locale)}</CommandEmpty>
-					<CommandList className="max-h-fit">
+					<CommandList className="max-h-[300px] overflow-y-auto">
 						<CommandGroup>
 							{columns.map((column) => (
 								<FilterableColumn

@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { formatLocalDate } from "@/lib/date-utils";
+
 import { Constants } from "@/utils/supabase/database.types";
 
 import { Button } from "@/components/ui/button";
@@ -19,7 +21,6 @@ import {
 	type StatusColorScheme,
 } from "@/components/ui/status-badge";
 
-import { format } from "date-fns";
 import { Calendar, Edit3, Save, X } from "lucide-react";
 
 interface ApplicationStageTimingProps {
@@ -37,21 +38,7 @@ interface ApplicationStageTimingProps {
 }
 
 const formatDate = (dateString: string | null) => {
-	if (!dateString) return "Not set";
-	try {
-		return format(new Date(dateString), "MMM dd, yyyy");
-	} catch {
-		return "Invalid date";
-	}
-};
-
-const formatDateForInput = (dateString: string | null) => {
-	if (!dateString) return "";
-	try {
-		return format(new Date(dateString), "yyyy-MM-dd");
-	} catch {
-		return "";
-	}
+	return formatLocalDate(dateString, "MMM dd, yyyy", "Not set");
 };
 
 // Get stage options from database constants
@@ -84,10 +71,10 @@ export function ApplicationStageTiming({
 }: ApplicationStageTimingProps) {
 	const [formData, setFormData] = useState({
 		stage: application.stage || "intro",
-		start_date: formatDateForInput(application.start_date),
-		offer_date: formatDateForInput(application.offer_date),
-		commitment_date: formatDateForInput(application.commitment_date),
-		last_interaction_at: formatDateForInput(application.last_interaction_at),
+		start_date: application.start_date || "",
+		offer_date: application.offer_date || "",
+		commitment_date: application.commitment_date || "",
+		last_interaction_at: application.last_interaction_at || "",
 	});
 
 	const handleSave = () => {
@@ -98,10 +85,10 @@ export function ApplicationStageTiming({
 		// Reset form data to original values
 		setFormData({
 			stage: application.stage || "intro",
-			start_date: formatDateForInput(application.start_date),
-			offer_date: formatDateForInput(application.offer_date),
-			commitment_date: formatDateForInput(application.commitment_date),
-			last_interaction_at: formatDateForInput(application.last_interaction_at),
+			start_date: application.start_date || "",
+			offer_date: application.offer_date || "",
+			commitment_date: application.commitment_date || "",
+			last_interaction_at: application.last_interaction_at || "",
 		});
 		onCancel?.();
 	};
@@ -169,14 +156,14 @@ export function ApplicationStageTiming({
 							</SelectContent>
 						</Select>
 					) : (
-						<p className="text-sm">
+						<div className="text-sm">
 							<StatusBadge colorScheme={getStageColor(application.stage)}>
 								{application.stage
 									? application.stage.charAt(0).toUpperCase() +
 										application.stage.slice(1)
 									: "Unknown"}
 							</StatusBadge>
-						</p>
+						</div>
 					)}
 				</div>
 				<div>

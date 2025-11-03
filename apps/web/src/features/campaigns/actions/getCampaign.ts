@@ -25,6 +25,7 @@ export async function getCampaign(id: string) {
 					application_id,
 					included_at,
 					internal_notes,
+					is_deleted,
 					campaign:campaigns(id, name, type, status),
 					university_job:university_jobs(
 						id,
@@ -77,6 +78,13 @@ export async function getCampaign(id: string) {
 		if (error) {
 			console.error("Error fetching campaign:", error);
 			return null;
+		}
+
+		// Filter out soft-deleted campaign leads
+		if (campaign?.campaign_leads) {
+			campaign.campaign_leads = campaign.campaign_leads.filter(
+				(lead: any) => !lead.is_deleted,
+			);
 		}
 
 		// Separately fetch seed campaign if it exists

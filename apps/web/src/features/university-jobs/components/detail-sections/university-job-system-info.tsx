@@ -1,20 +1,14 @@
+import { formatTimestamp } from "@/lib/date-utils";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { format } from "date-fns";
 import { Clock } from "lucide-react";
-
-const formatDate = (dateString: string | null) => {
-	if (!dateString) return "Not set";
-	try {
-		return format(new Date(dateString), "MMM dd, yyyy");
-	} catch {
-		return "Invalid date";
-	}
-};
 
 interface UniversityJobSystemInfoProps {
 	universityJob: {
 		id: string;
+		created_at: string | null;
+		updated_at: string | null;
 	};
 }
 
@@ -31,10 +25,20 @@ export function UniversityJobSystemInfo({
 			</CardHeader>
 			<CardContent className="space-y-4">
 				<div>
-					<label className="font-medium text-muted-foreground text-sm">
-						Record ID
-					</label>
+					<p className="font-medium text-muted-foreground text-sm">Record ID</p>
 					<p className="font-mono text-sm">{universityJob.id}</p>
+				</div>
+				<div>
+					<p className="font-medium text-muted-foreground text-sm">
+						Created At
+					</p>
+					<p className="text-sm">{formatTimestamp(universityJob.created_at)}</p>
+				</div>
+				<div>
+					<p className="font-medium text-muted-foreground text-sm">
+						Updated At
+					</p>
+					<p className="text-sm">{formatTimestamp(universityJob.updated_at)}</p>
 				</div>
 			</CardContent>
 		</Card>

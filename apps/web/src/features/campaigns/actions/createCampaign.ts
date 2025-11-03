@@ -11,6 +11,7 @@ import { z } from "zod";
 const createCampaignSchema = z.object({
 	athlete_id: z.string().uuid(),
 	primary_lead_list_id: z.string().uuid().nullable().optional(),
+	seed_campaign_id: z.string().uuid().nullable().optional(),
 	name: z.string().min(1, "Campaign name is required"),
 	type: z.enum(["top", "second_pass", "third_pass", "personal_best"]),
 	status: z
@@ -33,6 +34,7 @@ export const createCampaignAction = actionClient
 				.insert({
 					athlete_id: parsedInput.athlete_id,
 					primary_lead_list_id: parsedInput.primary_lead_list_id || null,
+					seed_campaign_id: parsedInput.seed_campaign_id || null,
 					name: parsedInput.name,
 					type: parsedInput.type,
 					status: parsedInput.status,

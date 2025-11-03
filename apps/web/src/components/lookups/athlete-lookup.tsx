@@ -8,101 +8,91 @@ import {
 } from "@/components/server-search-combobox";
 import { Label } from "@/components/ui/label";
 
-import { searchUniversityJobs } from "@/features/university-jobs/actions/searchUniversityJobs";
+import { searchAthletes } from "@/features/athletes/actions/searchAthletes";
 
-interface UniversityJobLookupProps {
-	universityId?: string;
+interface AthleteLookupProps {
 	value?: string;
 	onChange: (value: string) => void;
 	label?: string;
+	placeholder?: string;
 	required?: boolean;
 	disabled?: boolean;
 }
 
-interface UniversityJob {
+interface Athlete {
 	id: string;
-	job_title: string | null;
-	work_email: string | null;
-	coach: {
-		id: string;
-		full_name: string;
-	} | null;
-	university: {
-		id: string;
-		name: string;
-		city: string | null;
-		state: string | null;
-	} | null;
-	program: {
-		id: string;
-		gender: string | null;
-	} | null;
+	full_name: string;
+	contact_email: string | null;
+	graduation_year: number | null;
+	high_school: string | null;
+	state: string | null;
 }
 
-export function UniversityJobLookup({
-	universityId,
+export function AthleteLookup({
 	value,
 	onChange,
-	label = "Coach/Job",
+	label = "Athlete",
+	placeholder = "Search for an athlete...",
 	required = false,
 	disabled = false,
-}: UniversityJobLookupProps) {
+}: AthleteLookupProps) {
 	const [searchTerm, setSearchTerm] = useState("");
 	const [options, setOptions] = useState<ServerSearchComboboxOption[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [hasMore, setHasMore] = useState(false);
 	const [page, setPage] = useState(0);
 
-	const getDisplayText = useCallback((job: UniversityJob) => {
-		const parts = [];
+	const getDisplayText = useCallback((athlete: Athlete) => {
+		const parts = [athlete.full_name];
 
-		// Priority: Coach name or job title
-		if (job.coach?.full_name) {
-			parts.push(job.coach.full_name);
-		} else if (job.job_title) {
-			parts.push(job.job_title);
+		// Add graduation year if available
+		if (athlete.graduation_year) {
+			parts.push(`• Class of ${athlete.graduation_year}`);
 		}
 
-		// Add job title if we have coach name
-		if (job.coach?.full_name && job.job_title) {
-			parts.push(`- ${job.job_title}`);
+		// Add high school if available
+		if (athlete.high_school) {
+			parts.push(`• ${athlete.high_school}`);
 		}
 
-		// Program gender
-		if (job.program?.gender) {
-			const gender =
-				job.program.gender === "men"
-					? "Men's"
-					: job.program.gender === "women"
-						? "Women's"
-						: job.program.gender;
-			parts.push(`• ${gender}`);
+		// Add state if available (and no high school to avoid redundancy)
+		if (athlete.state && !athlete.high_school) {
+			parts.push(`• ${athlete.state}`);
 		}
 
-		// University name
-		if (job.university?.name) {
-			parts.push(`• ${job.university.name}`);
-		}
-
-		return parts.join(" ") || "Unknown";
+		return parts.join(" ");
 	}, []);
 
-	const fetchJobs = useCallback(
+	const getSubtitle = useCallback((athlete: Athlete) => {
+		const parts = [];
+
+		if (athlete.contact_email) {
+			parts.push(athlete.contact_email);
+		}
+
+		// If we have both high school and state, show them together in subtitle
+		if (athlete.high_school && athlete.state) {
+			parts.push(`${athlete.high_school}, ${athlete.state}`);
+		}
+
+		return parts.join(" • ") || undefined;
+	}, []);
+
+	const fetchAthletes = useCallback(
 		async (searchQuery: string, pageNumber: number, append = false) => {
 			setIsLoading(true);
 			try {
-				const result = await searchUniversityJobs({
+				const result = await searchAthletes({
 					searchTerm: searchQuery,
-					universityId,
 					page: pageNumber,
 					pageSize: 50,
 				});
 
-				const newOptions: ServerSearchComboboxOption[] = result.jobs.map(
-					(job) => ({
-						value: job.id,
-						label: getDisplayText(job),
-						subtitle: job.work_email || undefined,
+				const newOptions: ServerSearchComboboxOption[] = result.athletes.map(
+					(athlete) => ({
+						value: athlete.id,
+						label: getDisplayText(athlete),
+						subtitle: getSubtitle(athlete),
 					}),
 				);
 
@@ -121,27 +111,27 @@ export function UniversityJobLookup({
 
 				setHasMore(result.hasMore);
 			} catch (error) {
-				console.error("Error fetching university jobs:", error);
+				console.error("Error fetching athletes:", error);
 				setOptions([]);
 				setHasMore(false);
 			} finally {
 				setIsLoading(false);
 			}
 		},
-		[universityId, getDisplayText],
+		[getDisplayText, getSubtitle],
 	);
 
 	// Initial load and search term changes
 	useEffect(() => {
 		setPage(0);
-		fetchJobs(searchTerm, 0, false);
-	}, [searchTerm, fetchJobs]);
+		fetchAthletes(searchTerm, 0, false);
+	}, [searchTerm, fetchAthletes]);
 
 	const handleLoadMore = useCallback(() => {
 		const nextPage = page + 1;
 		setPage(nextPage);
-		fetchJobs(searchTerm, nextPage, true);
-	}, [page, searchTerm, fetchJobs]);
+		fetchAthletes(searchTerm, nextPage, true);
+	}, [page, searchTerm, fetchAthletes]);
 
 	const handleSearchChange = (newSearchTerm: string) => {
 		setSearchTerm(newSearchTerm);
@@ -166,9 +156,9 @@ export function UniversityJobLookup({
 				onSearchChange={handleSearchChange}
 				options={options}
 				isLoading={isLoading}
-				placeholder="Search for a coach or job..."
-				searchPlaceholder="Search by name, title, email, university..."
-				emptyText="No jobs found matching your search."
+				placeholder={placeholder}
+				searchPlaceholder="Search by name, email, high school, or state..."
+				emptyText="No athletes found matching your search."
 				disabled={disabled}
 				hasMore={hasMore}
 				onLoadMore={handleLoadMore}

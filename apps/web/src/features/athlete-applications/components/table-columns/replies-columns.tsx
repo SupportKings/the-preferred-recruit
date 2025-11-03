@@ -51,7 +51,7 @@ function ExpandableTextCell({
 
 	return (
 		<Dialog>
-			<DialogTrigger className="h-auto max-w-md justify-start truncate p-0 text-left font-normal hover:bg-transparent hover:underline">
+			<DialogTrigger className="h-auto items-center flex max-w-md justify-start truncate p-0 text-left font-normal hover:bg-transparent hover:underline">
 				<Eye className="mr-2 h-3 w-3 flex-shrink-0" />
 				<span className="truncate">{text}</span>
 			</DialogTrigger>

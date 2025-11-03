@@ -2,12 +2,14 @@ import { useState } from "react";
 
 import type { Database } from "@/utils/supabase/database.types";
 
-import { format } from "date-fns";
-import { Calendar, Edit3, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { UrlActions } from "@/components/url-actions";
+
+import { format } from "date-fns";
+import { Calendar, Edit3, Save, X } from "lucide-react";
 
 type Campaign = Database["public"]["Tables"]["campaigns"]["Row"];
 
@@ -101,16 +103,16 @@ export function CampaignScheduleSending({
 						Start Date
 					</label>
 					{isEditing ? (
-						<Input
-							type="date"
+						<DatePicker
 							value={
 								formData.start_date
 									? format(new Date(formData.start_date), "yyyy-MM-dd")
 									: ""
 							}
-							onChange={(e) =>
-								setFormData((prev) => ({ ...prev, start_date: e.target.value }))
+							onChange={(value) =>
+								setFormData((prev) => ({ ...prev, start_date: value }))
 							}
+							placeholder="Select start date"
 							className="mt-1"
 						/>
 					) : (
@@ -122,16 +124,16 @@ export function CampaignScheduleSending({
 						End Date
 					</label>
 					{isEditing ? (
-						<Input
-							type="date"
+						<DatePicker
 							value={
 								formData.end_date
 									? format(new Date(formData.end_date), "yyyy-MM-dd")
 									: ""
 							}
-							onChange={(e) =>
-								setFormData((prev) => ({ ...prev, end_date: e.target.value }))
+							onChange={(value) =>
+								setFormData((prev) => ({ ...prev, end_date: value }))
 							}
+							placeholder="Select end date"
 							className="mt-1"
 						/>
 					) : (
@@ -149,7 +151,7 @@ export function CampaignScheduleSending({
 							onChange={(e) =>
 								setFormData((prev) => ({
 									...prev,
-									daily_send_cap: Number.parseInt(e.target.value),
+									daily_send_cap: Number.parseInt(e.target.value, 10),
 								}))
 							}
 							className="mt-1"
@@ -175,7 +177,10 @@ export function CampaignScheduleSending({
 							className="mt-1"
 						/>
 					) : campaign.sending_tool_campaign_url ? (
-						<UrlActions url={campaign.sending_tool_campaign_url} className="mt-1" />
+						<UrlActions
+							url={campaign.sending_tool_campaign_url}
+							className="mt-1"
+						/>
 					) : (
 						<p className="mt-1 text-sm">Not set</p>
 					)}

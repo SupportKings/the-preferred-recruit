@@ -1,21 +1,29 @@
 import { useState } from "react";
 
+import { cn } from "@/lib/utils";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+	Command,
+	CommandEmpty,
+	CommandGroup,
+	CommandInput,
+	CommandItem,
+	CommandList,
+} from "@/components/ui/command";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "@/components/ui/select";
+	Popover,
+	PopoverContent,
+	PopoverTrigger,
+} from "@/components/ui/popover";
 import { Textarea } from "@/components/ui/textarea";
 
 import { US_TIMEZONES } from "@/features/team-members/types/team-member";
 
-import { Edit3, Save, User, X } from "lucide-react";
+import { Check, ChevronsUpDown, Edit3, Save, User, X } from "lucide-react";
 
 interface TeamMemberBasicInfoFormData {
 	name: string;
@@ -50,6 +58,7 @@ export function TeamMemberBasicInfo({
 		timezone: teamMember.timezone || "",
 		internal_notes: teamMember.internal_notes || "",
 	});
+	const [timezoneOpen, setTimezoneOpen] = useState(false);
 
 	const handleSave = () => {
 		onSave?.(formData);
@@ -107,15 +116,11 @@ export function TeamMemberBasicInfo({
 			</CardHeader>
 			<CardContent className="space-y-4">
 				<div>
-					<Label
-						htmlFor="name"
-						className="font-medium text-muted-foreground text-sm"
-					>
+					<Label className="font-medium text-muted-foreground text-sm">
 						Name
 					</Label>
 					{isEditing ? (
 						<Input
-							id="name"
 							value={formData.name}
 							onChange={(e) =>
 								setFormData((prev) => ({ ...prev, name: e.target.value }))
@@ -128,15 +133,11 @@ export function TeamMemberBasicInfo({
 					)}
 				</div>
 				<div>
-					<Label
-						htmlFor="job_title"
-						className="font-medium text-muted-foreground text-sm"
-					>
+					<Label className="font-medium text-muted-foreground text-sm">
 						Job Title
 					</Label>
 					{isEditing ? (
 						<Input
-							id="job_title"
 							value={formData.job_title}
 							onChange={(e) =>
 								setFormData((prev) => ({ ...prev, job_title: e.target.value }))
@@ -149,30 +150,65 @@ export function TeamMemberBasicInfo({
 					)}
 				</div>
 				<div>
-					<Label
-						htmlFor="timezone"
-						className="font-medium text-muted-foreground text-sm"
-					>
+					<Label className="font-medium text-muted-foreground text-sm">
 						Time Zone
 					</Label>
 					{isEditing ? (
-						<Select
-							value={formData.timezone}
-							onValueChange={(value) =>
-								setFormData((prev) => ({ ...prev, timezone: value }))
-							}
-						>
-							<SelectTrigger id="timezone" className="mt-1">
-								<SelectValue placeholder="Select timezone" />
-							</SelectTrigger>
-							<SelectContent>
-								{US_TIMEZONES.map((tz) => (
-									<SelectItem key={tz.value} value={tz.value}>
-										{tz.label}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
+						<Popover open={timezoneOpen} onOpenChange={setTimezoneOpen}>
+							<PopoverTrigger asChild>
+								<Button
+									variant="outline"
+									role="combobox"
+									aria-expanded={timezoneOpen}
+									className="mt-1 w-full justify-between"
+								>
+									<span className="truncate">
+										{formData.timezone
+											? US_TIMEZONES.find(
+													(tz) => tz.value === formData.timezone,
+												)?.label
+											: "Select timezone"}
+									</span>
+									<ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+								</Button>
+							</PopoverTrigger>
+							<PopoverContent className="w-[var(--radix-popover-trigger-width)] p-0">
+								<Command>
+									<CommandInput placeholder="Search timezone..." />
+									<CommandList>
+										<CommandEmpty>No timezone found.</CommandEmpty>
+										<CommandGroup>
+											{US_TIMEZONES.map((tz) => (
+												<CommandItem
+													key={tz.value}
+													value={tz.value}
+													onSelect={(currentValue) => {
+														setFormData((prev) => ({
+															...prev,
+															timezone:
+																currentValue === prev.timezone
+																	? ""
+																	: currentValue,
+														}));
+														setTimezoneOpen(false);
+													}}
+												>
+													<Check
+														className={cn(
+															"mr-2 h-4 w-4",
+															formData.timezone === tz.value
+																? "opacity-100"
+																: "opacity-0",
+														)}
+													/>
+													{tz.label}
+												</CommandItem>
+											))}
+										</CommandGroup>
+									</CommandList>
+								</Command>
+							</PopoverContent>
+						</Popover>
 					) : (
 						<p className="text-sm">
 							{teamMember.timezone
@@ -183,15 +219,11 @@ export function TeamMemberBasicInfo({
 					)}
 				</div>
 				<div>
-					<Label
-						htmlFor="internal_notes"
-						className="font-medium text-muted-foreground text-sm"
-					>
+					<Label className="font-medium text-muted-foreground text-sm">
 						Internal Notes
 					</Label>
 					{isEditing ? (
 						<Textarea
-							id="internal_notes"
 							value={formData.internal_notes}
 							onChange={(e) =>
 								setFormData((prev) => ({

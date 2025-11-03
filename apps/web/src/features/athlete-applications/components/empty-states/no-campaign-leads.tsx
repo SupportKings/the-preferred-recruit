@@ -6,25 +6,13 @@ import { ManageCampaignLeadModal } from "../manage-campaign-lead-modal";
 interface NoCampaignLeadsProps {
 	applicationId: string;
 	campaigns?: Array<{ id: string; name: string; type: string }>;
-	universities?: Array<{ id: string; name: string; city: string | null }>;
 	programs?: Array<{ id: string; gender: string; university_id: string }>;
-	coaches?: Array<{
-		id: string;
-		full_name: string;
-		university_jobs: Array<{
-			id: string;
-			job_title: string;
-			work_email: string | null;
-		}>;
-	}>;
 }
 
 export function NoCampaignLeads({
 	applicationId,
 	campaigns,
-	universities,
 	programs,
-	coaches,
 }: NoCampaignLeadsProps) {
 	return (
 		<Card>
@@ -38,9 +26,7 @@ export function NoCampaignLeads({
 						applicationId={applicationId}
 						mode="add"
 						campaigns={campaigns}
-						universities={universities}
 						programs={programs}
-						coaches={coaches}
 					/>
 				</div>
 			</CardHeader>
