@@ -71,7 +71,10 @@ export const createTeamMemberAction = actionClient
 						typeof createUserError === "object" &&
 						"status" in createUserError
 					) {
-						const apiError = createUserError as { status: string; body?: any };
+						const apiError = createUserError as {
+							status: string;
+							body?: { message?: string };
+						};
 
 						// Check if it's a BAD_REQUEST and contains "User already exists" message
 						if (apiError.status === "BAD_REQUEST") {
@@ -117,7 +120,6 @@ export const createTeamMemberAction = actionClient
 						}
 					}
 
-					console.error("Error creating user:", createUserError);
 					throw new Error("CREATE_USER_FAILED");
 				});
 
@@ -165,18 +167,13 @@ export const createTeamMemberAction = actionClient
 				});
 
 				if (error) {
-					console.error("Error sending invite email:", error);
-					// Note: User was created successfully, but email failed
-					// You might want to handle this differently (e.g., retry email later)
 					return returnValidationErrors(teamMemberFormSchema, {
 						_errors: [
 							"User created but failed to send invite email. Please try again.",
 						],
 					});
 				}
-			} catch (emailError) {
-				console.error("Error sending invite email:", emailError);
-				// Note: User was created successfully, but email failed
+			} catch (_emailError) {
 				return returnValidationErrors(teamMemberFormSchema, {
 					_errors: [
 						"User created but failed to send invite email. Please try again.",
@@ -193,8 +190,6 @@ export const createTeamMemberAction = actionClient
 				teamMember,
 			};
 		} catch (error) {
-			console.error("Unexpected error in createTeamMemberAction:", error);
-
 			// Handle specific error types
 			if (error instanceof Error) {
 				if (error.message === "USER_ALREADY_EXISTS") {
