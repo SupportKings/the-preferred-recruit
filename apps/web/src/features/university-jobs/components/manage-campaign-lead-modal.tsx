@@ -3,6 +3,8 @@
 import type { ReactNode } from "react";
 import { useEffect, useState } from "react";
 
+import { CampaignLookup } from "@/components/lookups/campaign-lookup";
+import { UniversityLookup } from "@/components/lookups/university-lookup";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -22,9 +24,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 
-import { CampaignLookup } from "@/features/athletes/components/lookups/campaign-lookup";
 import { ProgramLookup } from "@/features/athletes/components/lookups/program-lookup";
-import { UniversityLookup } from "@/features/athletes/components/lookups/university-lookup";
 import { universityJobQueries } from "@/features/university-jobs/queries/useUniversityJobs";
 
 import { useQueryClient } from "@tanstack/react-query";

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useId, useState } from "react";
 
+import { UniversityLookup } from "@/components/lookups/university-lookup";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
@@ -23,7 +24,6 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { CoachLookup } from "@/features/athletes/components/lookups/coach-lookup";
 import { ProgramLookup } from "@/features/athletes/components/lookups/program-lookup";
-import { UniversityLookup } from "@/features/athletes/components/lookups/university-lookup";
 
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";

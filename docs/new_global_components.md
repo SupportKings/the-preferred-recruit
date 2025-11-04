@@ -224,4 +224,57 @@ import { LeadListLookup } from "@/components/lookups/lead-list-lookup";
 
 ---
 
+## CampaignLookup
+
+**Location**: `apps/web/src/components/lookups/campaign-lookup.tsx`
+
+**Purpose**: A global, searchable dropdown component for selecting campaigns with infinite scroll support and athlete information.
+
+**Features**:
+- **Server-side search** with pagination
+- **Infinite scroll** - loads 50 campaigns at a time
+- **Real-time search** by campaign name
+- **Athlete filtering** - optionally filter campaigns by specific athlete
+- **Smart display format**: Shows "Campaign Name • Type • Status"
+- **Athlete subtitle**: Displays "Athlete Name • Class of YYYY" below the campaign name for context
+- **Fully integrated** with `ServerSearchCombobox` for consistent UX
+
+**Technical Details**:
+- Built on top of `ServerSearchCombobox` component
+- Uses `searchCampaigns` server action for data fetching
+- Server-side pagination with proper `hasMore` flag calculation
+- Prevents duplicate keys when appending results during infinite scroll
+- Sorted alphabetically by campaign name
+- Joins with `athletes` table to display athlete information
+- Search is by campaign name only (type and status are enums and displayed in results)
+
+**Usage**:
+```tsx
+import { CampaignLookup } from "@/components/lookups/campaign-lookup";
+
+<CampaignLookup
+  label="Campaign"
+  value={formData.campaign_id || ""}
+  onChange={(value) => setFormData({ ...formData, campaign_id: value })}
+  athleteId={athleteId} // Optional: filter by athlete
+  placeholder="Search for a campaign..."
+  required={true}
+  disabled={false}
+/>
+```
+
+**Used In**:
+- Coaches → Add Campaign Lead Modal
+- University Jobs → Add Campaign Lead Modal
+- University Jobs → Add Reply Modal
+- Universities → Add Campaign Lead Modal
+
+**Migration Note**: This component replaces the old Popover + Command + Input implementation that required typing 2+ characters to search. The new implementation provides server-side search with pagination, infinite scroll, and better performance.
+
+**Related Files**:
+- Action: `apps/web/src/features/campaigns/actions/searchCampaigns.ts`
+- Base Component: `apps/web/src/components/server-search-combobox.tsx`
+
+---
+
 *Last Updated: 2025-01-30*

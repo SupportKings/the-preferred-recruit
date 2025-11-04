@@ -2,6 +2,7 @@
 
 import { type ReactNode, useEffect, useId, useState } from "react";
 
+import { CampaignLookup } from "@/components/lookups/campaign-lookup";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -25,7 +26,6 @@ import {
 	createCampaignLead,
 	updateCampaignLead,
 } from "@/features/athletes/actions/campaignLeads";
-import { CampaignLookup } from "@/features/athletes/components/lookups/campaign-lookup";
 import { ProgramLookup } from "@/features/athletes/components/lookups/program-lookup";
 import { UniversityJobLookup } from "@/features/athletes/components/lookups/university-job-lookup";
 import { universityQueries } from "@/features/universities/queries/useUniversities";

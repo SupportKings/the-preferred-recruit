@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 
 import { getTodayDateString } from "@/lib/date-utils";
 
+import { CampaignLookup } from "@/components/lookups/campaign-lookup";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
@@ -26,7 +27,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 
 import { AthleteLookup } from "@/features/athletes/components/lookups/athlete-lookup";
-import { CampaignLookup } from "@/features/athletes/components/lookups/campaign-lookup";
 import { universityJobQueries } from "@/features/university-jobs/queries/useUniversityJobs";
 
 import { useQueryClient } from "@tanstack/react-query";

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { useRouter } from "next/navigation";
 
+import { UniversityLookup } from "@/components/lookups/university-lookup";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -19,7 +20,6 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { AthleteLookup } from "@/features/athletes/components/lookups/athlete-lookup";
 import { ProgramLookup } from "@/features/athletes/components/lookups/program-lookup";
-import { UniversityLookup } from "@/features/athletes/components/lookups/university-lookup";
 
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "sonner";

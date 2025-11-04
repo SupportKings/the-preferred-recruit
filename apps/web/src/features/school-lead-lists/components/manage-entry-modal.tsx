@@ -2,6 +2,7 @@
 
 import { type ReactNode, useEffect, useState } from "react";
 
+import { UniversityLookup } from "@/components/lookups/university-lookup";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -22,7 +23,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 
 import { ProgramLookup } from "@/features/athletes/components/lookups/program-lookup";
-import { UniversityLookup } from "@/features/athletes/components/lookups/university-lookup";
 import {
 	createSchoolLeadListEntry,
 	updateSchoolLeadListEntry,

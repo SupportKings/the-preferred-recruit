@@ -2,6 +2,7 @@
 
 import { type ReactNode, useState } from "react";
 
+import { UniversityLookup } from "@/components/lookups/university-lookup";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/date-picker";
 import {
@@ -24,7 +25,6 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 
 import { ProgramLookup } from "@/features/athletes/components/lookups/program-lookup";
-import { UniversityLookup } from "@/features/athletes/components/lookups/university-lookup";
 import { createUniversityJobAction } from "@/features/university-jobs/actions/createUniversityJob";
 
 import { useQueryClient } from "@tanstack/react-query";

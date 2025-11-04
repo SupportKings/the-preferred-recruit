@@ -4,6 +4,8 @@ import { type ReactNode, useEffect, useState } from "react";
 
 import { createClient } from "@/utils/supabase/client";
 
+import { CampaignLookup } from "@/components/lookups/campaign-lookup";
+import { UniversityLookup } from "@/components/lookups/university-lookup";
 import { Button } from "@/components/ui/button";
 import {
 	Dialog,
@@ -28,11 +30,9 @@ import {
 	createCampaignLead,
 	updateCampaignLead,
 } from "@/features/athletes/actions/campaignLeads";
-import { CampaignLookup } from "@/features/athletes/components/lookups/campaign-lookup";
 import { LeadListLookup } from "@/features/athletes/components/lookups/lead-list-lookup";
 import { ProgramLookup } from "@/features/athletes/components/lookups/program-lookup";
 import { UniversityJobLookup } from "@/features/athletes/components/lookups/university-job-lookup";
-import { UniversityLookup } from "@/features/athletes/components/lookups/university-lookup";
 
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
