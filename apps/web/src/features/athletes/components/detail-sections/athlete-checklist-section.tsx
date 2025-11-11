@@ -7,6 +7,7 @@ import { UniversalDataTable } from "@/components/universal-data-table/universal-
 
 import {
 	getCoreRowModel,
+	getPaginationRowModel,
 	getSortedRowModel,
 	useReactTable,
 } from "@tanstack/react-table";
@@ -61,6 +62,7 @@ export function AthleteChecklistSection({
 		columns: checklistColumns,
 		getCoreRowModel: getCoreRowModel(),
 		getSortedRowModel: getSortedRowModel(),
+		getPaginationRowModel: getPaginationRowModel(),
 		initialState: {
 			sorting: [
 				{
@@ -68,6 +70,10 @@ export function AthleteChecklistSection({
 					desc: false, // ascending order (1, 2, 3...)
 				},
 			],
+			pagination: {
+				pageSize: 20,
+				pageIndex: 0,
+			},
 		},
 	});
 
