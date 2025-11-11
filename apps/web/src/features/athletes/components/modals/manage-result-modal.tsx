@@ -59,7 +59,6 @@ export function ManageResultModal({
 		performance_mark: "",
 		date_recorded: format(new Date(), "yyyy-MM-dd"),
 		location: "",
-		hand_timed: false,
 		wind: "",
 		altitude: false,
 		organized_event: true,
@@ -75,7 +74,6 @@ export function ManageResultModal({
 					? format(new Date(result.date_recorded), "yyyy-MM-dd")
 					: format(new Date(), "yyyy-MM-dd"),
 				location: result.location || "",
-				hand_timed: result.hand_timed || false,
 				wind: result.wind || "",
 				altitude: result.altitude || false,
 				organized_event: result.organized_event ?? true,
@@ -87,7 +85,6 @@ export function ManageResultModal({
 				performance_mark: "",
 				date_recorded: format(new Date(), "yyyy-MM-dd"),
 				location: "",
-				hand_timed: false,
 				wind: "",
 				altitude: false,
 				organized_event: true,
@@ -119,7 +116,6 @@ export function ManageResultModal({
 					performance_mark: formData.performance_mark,
 					date_recorded: formData.date_recorded,
 					location: formData.location,
-					hand_timed: formData.hand_timed,
 					wind: formData.wind,
 					altitude: formData.altitude,
 					organized_event: formData.organized_event,
@@ -132,7 +128,6 @@ export function ManageResultModal({
 					performance_mark: formData.performance_mark,
 					date_recorded: formData.date_recorded,
 					location: formData.location,
-					hand_timed: formData.hand_timed,
 					wind: formData.wind,
 					altitude: formData.altitude,
 					organized_event: formData.organized_event,
@@ -243,17 +238,6 @@ export function ManageResultModal({
 
 					{/* Checkboxes */}
 					<div className="space-y-2">
-						<div className="flex items-center space-x-2">
-							<Checkbox
-								id="hand_timed"
-								checked={formData.hand_timed}
-								onCheckedChange={(checked) =>
-									setFormData({ ...formData, hand_timed: !!checked })
-								}
-							/>
-							<Label htmlFor="hand_timed">Hand Timed</Label>
-						</div>
-
 						<div className="flex items-center space-x-2">
 							<Checkbox
 								id="altitude"

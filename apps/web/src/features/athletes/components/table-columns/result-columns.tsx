@@ -24,13 +24,16 @@ export const createResultColumns = () => {
 			},
 		}),
 
-		// Performance Mark
+		// Performance Mark with Wind
 		resultColumnHelper.accessor("performance_mark", {
 			header: "Mark",
 			cell: (info) => {
 				const mark = info.getValue();
 				const units = info.row.original.event?.units;
-				return mark ? `${mark} ${units || ""}`.trim() : "N/A";
+				const wind = info.row.original.wind;
+				const windDisplay = wind ? wind : "NWI";
+				const markDisplay = mark ? `${mark} ${units || ""}`.trim() : "N/A";
+				return `${markDisplay} (${windDisplay})`;
 			},
 		}),
 
@@ -44,34 +47,6 @@ export const createResultColumns = () => {
 		resultColumnHelper.accessor("location", {
 			header: "Location",
 			cell: (info) => info.getValue() || "Unknown",
-		}),
-
-		// Hand Timed
-		resultColumnHelper.accessor("hand_timed", {
-			header: "Hand Timed",
-			cell: (info) => {
-				const isHandTimed = info.getValue();
-				return (
-					<span
-						className={`inline-flex h-7 items-center rounded-full px-3 font-medium text-xs ${
-							isHandTimed
-								? "bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400"
-								: "bg-gray-50 text-gray-700 dark:bg-gray-950/50 dark:text-gray-400"
-						}`}
-					>
-						{isHandTimed ? "Yes" : "No"}
-					</span>
-				);
-			},
-		}),
-
-		// Wind
-		resultColumnHelper.accessor("wind", {
-			header: "Wind",
-			cell: (info) => {
-				const wind = info.getValue();
-				return wind ? `${wind}` : "N/A";
-			},
 		}),
 
 		// Altitude
