@@ -81,17 +81,17 @@ export function AthleteApplicationsTab({
 			} as Parameters<typeof updateAthleteApplication>[0]);
 
 			if (result?.validationErrors) {
-				toast.error("Failed to update application");
+				toast.error("Failed to update offer");
 				return;
 			}
 
 			if (result?.data?.success) {
-				toast.success("Application updated successfully");
+				toast.success("Offer updated successfully");
 				onRefresh();
 			}
 		} catch (error) {
-			console.error("Error updating application:", error);
-			toast.error("Failed to update application");
+			console.error("Error updating offer:", error);
+			toast.error("Failed to update offer");
 		}
 	};
 
@@ -101,7 +101,7 @@ export function AthleteApplicationsTab({
 				<div className="flex items-center justify-between">
 					<CardTitle className="flex items-center gap-2">
 						<FileText className="h-5 w-5" />
-						Athlete Applications
+						Offers
 					</CardTitle>
 					<ManageApplicationModal
 						universityId={universityId}
@@ -114,9 +114,9 @@ export function AthleteApplicationsTab({
 				{applications.length === 0 ? (
 					<div className="py-8 text-center text-muted-foreground">
 						<FileText className="mx-auto mb-4 h-12 w-12 opacity-50" />
-						<p className="text-sm">No applications yet</p>
+						<p className="text-sm">No offers yet</p>
 						<p className="mt-1 text-xs">
-							Applications from athletes will appear here once submitted
+							Offers from athletes will appear here once submitted
 						</p>
 					</div>
 				) : (
@@ -267,7 +267,7 @@ export function AthleteApplicationsTab({
 															isOpen: true,
 															type: "athlete_application",
 															id: app.id,
-															title: `Delete application for ${app.athletes?.full_name || "athlete"}`,
+															title: `Delete offer for ${app.athletes?.full_name || "athlete"}`,
 														})
 													}
 												>

@@ -222,7 +222,7 @@ export default function SchoolLeadListDetailView({
 					<TabsTrigger value="entries">Entries</TabsTrigger>
 					<TabsTrigger value="campaigns">Campaigns</TabsTrigger>
 					<TabsTrigger value="campaign-leads">Campaign Leads</TabsTrigger>
-					<TabsTrigger value="applications">Applications</TabsTrigger>
+					<TabsTrigger value="applications">Offers</TabsTrigger>
 				</TabsList>
 
 				<TabsContent value="entries">

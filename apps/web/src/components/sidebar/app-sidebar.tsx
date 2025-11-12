@@ -118,7 +118,7 @@ export function AppSidebar({
 						url: "/dashboard/athletes",
 					},
 					{
-						title: "Athlete Applications",
+						title: "Offers",
 						url: "/dashboard/athlete-applications",
 					},
 				],

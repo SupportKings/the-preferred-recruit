@@ -58,15 +58,15 @@ export default function AthleteApplicationDetailView({
 	// Update application action
 	const { execute: executeUpdate } = useAction(updateAthleteApplication, {
 		onSuccess: () => {
-			toast.success("Application updated successfully");
+			toast.success("Offer updated successfully");
 			setEditState({ isEditing: false, section: null });
 			queryClient.invalidateQueries({
 				queryKey: applicationQueries.detail(applicationId),
 			});
 		},
 		onError: (err) => {
-			console.error("Error updating application:", err);
-			toast.error("Failed to update application. Please try again.");
+			console.error("Error updating offer:", err);
+			toast.error("Failed to update offer. Please try again.");
 		},
 	});
 
@@ -128,7 +128,7 @@ export default function AthleteApplicationDetailView({
 	};
 
 	if (isLoading) return <div>Loading...</div>;
-	if (error || !application) return <div>Error loading application</div>;
+	if (error || !application) return <div>Error loading offer</div>;
 
 	const athleteName = application.athletes?.full_name || "Unknown Athlete";
 	const universityName = application.universities?.name || "Unknown University";

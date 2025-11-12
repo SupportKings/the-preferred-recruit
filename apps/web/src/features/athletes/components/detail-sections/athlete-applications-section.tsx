@@ -57,7 +57,7 @@ export function AthleteApplicationsSection({
 				<div className="flex items-center justify-between">
 					<CardTitle className="flex items-center gap-2">
 						<GraduationCap className="h-5 w-5" />
-						Applications
+						Offers
 					</CardTitle>
 					<ManageApplicationModal athleteId={athleteId} mode="add" />
 				</div>
@@ -66,9 +66,9 @@ export function AthleteApplicationsSection({
 				{applications.length === 0 ? (
 					<div className="py-8 text-center text-muted-foreground">
 						<GraduationCap className="mx-auto mb-4 h-12 w-12 opacity-50" />
-						<p className="text-sm">No applications yet</p>
+						<p className="text-sm">No offers yet</p>
 						<p className="mt-1 text-xs">
-							Applications will appear here once added to this athlete
+							Offers will appear here once added to this athlete
 						</p>
 					</div>
 				) : (
@@ -76,7 +76,7 @@ export function AthleteApplicationsSection({
 						table={applicationTable}
 						rowActions={applicationRowActions}
 						inlineActions={true}
-						emptyStateMessage="No applications found for this athlete"
+						emptyStateMessage="No offers found for this athlete"
 						totalCount={applications.length}
 					/>
 				)}

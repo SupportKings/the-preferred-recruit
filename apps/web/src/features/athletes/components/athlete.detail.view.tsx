@@ -181,7 +181,7 @@ export default function AthleteDetailView({
 					break;
 				case "application":
 					await deleteAthleteApplication(deleteModal.id);
-					toast.success("Application deleted successfully");
+					toast.success("Offer deleted successfully");
 					break;
 				case "leadList":
 					await deleteSchoolLeadList(deleteModal.id);
@@ -295,7 +295,7 @@ export default function AthleteDetailView({
 					<TabsTrigger value="results">Results</TabsTrigger>
 					<TabsTrigger value="lead-lists">School Lead Lists</TabsTrigger>
 					<TabsTrigger value="campaigns">Campaigns</TabsTrigger>
-					<TabsTrigger value="applications">Applications</TabsTrigger>
+					<TabsTrigger value="applications">Offers</TabsTrigger>
 				</TabsList>
 
 				<TabsContent value="checklist">

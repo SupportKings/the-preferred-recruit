@@ -31,15 +31,15 @@ export function LeadListApplicationsSection({
 				<CardHeader>
 					<CardTitle className="flex items-center gap-2">
 						<FileText className="h-5 w-5" />
-						Applications (Originated From This List)
+						Offers (Originated From This List)
 					</CardTitle>
 				</CardHeader>
 				<CardContent>
 					<div className="py-8 text-center text-muted-foreground">
 						<FileText className="mx-auto mb-4 h-12 w-12 opacity-50" />
-						<p className="text-sm">No applications yet</p>
+						<p className="text-sm">No offers yet</p>
 						<p className="mt-1 text-xs">
-							Applications originated from this list will appear here
+							Offers originated from this list will appear here
 						</p>
 					</div>
 				</CardContent>
@@ -52,13 +52,13 @@ export function LeadListApplicationsSection({
 			<CardHeader>
 				<CardTitle className="flex items-center gap-2">
 					<FileText className="h-5 w-5" />
-					Applications (Originated From This List)
+					Offers (Originated From This List)
 				</CardTitle>
 			</CardHeader>
 			<CardContent>
 				<UniversalDataTable
 					table={applicationTable}
-					emptyStateMessage="No applications found for this lead list"
+					emptyStateMessage="No offers found for this lead list"
 				/>
 			</CardContent>
 		</Card>

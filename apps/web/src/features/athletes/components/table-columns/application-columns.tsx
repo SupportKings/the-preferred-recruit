@@ -153,7 +153,7 @@ export const createApplicationRowActions = (
 				isOpen: true,
 				type: "application",
 				id: application.id,
-				title: `Delete application for ${application.university?.name || "Unknown"}`,
+				title: `Delete offer for ${application.university?.name || "Unknown"}`,
 			});
 		},
 	},

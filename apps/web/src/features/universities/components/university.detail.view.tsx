@@ -288,7 +288,7 @@ export default function UniversityDetailView({
 				<TabsList className="grid w-full grid-cols-6">
 					<TabsTrigger value="programs">Programs</TabsTrigger>
 					<TabsTrigger value="jobs">University Jobs/Coaches</TabsTrigger>
-					<TabsTrigger value="applications">Athlete Applications</TabsTrigger>
+					<TabsTrigger value="applications">Offers</TabsTrigger>
 					<TabsTrigger value="leads">Lead List Entries</TabsTrigger>
 					<TabsTrigger value="campaigns">Campaign Leads</TabsTrigger>
 					<TabsTrigger value="knowledge">Ball Knowledge</TabsTrigger>

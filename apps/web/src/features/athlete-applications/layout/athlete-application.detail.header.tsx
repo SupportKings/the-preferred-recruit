@@ -33,12 +33,12 @@ export default function AthleteApplicationDetailHeader({
 		{
 			onSuccess: () => {
 				setIsDeleteDialogOpen(false);
-				toast.success("Application deleted successfully");
+				toast.success("Offer deleted successfully");
 				router.push("/dashboard/athlete-applications");
 			},
 			onError: (error) => {
-				console.error("Failed to delete application:", error);
-				toast.error("Failed to delete application. Please try again.");
+				console.error("Failed to delete offer:", error);
+				toast.error("Failed to delete offer. Please try again.");
 			},
 		},
 	);
@@ -57,8 +57,8 @@ export default function AthleteApplicationDetailHeader({
 				<BackButton />
 				<h1 className="font-medium text-[13px]">
 					{application
-						? `${athleteName} → ${universityName} - Application Details`
-						: "Application Details"}
+						? `${athleteName} → ${universityName} - Offer Details`
+						: "Offer Details"}
 				</h1>
 			</div>
 			<Dialog.Root
@@ -68,17 +68,17 @@ export default function AthleteApplicationDetailHeader({
 				<Dialog.Trigger asChild>
 					<Button variant="destructive" className="flex items-center gap-2">
 						<Trash2Icon className="mr-[6px] h-4 w-4" />
-						Delete Application
+						Delete Offer
 					</Button>
 				</Dialog.Trigger>
 				<Dialog.Portal>
 					<Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
 					<Dialog.Content className="-translate-x-1/2 -translate-y-1/2 fixed top-1/2 left-1/2 z-50 w-full max-w-md transform rounded-lg bg-white p-6 shadow-lg">
 						<Dialog.Title className="mb-4 font-semibold text-lg">
-							Delete Application
+							Delete Offer
 						</Dialog.Title>
 						<Dialog.Description className="mb-6 text-gray-600">
-							Are you sure you want to delete the application for {athleteName}{" "}
+							Are you sure you want to delete the offer for {athleteName}{" "}
 							to {universityName}? This action cannot be undone.
 						</Dialog.Description>
 						<div className="flex justify-end gap-3">

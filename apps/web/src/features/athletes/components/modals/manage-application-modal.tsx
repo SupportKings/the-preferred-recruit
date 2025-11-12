@@ -162,7 +162,7 @@ export function ManageApplicationModal({
 					{children || (
 						<Button variant="outline" size="sm" className="gap-2">
 							<Plus className="h-4 w-4" />
-							Add Application
+							Add Offer
 						</Button>
 					)}
 				</DialogTrigger>
@@ -171,12 +171,12 @@ export function ManageApplicationModal({
 				<DialogHeader>
 					<DialogTitle className="flex items-center gap-2">
 						<GraduationCap className="h-5 w-5" />
-						{isEdit ? "Edit Application" : "Add New Application"}
+						{isEdit ? "Edit Offer" : "Add New Offer"}
 					</DialogTitle>
 					<DialogDescription>
 						{isEdit
-							? "Update the application details."
-							: "Add a new university application for this athlete."}
+							? "Update the offer details."
+							: "Add a new university offer for this athlete."}
 					</DialogDescription>
 				</DialogHeader>
 
@@ -286,8 +286,8 @@ export function ManageApplicationModal({
 									? "Updating..."
 									: "Adding..."
 								: isEdit
-									? "Update Application"
-									: "Add Application"}
+									? "Update Offer"
+									: "Add Offer"}
 						</Button>
 					</div>
 				</form>
