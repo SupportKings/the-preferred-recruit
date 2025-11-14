@@ -29,7 +29,7 @@ import {
 import { athleteQueries } from "@/features/athletes/queries/useAthletes";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { formatLocalDate as format } from "@/lib/date-utils";
 import { Plus, Users } from "lucide-react";
 import { toast } from "sonner";
 import { CampaignLookup } from "../lookups/campaign-lookup";
@@ -81,7 +81,7 @@ export function ManageCampaignLeadModal({
 				coach_id: lead.coach_id || "",
 				status: lead.status || "pending",
 				first_reply_date: lead.first_reply_date
-					? format(new Date(lead.first_reply_date), "yyyy-MM-dd")
+					? format(lead.first_reply_date, "yyyy-MM-dd")
 					: "",
 				internal_notes: lead.internal_notes || "",
 			});

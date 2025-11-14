@@ -31,7 +31,7 @@ import {
 } from "@/features/contacts/actions/relations/contactAthletes";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { formatLocalDate as format, getTodayDateString } from "@/lib/date-utils";
 import { Edit, Plus, Users } from "lucide-react";
 import { toast } from "sonner";
 
@@ -79,7 +79,7 @@ export function ManageContactModal({
 		relationship: "",
 		is_primary: false,
 		internal_notes: "",
-		start_date: format(new Date(), "yyyy-MM-dd"),
+		start_date: getTodayDateString(),
 		end_date: "",
 	});
 
@@ -109,10 +109,10 @@ export function ManageContactModal({
 				is_primary: contactAthlete.is_primary || false,
 				internal_notes: contactAthlete.internal_notes || "",
 				start_date: contactAthlete.start_date
-					? format(new Date(contactAthlete.start_date), "yyyy-MM-dd")
-					: format(new Date(), "yyyy-MM-dd"),
+					? format(contactAthlete.start_date, "yyyy-MM-dd")
+					: getTodayDateString(),
 				end_date: contactAthlete.end_date
-					? format(new Date(contactAthlete.end_date), "yyyy-MM-dd")
+					? format(contactAthlete.end_date, "yyyy-MM-dd")
 					: "",
 			});
 		} else if (!isEdit && open) {
@@ -125,7 +125,7 @@ export function ManageContactModal({
 				relationship: "",
 				is_primary: false,
 				internal_notes: "",
-				start_date: format(new Date(), "yyyy-MM-dd"),
+				start_date: getTodayDateString(),
 				end_date: "",
 			});
 		}

@@ -9,6 +9,7 @@ import {
 
 import type { UserWithRole } from "@/features/team/queries/getUsers";
 
+import { format } from "date-fns";
 import { Mail, MoreHorizontal, User, XIcon } from "lucide-react";
 
 interface UserRowProps {
@@ -30,15 +31,6 @@ export function UserRow({ user, onRemoveUser, currentUserId }: UserRowProps) {
 			.join("")
 			.toUpperCase()
 			.slice(0, 2);
-	};
-
-	const formatDate = (date: string | Date) => {
-		const dateObj = typeof date === "string" ? new Date(date) : date;
-		return dateObj.toLocaleDateString("en-US", {
-			year: "numeric",
-			month: "short",
-			day: "numeric",
-		});
 	};
 
 	return (
@@ -68,7 +60,7 @@ export function UserRow({ user, onRemoveUser, currentUserId }: UserRowProps) {
 
 					<div className="flex items-center space-x-1">
 						<User className="h-3 w-3" />
-						<span>Joined {formatDate(user.createdAt)}</span>
+						<span>Joined {format(user.createdAt, "MMM d, yyyy")}</span>
 					</div>
 				</div>
 			</div>

@@ -32,7 +32,7 @@ import {
 import { AthleteLookup } from "@/features/athletes/components/lookups/athlete-lookup";
 import { ProgramLookup } from "@/features/athletes/components/lookups/program-lookup";
 
-import { format } from "date-fns";
+import { formatLocalDate as format } from "@/lib/date-utils";
 import { FileText, Plus } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "sonner";
@@ -134,13 +134,13 @@ export function ManageApplicationModal({
 				program_id: application.program_id || "",
 				stage: application.stage || "intro",
 				start_date: application.start_date
-					? format(new Date(application.start_date), "yyyy-MM-dd")
+					? format(application.start_date, "yyyy-MM-dd")
 					: "",
 				offer_date: application.offer_date
-					? format(new Date(application.offer_date), "yyyy-MM-dd")
+					? format(application.offer_date, "yyyy-MM-dd")
 					: "",
 				commitment_date: application.commitment_date
-					? format(new Date(application.commitment_date), "yyyy-MM-dd")
+					? format(application.commitment_date, "yyyy-MM-dd")
 					: "",
 				scholarship_amount_per_year:
 					application.scholarship_amount_per_year?.toString() || "",

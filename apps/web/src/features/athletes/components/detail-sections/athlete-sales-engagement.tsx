@@ -10,6 +10,7 @@ import { UrlActions } from "@/components/url-actions";
 
 import { useTeamMembers } from "@/features/athletes/queries/useAthletes";
 
+import { formatLocalDate } from "@/lib/date-utils";
 import { Edit3, Save, Users, X } from "lucide-react";
 
 interface AthleteSalesEngagementProps {
@@ -235,7 +236,7 @@ export function AthleteSalesEngagement({
 					) : (
 						<p className="text-sm">
 							{athlete.last_sales_call_at
-								? new Date(athlete.last_sales_call_at).toLocaleDateString()
+								? formatLocalDate(athlete.last_sales_call_at)
 								: "No calls yet"}
 						</p>
 					)}

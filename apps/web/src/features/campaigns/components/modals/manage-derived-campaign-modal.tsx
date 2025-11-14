@@ -26,7 +26,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { createCampaignAction } from "@/features/campaigns/actions/createCampaign";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { formatLocalDate as format, getTodayDateString } from "@/lib/date-utils";
 import { GitBranch } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "sonner";
@@ -63,7 +63,7 @@ export function ManageDerivedCampaignModal({
 		type: "second_pass" as const,
 		primary_lead_list_id: "",
 		daily_send_cap: "",
-		start_date: format(new Date(), "yyyy-MM-dd"),
+		start_date: getTodayDateString(),
 		internal_notes: "",
 	});
 
@@ -94,7 +94,7 @@ export function ManageDerivedCampaignModal({
 				type: "second_pass",
 				primary_lead_list_id: "",
 				daily_send_cap: "",
-				start_date: format(new Date(), "yyyy-MM-dd"),
+				start_date: getTodayDateString(),
 				internal_notes: "",
 			});
 		}

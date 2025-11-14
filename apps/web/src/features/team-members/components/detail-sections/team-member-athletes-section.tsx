@@ -7,13 +7,13 @@ import {
 	getSortedRowModel,
 	useReactTable,
 } from "@tanstack/react-table";
-import { format } from "date-fns";
+import { formatLocalDate as format } from "@/lib/date-utils";
 import { Users } from "lucide-react";
 
 const formatDate = (dateString: string | null) => {
 	if (!dateString) return "Not set";
 	try {
-		return format(new Date(dateString), "MMM dd, yyyy");
+		return format(dateString, "MMM dd, yyyy");
 	} catch {
 		return "Invalid date";
 	}
