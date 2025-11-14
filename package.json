@@ -20,7 +20,9 @@
 		"db:migrate": "turbo -F server db:migrate"
 	},
 	"dependencies": {
-		"country-state-city": "^3.2.1"
+		"@trigger.dev/sdk": "^4.1.0",
+		"country-state-city": "^3.2.1",
+		"react-dropzone": "^14.3.8"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.2.2",
