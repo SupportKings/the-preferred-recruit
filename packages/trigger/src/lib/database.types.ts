@@ -1076,68 +1076,6 @@ export type Database = {
           },
         ]
       }
-      coach_import_jobs: {
-        Row: {
-          completed_at: string | null
-          created_at: string | null
-          error_count: number | null
-          error_log: Json | null
-          file_size_bytes: number | null
-          file_url: string | null
-          id: string
-          original_filename: string | null
-          processed_rows: number | null
-          started_at: string | null
-          status: string
-          success_count: number | null
-          total_rows: number | null
-          updated_at: string | null
-          uploaded_by: string | null
-        }
-        Insert: {
-          completed_at?: string | null
-          created_at?: string | null
-          error_count?: number | null
-          error_log?: Json | null
-          file_size_bytes?: number | null
-          file_url?: string | null
-          id?: string
-          original_filename?: string | null
-          processed_rows?: number | null
-          started_at?: string | null
-          status?: string
-          success_count?: number | null
-          total_rows?: number | null
-          updated_at?: string | null
-          uploaded_by?: string | null
-        }
-        Update: {
-          completed_at?: string | null
-          created_at?: string | null
-          error_count?: number | null
-          error_log?: Json | null
-          file_size_bytes?: number | null
-          file_url?: string | null
-          id?: string
-          original_filename?: string | null
-          processed_rows?: number | null
-          started_at?: string | null
-          status?: string
-          success_count?: number | null
-          total_rows?: number | null
-          updated_at?: string | null
-          uploaded_by?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "coach_import_jobs_uploaded_by_fkey"
-            columns: ["uploaded_by"]
-            isOneToOne: false
-            referencedRelation: "team_members"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       coach_responsibilities: {
         Row: {
           deleted_at: string | null
@@ -1210,7 +1148,6 @@ export type Database = {
             | Database["public"]["Enums"]["event_group_enum"]
             | null
           twitter_profile: string | null
-          unique_id: string | null
           updated_at: string | null
         }
         Insert: {
@@ -1229,7 +1166,6 @@ export type Database = {
             | Database["public"]["Enums"]["event_group_enum"]
             | null
           twitter_profile?: string | null
-          unique_id?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -1248,7 +1184,6 @@ export type Database = {
             | Database["public"]["Enums"]["event_group_enum"]
             | null
           twitter_profile?: string | null
-          unique_id?: string | null
           updated_at?: string | null
         }
         Relationships: [
