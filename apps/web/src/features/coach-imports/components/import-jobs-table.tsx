@@ -3,7 +3,7 @@
 import { useState } from "react";
 
 import { formatDistanceToNow } from "date-fns";
-import { FileText, MoreHorizontal, Trash2 } from "lucide-react";
+import { AlertCircle, FileText, MoreHorizontal, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -24,7 +24,11 @@ import {
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "sonner";
 import { deleteImportJobAction } from "../actions/deleteImportJob";
-import type { ImportJobWithUploader } from "../types/import-types";
+import type {
+	ImportJobWithUploader,
+	ImportStatus,
+} from "../types/import-types";
+import { ErrorLogsDialog } from "./error-logs-dialog";
 import { ImportJobStatusBadge } from "./import-job-status-badge";
 
 interface ImportJobsTableProps {
@@ -37,6 +41,7 @@ export function ImportJobsTable({
 	onJobDeleted,
 }: ImportJobsTableProps) {
 	const [deletingJobId, setDeletingJobId] = useState<string | null>(null);
+	const [errorDialogJob, setErrorDialogJob] = useState<ImportJobWithUploader | null>(null);
 
 	const { execute: deleteJob } = useAction(deleteImportJobAction, {
 		onSuccess: (result) => {
@@ -94,6 +99,7 @@ export function ImportJobsTable({
 						<TableHead>Filename</TableHead>
 						<TableHead>Size</TableHead>
 						<TableHead>Rows</TableHead>
+						<TableHead>Errors</TableHead>
 						<TableHead>Uploaded By</TableHead>
 						<TableHead>Uploaded</TableHead>
 						<TableHead className="w-[70px]"></TableHead>
@@ -103,7 +109,7 @@ export function ImportJobsTable({
 					{jobs.map((job) => (
 						<TableRow key={job.id}>
 							<TableCell>
-								<ImportJobStatusBadge status={job.status} />
+								<ImportJobStatusBadge status={job.status as ImportStatus} />
 							</TableCell>
 							<TableCell className="font-medium">
 								{job.original_filename}
@@ -113,21 +119,9 @@ export function ImportJobsTable({
 								{job.status === "completed" || job.status === "processing" ? (
 									<div className="text-sm">
 										{job.status === "completed" && (
-											<div>
-												<span className="font-medium text-green-600 dark:text-green-400">
-													{job.success_count || 0}
-												</span>{" "}
-												success
-												{job.error_count ? (
-													<>
-														,{" "}
-														<span className="font-medium text-destructive">
-															{job.error_count}
-														</span>{" "}
-														failed
-													</>
-												) : null}
-											</div>
+											<span className="font-medium text-green-600 dark:text-green-400">
+												{job.success_count || 0}
+											</span>
 										)}
 										{job.status === "processing" && (
 											<div className="text-muted-foreground">
@@ -139,6 +133,15 @@ export function ImportJobsTable({
 									<span className="text-muted-foreground">
 										{job.total_rows || "-"}
 									</span>
+								)}
+							</TableCell>
+							<TableCell>
+								{job.error_count ? (
+									<span className="font-medium text-destructive">
+										{job.error_count}
+									</span>
+								) : (
+									<span className="text-muted-foreground">-</span>
 								)}
 							</TableCell>
 							<TableCell className="text-sm text-muted-foreground">
@@ -163,6 +166,12 @@ export function ImportJobsTable({
 										</Button>
 									</DropdownMenuTrigger>
 									<DropdownMenuContent align="end">
+										{(job.status === "failed" || job.status === "completed") && (
+											<DropdownMenuItem onClick={() => setErrorDialogJob(job)}>
+												<AlertCircle className="mr-2 h-4 w-4" />
+												View Errors {job.error_count ? `(${job.error_count})` : ""}
+											</DropdownMenuItem>
+										)}
 										<DropdownMenuItem
 											className="text-destructive"
 											onClick={() => handleDelete(job.id)}
@@ -177,6 +186,15 @@ export function ImportJobsTable({
 					))}
 				</TableBody>
 			</Table>
+
+			{errorDialogJob && (
+				<ErrorLogsDialog
+					open={!!errorDialogJob}
+					onOpenChange={(open) => !open && setErrorDialogJob(null)}
+					errors={errorDialogJob.error_log || []}
+					filename={errorDialogJob.original_filename || "Unknown file"}
+				/>
+			)}
 		</div>
 	);
 }

@@ -130,6 +130,19 @@ export const uploadImportFileAction = actionClient
 				};
 			}
 
+			// Trigger background job processing
+			try {
+				const { tasks } = await import("@trigger.dev/sdk/v3");
+				await tasks.trigger("process-coach-import", {
+					jobId: jobData.id,
+					fileUrl: urlData.signedUrl,
+				});
+				console.log(`Triggered coach import job: ${jobData.id}`);
+			} catch (triggerError) {
+				console.error("Failed to trigger background job:", triggerError);
+				// Don't fail the upload - job is still created and can be manually triggered
+			}
+
 			// Revalidate paths
 			revalidatePath("/dashboard/coach-imports");
 
