@@ -21,7 +21,7 @@ import { createUniversalColumnHelper } from "@/components/universal-data-table/u
 
 import { useQueryClient } from "@tanstack/react-query";
 import { createColumnHelper } from "@tanstack/react-table";
-import { format } from "date-fns";
+import { formatLocalDate as format } from "@/lib/date-utils";
 import {
 	CalendarIcon,
 	EditIcon,

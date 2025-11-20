@@ -15,7 +15,7 @@ import { useUser } from "@/queries/useUser";
 
 import NumberFlow from "@number-flow/react";
 import { useQueryClient } from "@tanstack/react-query";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, parseISO } from "date-fns";
 import { AnimatePresence, motion } from "framer-motion";
 import { Key } from "lucide-react";
 import { toast } from "sonner";
@@ -164,7 +164,7 @@ export default function SecurityClient() {
 			icon,
 			location: session.ipAddress || "Unknown location",
 			lastSeen: session.updatedAt
-				? formatDistanceToNow(new Date(session.updatedAt), { addSuffix: true })
+				? formatDistanceToNow(session.updatedAt, { addSuffix: true })
 				: "Unknown",
 		};
 	};
@@ -511,7 +511,7 @@ export default function SecurityClient() {
 																				Created{" "}
 																				{passkey.createdAt
 																					? formatDistanceToNow(
-																							new Date(passkey.createdAt),
+																							parseISO(passkey.createdAt),
 																							{ addSuffix: true },
 																						)
 																					: "Unknown"}

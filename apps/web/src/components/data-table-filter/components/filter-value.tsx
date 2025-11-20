@@ -31,6 +31,7 @@ import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { format, isEqual } from "date-fns";
+import { parseLocalDate } from "@/lib/date-utils";
 import { Ellipsis } from "lucide-react";
 import type { DateRange } from "react-day-picker";
 import { numberFilterOperators } from "../core/operators";
@@ -269,8 +270,10 @@ export function FilterValueMultiOptionDisplay<TData>({
 
 function formatDateRange(start: Date | string, end: Date | string) {
 	// Convert strings to Date objects if needed
-	const startDate = typeof start === "string" ? new Date(start) : start;
-	const endDate = typeof end === "string" ? new Date(end) : end;
+	const startDate = typeof start === "string" ? parseLocalDate(start) : start;
+	const endDate = typeof end === "string" ? parseLocalDate(end) : end;
+
+	if (!startDate || !endDate) return "Invalid date range";
 
 	const sameMonth = startDate.getMonth() === endDate.getMonth();
 	const sameYear = startDate.getFullYear() === endDate.getFullYear();

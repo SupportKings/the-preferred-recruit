@@ -22,7 +22,7 @@ import { updateUniversityJobAction } from "@/features/university-jobs/actions/up
 import { CreateUniversityJobModal } from "@/features/university-jobs/components/create-university-job-modal";
 import { DeleteConfirmModal } from "@/features/university-jobs/components/shared/delete-confirm-modal";
 
-import { format } from "date-fns";
+import { formatLocalDate as format } from "@/lib/date-utils";
 import { Briefcase, ExternalLink, Eye, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { InlineEditCell } from "./inline-edit-cell";
@@ -231,9 +231,9 @@ export function UniversityJobsTab({
 											<div className="text-sm">
 												{job.start_date ? (
 													<div>
-														{format(new Date(job.start_date), "MMM dd, yyyy")}
+														{format(job.start_date, "MMM dd, yyyy")}
 														{job.end_date &&
-															` - ${format(new Date(job.end_date), "MMM dd, yyyy")}`}
+															` - ${format(job.end_date, "MMM dd, yyyy")}`}
 													</div>
 												) : (
 													"-"

@@ -1,7 +1,7 @@
 import Link from "next/link";
 
 import { createColumnHelper } from "@tanstack/react-table";
-import { format } from "date-fns";
+import { formatLocalDate as format } from "@/lib/date-utils";
 import { ExternalLink } from "lucide-react";
 import { InlineCampaignStatusCell } from "./inline-campaign-status-cell";
 import { InlineCampaignTypeCell } from "./inline-campaign-type-cell";
@@ -9,7 +9,7 @@ import { InlineCampaignTypeCell } from "./inline-campaign-type-cell";
 const formatDate = (dateString: string | null) => {
 	if (!dateString) return "Not set";
 	try {
-		return format(new Date(dateString), "MMM dd, yyyy");
+		return format(dateString, "MMM dd, yyyy");
 	} catch {
 		return "Invalid date";
 	}

@@ -25,7 +25,7 @@ import { createUniversalColumnHelper } from "@/components/universal-data-table/u
 import { deleteAthleteApplication } from "@/features/athlete-applications/actions/deleteAthleteApplication";
 
 import { createColumnHelper } from "@tanstack/react-table";
-import { format } from "date-fns";
+import { formatLocalDate as format } from "@/lib/date-utils";
 import {
 	CalendarIcon,
 	EditIcon,
@@ -187,7 +187,7 @@ const applicationTableColumns = [
 			const startDate = row.getValue<string>("start_date");
 			return startDate ? (
 				<div className="text-sm">
-					{format(new Date(startDate), "MMM d, yyyy")}
+					{format(startDate, "MMM d, yyyy")}
 				</div>
 			) : (
 				"—"
@@ -203,7 +203,7 @@ const applicationTableColumns = [
 			const offerDate = row.getValue<string>("offer_date");
 			return offerDate ? (
 				<div className="text-sm">
-					{format(new Date(offerDate), "MMM d, yyyy")}
+					{format(offerDate, "MMM d, yyyy")}
 				</div>
 			) : (
 				"—"
@@ -219,7 +219,7 @@ const applicationTableColumns = [
 			const commitmentDate = row.getValue<string>("commitment_date");
 			return commitmentDate ? (
 				<div className="text-sm">
-					{format(new Date(commitmentDate), "MMM d, yyyy")}
+					{format(commitmentDate, "MMM d, yyyy")}
 				</div>
 			) : (
 				"—"
@@ -235,7 +235,7 @@ const applicationTableColumns = [
 			const lastInteraction = row.getValue<string>("last_interaction_at");
 			return lastInteraction ? (
 				<div className="text-sm">
-					{format(new Date(lastInteraction), "MMM d, yyyy")}
+					{format(lastInteraction, "MMM d, yyyy")}
 				</div>
 			) : (
 				"—"

@@ -30,7 +30,7 @@ import {
 import { athleteQueries } from "@/features/athletes/queries/useAthletes";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { formatLocalDate as format, getTodayDateString } from "@/lib/date-utils";
 import { GraduationCap, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { CampaignLookup } from "../lookups/campaign-lookup";
@@ -67,7 +67,7 @@ export function ManageApplicationModal({
 		university_id: "",
 		program_id: "",
 		stage: "intro",
-		start_date: format(new Date(), "yyyy-MM-dd"),
+		start_date: getTodayDateString(),
 		origin_lead_list_id: "",
 		origin_campaign_id: "",
 		offer_notes: "",
@@ -79,9 +79,7 @@ export function ManageApplicationModal({
 				university_id: application.university_id || "",
 				program_id: application.program_id || "",
 				stage: application.stage || "intro",
-				start_date: application.start_date
-					? format(new Date(application.start_date), "yyyy-MM-dd")
-					: format(new Date(), "yyyy-MM-dd"),
+				start_date: application.start_date || getTodayDateString(),
 				origin_lead_list_id: application.origin_lead_list_id || "",
 				origin_campaign_id: application.origin_campaign_id || "",
 				offer_notes: application.offer_notes || "",
@@ -91,7 +89,7 @@ export function ManageApplicationModal({
 				university_id: "",
 				program_id: "",
 				stage: "intro",
-				start_date: format(new Date(), "yyyy-MM-dd"),
+				start_date: getTodayDateString(),
 				origin_lead_list_id: "",
 				origin_campaign_id: "",
 				offer_notes: "",

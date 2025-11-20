@@ -16,9 +16,15 @@ import { format, parseISO } from "date-fns";
  * @returns Date object representing the local date
  */
 export function parseLocalDate(
-	dateString: string | null | undefined,
+	dateString: string | null | undefined | Date,
 ): Date | null {
 	if (!dateString) return null;
+
+	// If it's already a Date object, return it
+	if (dateString instanceof Date) return dateString;
+
+	// Ensure it's a string
+	if (typeof dateString !== "string") return null;
 
 	// Parse as local date to avoid timezone shifts
 	const [year, month, day] = dateString.split("-");

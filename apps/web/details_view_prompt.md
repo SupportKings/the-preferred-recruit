@@ -834,7 +834,7 @@ import { useActive[DataSource] } from "@/features/[datasource]/queries/use[DataS
 
 
 import { useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { formatLocalDate as format } from "@/lib/date-utils";
 import { Edit, Plus, [Icon] } from "lucide-react";
 import { toast } from "sonner";
 
@@ -1132,7 +1132,7 @@ export function Manage[Relation]Modal({
 ```typescript
 import { createColumnHelper } from "@tanstack/react-table";
 import { StatusBadge } from "@/components/ui/status-badge";
-import { format } from "date-fns";
+import { formatLocalDate as format } from "@/lib/date-utils";
 import { Edit, Trash2 } from "lucide-react";
 
 
@@ -1279,7 +1279,7 @@ export function No[Relations]({ [entity]Id }: No[Relations]Props) {
 
 ```typescript
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { format } from "date-fns";
+import { formatLocalDate as format } from "@/lib/date-utils";
 import { Clock } from "lucide-react";
 
 

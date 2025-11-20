@@ -7,7 +7,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 
-import { format } from "date-fns";
+import { formatLocalDate as format } from "@/lib/date-utils";
 import { motion, useMotionValue } from "framer-motion";
 import { Calendar, ExternalLink, Mail, MapPin, Phone } from "lucide-react";
 
@@ -191,10 +191,10 @@ export function HoverLink({
 											<Calendar className="h-3 w-3" />
 											<span>
 												{preview.startDate &&
-													format(new Date(preview.startDate), "MMM d, yyyy")}
+													format(preview.startDate, "MMM d, yyyy")}
 												{preview.startDate && preview.endDate && " - "}
 												{preview.endDate &&
-													format(new Date(preview.endDate), "MMM d, yyyy")}
+													format(preview.endDate, "MMM d, yyyy")}
 												{preview.startDate && !preview.endDate && " - Present"}
 											</span>
 										</div>

@@ -19,7 +19,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 
-import { format } from "date-fns";
+import { formatLocalDate as format } from "@/lib/date-utils";
 import { Edit2, ExternalLink, List, Plus, Trash2 } from "lucide-react";
 import { ManageSchoolLeadListEntryModal } from "../shared/manage-school-lead-list-entry-modal";
 
@@ -201,7 +201,7 @@ export function LeadListEntriesTab({
 										</TableCell>
 										<TableCell>
 											{entry.added_at
-												? format(new Date(entry.added_at), "MMM dd, yyyy")
+												? format(entry.added_at, "MMM dd, yyyy")
 												: "-"}
 										</TableCell>
 										<TableCell className="max-w-[200px] truncate">
