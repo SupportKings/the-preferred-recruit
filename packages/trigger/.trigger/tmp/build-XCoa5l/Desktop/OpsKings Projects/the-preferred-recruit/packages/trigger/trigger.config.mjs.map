@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["../../../../../../../../trigger.config.ts"],
+  "sourcesContent": ["import { defineConfig } from \"@trigger.dev/sdk/v3\";\n\nexport default defineConfig({\n project: \"proj_fwlmfzysfaxqxfycqxrd\",\n runtime: \"node\",\n logLevel: \"info\",\n\n // 60 minutes (3600 seconds)\n\tmaxDuration: 3600,\n\n retries: {\n\t\t\t\t\tenabledInDev: true,\n\t\t\t\t\tdefault: {\n\t\t\t\t\t\t\t\t\tmaxAttempts: 3,\n\t\t\t\t\t\t\t\t\tminTimeoutInMs: 1000,\n\t\t\t\t\t\t\t\t\tmaxTimeoutInMs: 10000,\n\t\t\t\t\t\t\t\t\tfactor: 2,\n\t\t\t\t\t},\n\t},\n\n dirs: [\"./src/tasks\"],\n build: {},\n});\nexport const resolveEnvVars = undefined;"],
+  "mappings": ";;;;;;;;;AAAA;AAEA,IAAO,yBAAQ,aAAa;AAAA,EAC3B,SAAS;AAAA,EACT,SAAS;AAAA,EACT,UAAU;AAAA;AAAA,EAGV,aAAa;AAAA,EAEb,SAAS;AAAA,IACL,cAAc;AAAA,IACd,SAAS;AAAA,MACL,aAAa;AAAA,MACb,gBAAgB;AAAA,MAChB,gBAAgB;AAAA,MAChB,QAAQ;AAAA,IACZ;AAAA,EACJ;AAAA,EAEA,MAAM,CAAC,aAAa;AAAA,EACpB,OAAO,CAAC;AACT,CAAC;AACM,IAAM,iBAAiB;",
+  "names": []
+}

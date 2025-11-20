@@ -1,0 +1,55 @@
+{
+  "configPath": "/Users/vugarnasraddinli/Desktop/OpsKings Projects/the-preferred-recruit/packages/trigger/.trigger/tmp/build-XCoa5l/Desktop/OpsKings Projects/the-preferred-recruit/packages/trigger/trigger.config.mjs",
+  "tasks": [
+    {
+      "id": "process-coach-import",
+      "queue": {
+        "name": "coach-imports",
+        "concurrencyLimit": 2
+      },
+      "retry": {
+        "maxAttempts": 3,
+        "factor": 2,
+        "minTimeoutInMs": 1000,
+        "maxTimeoutInMs": 10000
+      },
+      "maxDuration": 3600,
+      "filePath": "src/tasks/coach-import.ts",
+      "entryPoint": "/Users/vugarnasraddinli/Desktop/OpsKings Projects/the-preferred-recruit/packages/trigger/.trigger/tmp/build-XCoa5l/Desktop/OpsKings Projects/the-preferred-recruit/packages/trigger/src/tasks/coach-import.mjs"
+    },
+    {
+      "id": "process-coach-batch",
+      "queue": {
+        "name": "coach-batch-processing",
+        "concurrencyLimit": 10
+      },
+      "retry": {
+        "maxAttempts": 3,
+        "factor": 2,
+        "minTimeoutInMs": 1000,
+        "maxTimeoutInMs": 10000
+      },
+      "maxDuration": 3600,
+      "filePath": "src/tasks/coach-import.ts",
+      "entryPoint": "/Users/vugarnasraddinli/Desktop/OpsKings Projects/the-preferred-recruit/packages/trigger/.trigger/tmp/build-XCoa5l/Desktop/OpsKings Projects/the-preferred-recruit/packages/trigger/src/tasks/coach-import.mjs"
+    }
+  ],
+  "queues": [
+    {
+      "name": "coach-imports",
+      "concurrencyLimit": 2
+    },
+    {
+      "name": "coach-batch-processing",
+      "concurrencyLimit": 10
+    }
+  ],
+  "workerEntryPoint": "/Users/vugarnasraddinli/Desktop/OpsKings Projects/the-preferred-recruit/packages/trigger/.trigger/tmp/build-XCoa5l/.npm/_npx/f51a09bd0abf5f10/node_modules/trigger.dev/dist/esm/entryPoints/dev-run-worker.mjs",
+  "runtime": "node",
+  "runtimeVersion": "23.7.0",
+  "customConditions": [],
+  "timings": {
+    "src/lib/helpers.ts": 0.5316249999999911,
+    "src/tasks/coach-import.ts": 63.87508299999999
+  }
+}
