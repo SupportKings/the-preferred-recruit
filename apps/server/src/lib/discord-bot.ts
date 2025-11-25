@@ -46,18 +46,30 @@ export class DiscordBot {
 
 			// Cache all invites when bot starts for tracking invite usage
 			try {
-				const guild = this.client.guilds.cache.get(
-					process.env.DISCORD_GUILD_ID || "",
-				);
-				if (guild) {
-					const firstInvites = await guild.invites.fetch();
-					this.invites.set(guild.id, firstInvites);
-					console.log(
-						`Cached ${firstInvites.size} invites for guild: ${guild.name}`,
-					);
+				const guildId = process.env.DISCORD_GUILD_ID || "";
+				console.log(`Looking for guild with ID: ${guildId}`);
+
+				const guild = this.client.guilds.cache.get(guildId);
+
+				if (!guild) {
+					console.error(`Guild not found! Available guilds: ${this.client.guilds.cache.map(g => `${g.name} (${g.id})`).join(", ")}`);
+					return;
 				}
+
+				console.log(`Found guild: ${guild.name}`);
+				console.log(`Fetching invites for guild...`);
+
+				const firstInvites = await guild.invites.fetch();
+				this.invites.set(guild.id, firstInvites);
+				console.log(
+					`Cached ${firstInvites.size} invites for guild: ${guild.name}`,
+				);
 			} catch (error) {
 				console.error("Failed to cache invites:", error);
+				if (error instanceof Error) {
+					console.error("Error details:", error.message);
+					console.error("Error stack:", error.stack);
+				}
 			}
 		});
 
