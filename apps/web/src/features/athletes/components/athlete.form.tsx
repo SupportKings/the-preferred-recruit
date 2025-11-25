@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
 	Command,
 	CommandEmpty,
@@ -162,11 +163,28 @@ export function AthleteForm({
 			discord_channel_id: initialData?.discord_channel_id || "",
 			discord_username: initialData?.discord_username || "",
 			internal_notes: initialData?.internal_notes || "",
+			run_kickoff_automations: initialData?.run_kickoff_automations || false,
 		},
 		onSubmit: async ({ value }) => {
 			setIsSubmitting(true);
 
 			try {
+				// Validate email if kickoff automations is enabled
+				if (value.run_kickoff_automations && !value.contact_email?.trim()) {
+					toast.error("Email is required to run kickoff automations");
+					// Scroll to and focus the email field
+					const emailField = document.getElementById("contact_email");
+					if (emailField) {
+						emailField.scrollIntoView({
+							behavior: "smooth",
+							block: "center",
+						});
+						emailField.focus();
+					}
+					setIsSubmitting(false);
+					return;
+				}
+
 				// Get the state name from the state code
 				const stateName = value.state
 					? usStates.find((s) => s.isoCode === value.state)?.name || value.state
@@ -216,6 +234,7 @@ export function AthleteForm({
 					discord_channel_id: value.discord_channel_id || undefined,
 					discord_username: value.discord_username || undefined,
 					internal_notes: value.internal_notes || undefined,
+					run_kickoff_automations: value.run_kickoff_automations || false,
 				};
 
 				await execute(transformedData as any);
@@ -1017,6 +1036,30 @@ export function AthleteForm({
 						)}
 					</form.Field>
 				</div>
+			</div>
+
+			{/* Kickoff Automations Section */}
+			<div className="space-y-4">
+				<h2 className="font-semibold text-lg">Kickoff Automations</h2>
+				<form.Field name="run_kickoff_automations">
+					{(field) => (
+						<div className="flex items-center space-x-3">
+							<Checkbox
+								id="run_kickoff_automations"
+								checked={field.state.value}
+								onCheckedChange={(checked) => {
+									field.handleChange(checked === true);
+								}}
+							/>
+							<Label
+								htmlFor="run_kickoff_automations"
+								className="cursor-pointer font-normal"
+							>
+								Run kickoff automations when creating this athlete
+							</Label>
+						</div>
+					)}
+				</form.Field>
 			</div>
 
 			{/* Internal Section */}

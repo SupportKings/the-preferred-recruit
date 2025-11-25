@@ -3,6 +3,10 @@
 import type { FiltersState } from "@/components/data-table-filter/core/types";
 
 import {
+	getAthleteStatusCategories,
+	getAthleteStatusValues,
+} from "@/features/athletes/actions/athleteStatuses";
+import {
 	getAllAthletes,
 	getAthlete,
 	getAthletesFaceted,
@@ -177,5 +181,32 @@ export function useTeamMembers() {
 		queryKey: ["team_members"],
 		queryFn: getTeamMembers,
 		staleTime: 10 * 60 * 1000, // 10 minutes (team members don't change often)
+	});
+}
+
+// Status query keys
+export const athleteStatusQueries = {
+	all: ["athlete_statuses"] as const,
+	categories: () => [...athleteStatusQueries.all, "categories"] as const,
+	values: (athleteId: string) =>
+		[...athleteStatusQueries.all, "values", athleteId] as const,
+};
+
+// Status categories hook (all categories and options for athletes)
+export function useAthleteStatusCategories() {
+	return useQuery({
+		queryKey: athleteStatusQueries.categories(),
+		queryFn: getAthleteStatusCategories,
+		staleTime: 30 * 60 * 1000, // 30 minutes (categories don't change often)
+	});
+}
+
+// Status values hook for a specific athlete
+export function useAthleteStatusValues(athleteId: string) {
+	return useQuery({
+		queryKey: athleteStatusQueries.values(athleteId),
+		queryFn: () => getAthleteStatusValues(athleteId),
+		enabled: !!athleteId,
+		staleTime: 2 * 60 * 1000, // 2 minutes
 	});
 }

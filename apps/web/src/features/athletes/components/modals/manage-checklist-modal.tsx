@@ -1,6 +1,6 @@
 "use client";
 
-import { type ReactNode, useEffect, useState } from "react";
+import { type ReactElement, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -30,7 +30,7 @@ interface ManageChecklistModalProps {
 	athleteId: string;
 	mode: "add" | "edit";
 	checklistItem?: any;
-	children?: ReactNode;
+	children?: ReactElement;
 	open?: boolean;
 	onOpenChange?: (open: boolean) => void;
 }
@@ -166,14 +166,16 @@ export function ManageChecklistModal({
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			{externalOpen === undefined && (
-				<DialogTrigger>
-					{children || (
-						<Button variant="outline" size="sm" className="gap-2">
-							<Plus className="h-4 w-4" />
-							Add Checklist Item
-						</Button>
-					)}
-				</DialogTrigger>
+				<DialogTrigger
+					render={
+						children || (
+							<Button variant="outline" size="sm" className="gap-2">
+								<Plus className="h-4 w-4" />
+								Add Checklist Item
+							</Button>
+						)
+					}
+				/>
 			)}
 			<DialogContent className="sm:max-w-[500px]">
 				<DialogHeader>

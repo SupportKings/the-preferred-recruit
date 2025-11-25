@@ -5,6 +5,10 @@ import { z } from "zod";
 // Database types
 export type AthleteRow = Tables<"athletes">;
 export type TeamMemberRow = Tables<"team_members">;
+export type EntityTypeRow = Tables<"entity_types">;
+export type StatusCategoryRow = Tables<"status_categories">;
+export type StatusOptionRow = Tables<"status_options">;
+export type EntityStatusValueRow = Tables<"entity_status_values">;
 
 // Enums from database
 export type AthleteGender = Enums<"athlete_gender_enum">;
@@ -170,7 +174,35 @@ export const validationUtils = {
 			.max(maxLength, `Must be less than ${maxLength} characters`)
 			.optional()
 			.or(z.literal("").transform(() => undefined)),
+
+	// Boolean validation
+	boolean: z.boolean().optional().default(false),
 };
+
+// Status category names for athletes
+export const ATHLETE_STATUS_CATEGORIES = [
+	"onboarding_call",
+	"eval_form_review",
+	"poster",
+	"campaign_copy",
+] as const;
+
+export type AthleteStatusCategory = (typeof ATHLETE_STATUS_CATEGORIES)[number];
+
+// Status option with category info
+export interface StatusOptionWithCategory extends StatusOptionRow {
+	category_name?: string;
+	category_display_name?: string;
+}
+
+// Athlete status values map (category_name -> current status)
+export type AthleteStatusMap = Record<
+	AthleteStatusCategory,
+	{
+		status_option_id: number | null;
+		status_option?: StatusOptionRow | null;
+	}
+>;
 
 // Base athlete schema for creation (matches database schema)
 export const athleteCreateSchema = z.object({
@@ -221,6 +253,9 @@ export const athleteCreateSchema = z.object({
 
 	// Internal
 	internal_notes: validationUtils.textarea(5000),
+
+	// Kickoff automation
+	run_kickoff_automations: validationUtils.boolean,
 });
 
 // Schema for athlete updates (all fields optional except id)
@@ -277,6 +312,9 @@ export const athleteFormSchema = z.object({
 
 	// Internal
 	internal_notes: z.string().optional().default(""),
+
+	// Kickoff automation
+	run_kickoff_automations: z.boolean().optional().default(false),
 });
 
 // Form schema for athlete updates
@@ -349,6 +387,7 @@ export const getFieldValidator = (fieldName: keyof AthleteFormInput) => {
 		discord_channel_id: validationUtils.text(100),
 		discord_username: validationUtils.text(100),
 		internal_notes: validationUtils.textarea(5000),
+		run_kickoff_automations: validationUtils.boolean,
 	};
 
 	return (value: any) => validateSingleField(value, fieldSchemas[fieldName]);

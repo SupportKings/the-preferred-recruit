@@ -11,8 +11,12 @@ import { Button } from "@/components/ui/button";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
 import { deleteAthlete } from "@/features/athletes/actions/deleteAthlete";
-import { useAthlete } from "@/features/athletes/queries/useAthletes";
+import {
+	athleteQueries,
+	useAthlete,
+} from "@/features/athletes/queries/useAthletes";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { Trash2Icon, X } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "sonner";
@@ -26,17 +30,38 @@ export default function AthleteDetailHeader({
 }: AthleteDetailHeaderProps) {
 	const { data: athlete } = useAthlete(athleteId);
 	const router = useRouter();
+	const queryClient = useQueryClient();
 	const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
 	const { execute: executeDeleteAthlete, isExecuting } = useAction(
 		deleteAthlete,
 		{
-			onSuccess: () => {
-				setIsDeleteDialogOpen(false);
-				toast.success(
-					`${athlete?.full_name || "Athlete"} has been deleted successfully`,
-				);
-				router.push("/dashboard/athletes");
+			onSuccess: (result) => {
+				console.log("Delete result:", result);
+				// result.data contains our action's return value
+				if (result.data?.success) {
+					// Store athlete name before clearing cache
+					const athleteName = athlete?.full_name || "Athlete";
+
+					// Close dialog first
+					setIsDeleteDialogOpen(false);
+
+					// Remove the athlete from cache to prevent refetch
+					queryClient.removeQueries({
+						queryKey: athleteQueries.detail(athleteId),
+					});
+
+					// Also invalidate the athletes list
+					queryClient.invalidateQueries({
+						queryKey: athleteQueries.lists(),
+					});
+
+					// Show success toast
+					toast.success(`${athleteName} has been deleted successfully`);
+
+					// Navigate to athletes list
+					router.push("/dashboard/athletes");
+				}
 			},
 			onError: (error) => {
 				console.error("Failed to delete athlete:", error);
@@ -50,7 +75,7 @@ export default function AthleteDetailHeader({
 	};
 
 	return (
-		<div className="sticky top-0 z-10 flex h-[45px] flex-shrink-0 items-center justify-between border-border border-b px-4 py-2 lg:px-6">
+		<div className="sticky top-0 z-10 flex h-[45px] shrink-0 items-center justify-between border-border border-b px-4 py-2 lg:px-6">
 			<div className="flex items-center gap-2">
 				<SidebarTrigger />
 				<BackButton />
@@ -66,7 +91,7 @@ export default function AthleteDetailHeader({
 			>
 				<Dialog.Trigger asChild>
 					<Button variant="destructive" className="flex items-center gap-2">
-						<Trash2Icon className="mr-[6px] h-4 w-4" />
+						<Trash2Icon className="mr-1.5 h-4 w-4" />
 						Delete Athlete
 					</Button>
 				</Dialog.Trigger>

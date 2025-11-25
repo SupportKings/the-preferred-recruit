@@ -14,7 +14,7 @@ const deleteAthleteSchema = z.object({
 });
 
 export const deleteAthlete = actionClient
-	.inputSchema(deleteAthleteSchema)
+	.schema(deleteAthleteSchema)
 	.action(async ({ parsedInput }) => {
 		const { id } = parsedInput;
 
@@ -53,9 +53,8 @@ export const deleteAthlete = actionClient
 				});
 			}
 
-			// Revalidate relevant paths
+			// Revalidate relevant paths (but NOT the deleted athlete's page - we're redirecting away)
 			revalidatePath("/dashboard/athletes");
-			revalidatePath(`/dashboard/athletes/${id}`);
 			revalidatePath("/dashboard");
 
 			return {
