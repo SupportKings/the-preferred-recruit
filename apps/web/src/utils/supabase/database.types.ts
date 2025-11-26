@@ -297,6 +297,9 @@ export type Database = {
 					milesplit_url: string | null;
 					onboarding_form_data: Json | null;
 					phone: string | null;
+					poster_image_2_url: string | null;
+					poster_image_3_url: string | null;
+					poster_primary_url: string | null;
 					run_kickoff_automations: boolean | null;
 					sales_call_note: string | null;
 					sales_call_recording_url: string | null;
@@ -306,6 +309,7 @@ export type Database = {
 					sending_email_id: string | null;
 					state: string | null;
 					student_type: Database["public"]["Enums"]["student_type_enum"] | null;
+					tally_submission_id: string | null;
 					updated_at: string | null;
 					year_entering_university: number | null;
 				};
@@ -347,6 +351,9 @@ export type Database = {
 					milesplit_url?: string | null;
 					onboarding_form_data?: Json | null;
 					phone?: string | null;
+					poster_image_2_url?: string | null;
+					poster_image_3_url?: string | null;
+					poster_primary_url?: string | null;
 					run_kickoff_automations?: boolean | null;
 					sales_call_note?: string | null;
 					sales_call_recording_url?: string | null;
@@ -358,6 +365,7 @@ export type Database = {
 					student_type?:
 						| Database["public"]["Enums"]["student_type_enum"]
 						| null;
+					tally_submission_id?: string | null;
 					updated_at?: string | null;
 					year_entering_university?: number | null;
 				};
@@ -399,6 +407,9 @@ export type Database = {
 					milesplit_url?: string | null;
 					onboarding_form_data?: Json | null;
 					phone?: string | null;
+					poster_image_2_url?: string | null;
+					poster_image_3_url?: string | null;
+					poster_primary_url?: string | null;
 					run_kickoff_automations?: boolean | null;
 					sales_call_note?: string | null;
 					sales_call_recording_url?: string | null;
@@ -410,6 +421,7 @@ export type Database = {
 					student_type?:
 						| Database["public"]["Enums"]["student_type_enum"]
 						| null;
+					tally_submission_id?: string | null;
 					updated_at?: string | null;
 					year_entering_university?: number | null;
 				};
