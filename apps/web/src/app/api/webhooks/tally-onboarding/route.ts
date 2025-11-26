@@ -1043,8 +1043,22 @@ export async function POST(request: NextRequest) {
 		}
 
 		// Parse the payload
-		const payload: TallyWebhookPayload = JSON.parse(rawBody);
+		const payload = JSON.parse(rawBody);
 
+		// DEBUG MODE: Just log the payload and return immediately
+		console.log("=".repeat(80));
+		console.log("[Tally Webhook DEBUG] RAW PAYLOAD:");
+		console.log("=".repeat(80));
+		console.log(JSON.stringify(payload, null, 2));
+		console.log("=".repeat(80));
+
+		return NextResponse.json({
+			success: true,
+			message: "DEBUG MODE: Payload logged, no processing done",
+			payload,
+		});
+
+		/* DISABLED FOR DEBUG - Uncomment when ready to process
 		console.log(
 			`[Tally Webhook] Received submission ${payload.data.submissionId} for form "${payload.data.formName}"`,
 		);
@@ -1424,6 +1438,7 @@ export async function POST(request: NextRequest) {
 			duration: `${duration}ms`,
 			redirectUrl,
 		});
+		// END DISABLED FOR DEBUG */
 	} catch (error) {
 		console.error("[Tally Webhook] Error:", error);
 		return NextResponse.json(
