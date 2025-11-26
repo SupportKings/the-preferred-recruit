@@ -5,6 +5,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { createContext } from "./lib/context";
+import { DiscordBot } from "./lib/discord-bot";
 import { appRouter } from "./routers/index";
 
 const app = new Hono();
@@ -97,6 +98,23 @@ async function startServerWithRetry(
 if (import.meta.main) {
 	console.log("🔍 Starting server with automatic port detection...");
 	startServerWithRetry();
+
+	// Start Discord bot
+	const discordBot = new DiscordBot();
+	discordBot.start();
+
+	// Graceful shutdown
+	process.on("SIGINT", async () => {
+		console.log("\n🛑 Shutting down gracefully...");
+		await discordBot.stop();
+		process.exit(0);
+	});
+
+	process.on("SIGTERM", async () => {
+		console.log("\n🛑 Shutting down gracefully...");
+		await discordBot.stop();
+		process.exit(0);
+	});
 }
 
 // Export as named export to avoid Bun auto-serving

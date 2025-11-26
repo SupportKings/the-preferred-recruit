@@ -35,7 +35,7 @@ function DialogOverlay({
 		<BaseDialog.Backdrop
 			data-slot="dialog-overlay"
 			className={cn(
-				"fixed inset-0 z-50 bg-black/20 transition-all duration-150 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0 dark:bg-black/70",
+				"fixed inset-0 z-50 bg-black/20 transition-all duration-150 data-ending-style:opacity-0 data-starting-style:opacity-0 dark:bg-black/70",
 				className,
 			)}
 			{...props}
@@ -59,7 +59,7 @@ function DialogContent({
 			<BaseDialog.Popup
 				data-slot="dialog-content"
 				className={cn(
-					"-mt-8 -translate-x-1/2 -translate-y-1/2 fixed top-[calc(50%+1.25rem*var(--nested-dialogs))] left-1/2 z-[60] grid max-h-[90vh] w-full max-w-[calc(100%-2rem)] scale-[calc(1-0.1*var(--nested-dialogs))] gap-4 overflow-y-auto rounded-lg border bg-background p-6 shadow-lg transition-all duration-150 data-[ending-style]:scale-90 data-[starting-style]:scale-90 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0 data-[nested-dialog-open]:after:absolute data-[nested-dialog-open]:after:inset-0 data-[nested-dialog-open]:after:rounded-[inherit] data-[nested-dialog-open]:after:bg-black/5 sm:max-w-lg",
+					"-mt-8 -translate-x-1/2 -translate-y-1/2 fixed top-[calc(50%+1.25rem*var(--nested-dialogs))] left-1/2 z-60 grid max-h-[90vh] w-full max-w-[calc(100%-2rem)] scale-[calc(1-0.1*var(--nested-dialogs))] gap-4 overflow-y-auto rounded-lg border bg-background p-6 shadow-lg transition-all duration-150 data-ending-style:scale-90 data-starting-style:scale-90 data-ending-style:opacity-0 data-starting-style:opacity-0 data-nested-dialog-open:after:absolute data-nested-dialog-open:after:inset-0 data-nested-dialog-open:after:rounded-[inherit] data-nested-dialog-open:after:bg-black/5 sm:max-w-lg",
 					className,
 				)}
 				{...props}
@@ -84,7 +84,7 @@ function DialogContent({
 			<BaseDialog.Popup
 				data-slot="dialog-content"
 				className={cn(
-					"-mt-8 -translate-x-1/2 -translate-y-1/2 fixed top-[calc(50%+1.25rem*var(--nested-dialogs))] left-1/2 z-50 grid max-h-[90vh] w-full max-w-[calc(100%-2rem)] scale-[calc(1-0.1*var(--nested-dialogs))] gap-4 overflow-y-auto rounded-lg border bg-background p-6 shadow-lg transition-all duration-150 data-[ending-style]:scale-90 data-[starting-style]:scale-90 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0 data-[nested-dialog-open]:after:absolute data-[nested-dialog-open]:after:inset-0 data-[nested-dialog-open]:after:rounded-[inherit] data-[nested-dialog-open]:after:bg-black/5 sm:max-w-lg",
+					"-mt-8 -translate-x-1/2 -translate-y-1/2 fixed top-[calc(50%+1.25rem*var(--nested-dialogs))] left-1/2 z-50 grid max-h-[90vh] w-full max-w-[calc(100%-2rem)] scale-[calc(1-0.1*var(--nested-dialogs))] gap-4 overflow-y-auto rounded-lg border bg-background p-6 shadow-lg transition-all duration-150 data-ending-style:scale-90 data-starting-style:scale-90 data-ending-style:opacity-0 data-starting-style:opacity-0 data-nested-dialog-open:after:absolute data-nested-dialog-open:after:inset-0 data-nested-dialog-open:after:rounded-[inherit] data-nested-dialog-open:after:bg-black/5 sm:max-w-lg",
 					className,
 				)}
 				{...props}

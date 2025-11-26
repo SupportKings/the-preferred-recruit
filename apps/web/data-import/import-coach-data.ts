@@ -10,8 +10,8 @@
  * Run with: bun --env-file=apps/web/.env apps/web/data-import/import-coach-data.ts
  */
 
-import * as XLSX from "xlsx";
 import { createClient } from "@supabase/supabase-js";
+import * as XLSX from "xlsx";
 import type { Database } from "../src/utils/supabase/database.types";
 
 // Environment variables
@@ -22,7 +22,9 @@ if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
 	console.error(
 		"❌ Missing environment variables. Please set NEXT_PUBLIC_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY",
 	);
-	console.error("   Make sure to run with: bun --env-file=apps/web/.env apps/web/data-import/import-coach-data.ts");
+	console.error(
+		"   Make sure to run with: bun --env-file=apps/web/.env apps/web/data-import/import-coach-data.ts",
+	);
 	process.exit(1);
 }
 
@@ -121,7 +123,7 @@ async function importGoverningBodies(
 			.from("governing_bodies")
 			.upsert({ name }, { onConflict: "name", ignoreDuplicates: false })
 			.select("id, name")
-			.single();
+			.single<{ id: string; name: string }>();
 
 		if (error) {
 			console.error(`❌ Error importing governing body "${name}":`, error);
@@ -165,7 +167,9 @@ async function importConferences(
 		const governingBodyId = governingBodyMap.get(governingBody);
 
 		if (!governingBodyId) {
-			console.warn(`⚠️  Governing body not found for conference "${name}": ${governingBody}`);
+			console.warn(
+				`⚠️  Governing body not found for conference "${name}": ${governingBody}`,
+			);
 			continue;
 		}
 
@@ -176,7 +180,7 @@ async function importConferences(
 				{ onConflict: "name", ignoreDuplicates: false },
 			)
 			.select("id, name")
-			.single();
+			.single<{ id: string; name: string }>();
 
 		if (error) {
 			console.error(`❌ Error importing conference "${name}":`, error);
@@ -227,7 +231,9 @@ async function importDivisions(
 		const governingBodyId = governingBodyMap.get(governingBody);
 
 		if (!governingBodyId) {
-			console.warn(`⚠️  Governing body not found for division "${name}": ${governingBody}`);
+			console.warn(
+				`⚠️  Governing body not found for division "${name}": ${governingBody}`,
+			);
 			continue;
 		}
 
@@ -238,7 +244,7 @@ async function importDivisions(
 				{ onConflict: "name", ignoreDuplicates: false },
 			)
 			.select("id, name")
-			.single();
+			.single<{ id: string; name: string }>();
 
 		if (error) {
 			console.error(`❌ Error importing division "${name}":`, error);
@@ -295,7 +301,7 @@ async function importUniversities(
 				onConflict: "name",
 				ignoreDuplicates: false,
 			})
-			.select("id, name");
+			.select<"id, name", { id: string; name: string }>("id, name");
 
 		if (error) {
 			console.error(`❌ Error importing batch ${i / batchSize + 1}:`, error);
@@ -480,7 +486,9 @@ async function importCoaches(rows: CoachRow[]): Promise<Map<string, string>> {
 				onConflict: "full_name",
 				ignoreDuplicates: false,
 			})
-			.select("id, full_name");
+			.select<"id, full_name", { id: string; full_name: string }>(
+				"id, full_name",
+			);
 
 		if (error) {
 			console.error(`❌ Error importing batch ${i / batchSize + 1}:`, error);
@@ -597,7 +605,9 @@ async function cleanExistingData() {
 			.neq("id", "00000000-0000-0000-0000-000000000000");
 
 		if (jobsError) {
-			console.warn(`   ⚠️  Could not delete University Jobs: ${jobsError.message}`);
+			console.warn(
+				`   ⚠️  Could not delete University Jobs: ${jobsError.message}`,
+			);
 		} else {
 			console.log("   ✅ Deleted University Jobs");
 		}
@@ -703,13 +713,12 @@ async function main() {
 	const coachesSheet = workbook.Sheets["Upload - coaches"];
 	const jobsSheet = workbook.Sheets["Upload - University Jobs"];
 
-	const universities = XLSX.utils.sheet_to_json<UniversityRow>(
-		universitiesSheet,
-	);
+	const universities =
+		XLSX.utils.sheet_to_json<UniversityRow>(universitiesSheet);
 	const coaches = XLSX.utils.sheet_to_json<CoachRow>(coachesSheet);
 	const jobs = XLSX.utils.sheet_to_json<UniversityJobRow>(jobsSheet);
 
-	console.log(`📊 Loaded data:`);
+	console.log("📊 Loaded data:");
 	console.log(`   - ${universities.length} universities`);
 	console.log(`   - ${coaches.length} coaches`);
 	console.log(`   - ${jobs.length} university jobs`);

@@ -10,6 +10,7 @@ import { getUser } from "@/queries/getUser";
 
 import { returnValidationErrors } from "next-safe-action";
 import { athleteCreateSchema } from "../types/athlete";
+import { triggerKickoffWebhook } from "./triggerKickoffWebhook";
 
 export const createAthleteAction = actionClient
 	.schema(athleteCreateSchema)
@@ -55,6 +56,18 @@ export const createAthleteAction = actionClient
 				console.error("Error creating athlete:", insertError);
 				return returnValidationErrors(athleteCreateSchema, {
 					_errors: [`Failed to create athlete: ${insertError.message}`],
+				});
+			}
+
+			// Trigger kickoff webhook if run_kickoff_automations is true
+			if (athlete.run_kickoff_automations) {
+				await triggerKickoffWebhook({
+					athlete_id: athlete.id,
+					discord_channel_id: athlete.discord_channel_id,
+					discord_username: athlete.discord_username,
+					discord_channel_url: athlete.discord_channel_url,
+					full_name: athlete.full_name,
+					contact_email: athlete.contact_email,
 				});
 			}
 
