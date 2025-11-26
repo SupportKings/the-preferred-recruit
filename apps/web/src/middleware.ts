@@ -1,9 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-import { getSessionCookie } from "better-auth/cookies";
-
 export async function middleware(request: NextRequest) {
-	const sessionCookie = getSessionCookie(request);
+	// Check for session cookie directly to avoid Edge Runtime eval issues
+	const sessionCookie = request.cookies.get("better-auth.session_token");
 	const isHomePage = request.nextUrl.pathname === "/";
 	const isDashboardPage = request.nextUrl.pathname.startsWith("/dashboard");
 

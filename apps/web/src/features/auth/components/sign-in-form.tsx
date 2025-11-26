@@ -100,9 +100,7 @@ export function SignInForm({ redirectTo = "/" }: SignInFormProps) {
 				setPasskeyResolved(false); // Reset resolution state
 				try {
 					await authClient.signIn.passkey(
-						{
-							email: value.email,
-						},
+						{},
 						{
 							onSuccess: () => {
 								setPasskeyResolved(true); // Mark as resolved
@@ -120,7 +118,7 @@ export function SignInForm({ redirectTo = "/" }: SignInFormProps) {
 							},
 						},
 					);
-				} catch (error: any) {
+				} catch (error: unknown) {
 					console.error("Passkey sign-in error:", error);
 					setPasskeyResolved(true); // Mark as resolved
 					toast.error("Passkey sign-in failed. Please try again.");

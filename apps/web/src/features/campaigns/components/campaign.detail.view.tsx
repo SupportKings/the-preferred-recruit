@@ -11,6 +11,7 @@ import { deleteReply } from "@/features/athletes/actions/replies";
 import { deleteSendingToolLeadList } from "@/features/athletes/actions/sendingToolLeadLists";
 
 import { useQueryClient } from "@tanstack/react-query";
+import type { CampaignCoachData } from "../types/coach-export-types";
 import { toast } from "sonner";
 import { updateCampaignAction } from "../actions/updateCampaign";
 import { campaignQueries, useCampaign } from "../queries/useCampaigns";
@@ -19,6 +20,7 @@ import { CampaignOwnershipSetup } from "./detail-sections/campaign-ownership-set
 import { CampaignScheduleSending } from "./detail-sections/campaign-schedule-sending";
 import { CampaignSystemInfo } from "./detail-sections/campaign-system-info";
 import { CampaignLeadsTab } from "./detail-tabs/campaign-leads-tab";
+import { CoachListExportsTab } from "./detail-tabs/coach-list-exports-tab";
 import { DerivedCampaignsTab } from "./detail-tabs/derived-campaigns-tab";
 import { RepliesTab } from "./detail-tabs/replies-tab";
 import { SendingToolFilesTab } from "./detail-tabs/sending-tool-files-tab";
@@ -46,6 +48,11 @@ export default function CampaignDetailView({
 		isEditing: boolean;
 		section: "ownership" | "schedule" | "metrics" | null;
 	}>({ isEditing: false, section: null });
+
+	// Coach selection state for exports (lifted up to persist across tab switches)
+	const [selectedCoaches, setSelectedCoaches] = useState<CampaignCoachData[]>(
+		[],
+	);
 
 	const handleEditToggle = (section: "ownership" | "schedule" | "metrics") => {
 		if (editState.isEditing && editState.section === section) {
@@ -231,9 +238,10 @@ export default function CampaignDetailView({
 
 			{/* Relationship Tabs */}
 			<Tabs defaultValue="leads" className="w-full">
-				<TabsList className="grid w-full grid-cols-4">
+				<TabsList className="grid w-full grid-cols-5">
 					<TabsTrigger value="leads">Campaign Leads</TabsTrigger>
 					<TabsTrigger value="files">Sending Tool Files</TabsTrigger>
+					<TabsTrigger value="exports">Coach List Exports</TabsTrigger>
 					<TabsTrigger value="replies">Replies</TabsTrigger>
 					<TabsTrigger value="derived">Derived Campaigns</TabsTrigger>
 				</TabsList>
@@ -253,6 +261,14 @@ export default function CampaignDetailView({
 						athleteId={campaign.athlete?.id || ""}
 						sendingToolLeadLists={campaign.sending_tool_lead_lists || []}
 						setDeleteModal={setDeleteModal}
+					/>
+				</TabsContent>
+
+				<TabsContent value="exports">
+					<CoachListExportsTab
+						campaignId={campaignId}
+						selectedCoaches={selectedCoaches}
+						setSelectedCoaches={setSelectedCoaches}
 					/>
 				</TabsContent>
 

@@ -1,3 +1,4 @@
+import type React from "react";
 import { useCallback, useEffect, useState } from "react";
 
 import { Input } from "@/components/ui/input";
@@ -13,7 +14,7 @@ export function DebouncedInput({
 	value: string | number;
 	onChange: (value: string | number) => void;
 	debounceMs?: number;
-} & Omit<React.InputHTMLAttributes<HTMLInputElement>, "onChange">) {
+} & Omit<React.ComponentProps<"input">, "onChange">) {
 	const [value, setValue] = useState(initialValue);
 
 	// Sync with initialValue when it changes

@@ -10,6 +10,7 @@
 	},
 	"dependencies": {
 		"@base-ui-components/react": "^1.0.0-beta.2",
+		"@better-auth/passkey": "^1.4.2",
 		"@date-fns/tz": "^1.4.1",
 		"@floating-ui/react": "^0.27.16",
 		"@hookform/resolvers": "^5.2.1",

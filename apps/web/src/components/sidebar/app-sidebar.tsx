@@ -136,6 +136,10 @@ export function AppSidebar({
 						title: "Coaches",
 						url: "/dashboard/coaches",
 					},
+					{
+						title: "Coach Imports",
+						url: "/dashboard/coach-imports",
+					},
 				],
 			},
 			{
