@@ -2,7 +2,6 @@ import { type NextRequest, NextResponse } from "next/server";
 
 import {
 	findDropdownValue,
-	findField,
 	findFileValue,
 	findIntegerValue,
 	findMultiSelectValues,
@@ -15,7 +14,7 @@ import {
 	verifyTallySignature,
 } from "@/lib/tally-webhook";
 
-import type { createClient } from "@/utils/supabase/serviceRole";
+import { createClient } from "@/utils/supabase/serviceRole";
 
 // ============================================================================
 // Constants
@@ -866,45 +865,8 @@ export async function POST(request: NextRequest) {
 		}
 
 		// Parse the payload
-		const payload = JSON.parse(rawBody);
+		const payload: TallyWebhookPayload = JSON.parse(rawBody);
 
-		// DEBUG MODE: Log payload and test redirect logic
-		console.log("=".repeat(80));
-		console.log("[Tally Webhook DEBUG] RAW PAYLOAD:");
-		console.log("=".repeat(80));
-		console.log(JSON.stringify(payload, null, 2));
-		console.log("=".repeat(80));
-
-		// Test redirect logic based on "Do you need poster?" answer
-		const { fields } = payload.data;
-		const needsPosterDebug = getBooleanField(fields, "Do you need poster?");
-
-		let debugRedirectUrl: string;
-		if (needsPosterDebug) {
-			// Redirect to poster form (without athleteId since we're not processing)
-			debugRedirectUrl = "https://tally.so/r/RGWMNl";
-		} else {
-			// Redirect to Calendly
-			debugRedirectUrl = CALENDLY_URL;
-		}
-
-		console.log("=".repeat(80));
-		console.log("[Tally Webhook DEBUG] REDIRECT LOGIC TEST:");
-		console.log(
-			`  - "Do you need poster?" answer resolved to: ${needsPosterDebug}`,
-		);
-		console.log(`  - Would redirect to: ${debugRedirectUrl}`);
-		console.log("=".repeat(80));
-
-		return NextResponse.json({
-			success: true,
-			message: "DEBUG MODE: Payload logged, redirect logic tested",
-			needsPoster: needsPosterDebug,
-			redirectUrl: debugRedirectUrl,
-			payload,
-		});
-
-		/* DISABLED FOR DEBUG - Uncomment when ready to process
 		console.log(
 			`[Tally Webhook] Received submission ${payload.data.submissionId} for form "${payload.data.formName}"`,
 		);
@@ -1266,7 +1228,6 @@ export async function POST(request: NextRequest) {
 			duration: `${duration}ms`,
 			redirectUrl,
 		});
-		// END DISABLED FOR DEBUG */
 	} catch (error) {
 		console.error("[Tally Webhook] Error:", error);
 		return NextResponse.json(
