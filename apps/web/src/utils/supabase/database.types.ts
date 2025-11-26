@@ -272,10 +272,13 @@ export type Database = {
           deleted_by: string | null
           discord_channel_id: string | null
           discord_channel_url: string | null
+          discord_invite_code: string | null
+          discord_user_id: string | null
           discord_username: string | null
           full_name: string
           gender: Database["public"]["Enums"]["athlete_gender_enum"] | null
           go_live_date: string | null
+          google_drive_evaluation_form_url: string | null
           google_drive_folder_url: string | null
           gpa: number | null
           graduation_year: number | null
@@ -294,6 +297,10 @@ export type Database = {
           milesplit_url: string | null
           onboarding_form_data: Json | null
           phone: string | null
+          poster_image_2_url: string | null
+          poster_image_3_url: string | null
+          poster_primary_url: string | null
+          run_kickoff_automations: boolean | null
           sales_call_note: string | null
           sales_call_recording_url: string | null
           sales_closer_id: string | null
@@ -302,6 +309,7 @@ export type Database = {
           sending_email_id: string | null
           state: string | null
           student_type: Database["public"]["Enums"]["student_type_enum"] | null
+          tally_submission_id: string | null
           updated_at: string | null
           year_entering_university: number | null
         }
@@ -318,10 +326,13 @@ export type Database = {
           deleted_by?: string | null
           discord_channel_id?: string | null
           discord_channel_url?: string | null
+          discord_invite_code?: string | null
+          discord_user_id?: string | null
           discord_username?: string | null
           full_name: string
           gender?: Database["public"]["Enums"]["athlete_gender_enum"] | null
           go_live_date?: string | null
+          google_drive_evaluation_form_url?: string | null
           google_drive_folder_url?: string | null
           gpa?: number | null
           graduation_year?: number | null
@@ -340,6 +351,10 @@ export type Database = {
           milesplit_url?: string | null
           onboarding_form_data?: Json | null
           phone?: string | null
+          poster_image_2_url?: string | null
+          poster_image_3_url?: string | null
+          poster_primary_url?: string | null
+          run_kickoff_automations?: boolean | null
           sales_call_note?: string | null
           sales_call_recording_url?: string | null
           sales_closer_id?: string | null
@@ -348,6 +363,7 @@ export type Database = {
           sending_email_id?: string | null
           state?: string | null
           student_type?: Database["public"]["Enums"]["student_type_enum"] | null
+          tally_submission_id?: string | null
           updated_at?: string | null
           year_entering_university?: number | null
         }
@@ -364,10 +380,13 @@ export type Database = {
           deleted_by?: string | null
           discord_channel_id?: string | null
           discord_channel_url?: string | null
+          discord_invite_code?: string | null
+          discord_user_id?: string | null
           discord_username?: string | null
           full_name?: string
           gender?: Database["public"]["Enums"]["athlete_gender_enum"] | null
           go_live_date?: string | null
+          google_drive_evaluation_form_url?: string | null
           google_drive_folder_url?: string | null
           gpa?: number | null
           graduation_year?: number | null
@@ -386,6 +405,10 @@ export type Database = {
           milesplit_url?: string | null
           onboarding_form_data?: Json | null
           phone?: string | null
+          poster_image_2_url?: string | null
+          poster_image_3_url?: string | null
+          poster_primary_url?: string | null
+          run_kickoff_automations?: boolean | null
           sales_call_note?: string | null
           sales_call_recording_url?: string | null
           sales_closer_id?: string | null
@@ -394,6 +417,7 @@ export type Database = {
           sending_email_id?: string | null
           state?: string | null
           student_type?: Database["public"]["Enums"]["student_type_enum"] | null
+          tally_submission_id?: string | null
           updated_at?: string | null
           year_entering_university?: number | null
         }
@@ -1551,7 +1575,7 @@ export type Database = {
       }
       entity_status_values: {
         Row: {
-          entity_id: number
+          entity_id: string
           entity_type: string
           id: number
           set_at: string | null
@@ -1560,7 +1584,7 @@ export type Database = {
           status_option_id: number | null
         }
         Insert: {
-          entity_id: number
+          entity_id: string
           entity_type: string
           id?: number
           set_at?: string | null
@@ -1569,7 +1593,7 @@ export type Database = {
           status_option_id?: number | null
         }
         Update: {
-          entity_id?: number
+          entity_id?: string
           entity_type?: string
           id?: number
           set_at?: string | null
@@ -2263,7 +2287,7 @@ export type Database = {
         Row: {
           changed_at: string | null
           changed_by: number | null
-          entity_id: number
+          entity_id: string
           entity_type: string
           id: number
           new_status_option_id: number | null
@@ -2274,7 +2298,7 @@ export type Database = {
         Insert: {
           changed_at?: string | null
           changed_by?: number | null
-          entity_id: number
+          entity_id: string
           entity_type: string
           id?: number
           new_status_option_id?: number | null
@@ -2285,7 +2309,7 @@ export type Database = {
         Update: {
           changed_at?: string | null
           changed_by?: number | null
-          entity_id?: number
+          entity_id?: string
           entity_type?: string
           id?: number
           new_status_option_id?: number | null

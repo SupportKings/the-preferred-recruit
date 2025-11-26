@@ -117,6 +117,20 @@ export const coachExportColumns = [
 			);
 		},
 	}),
+	columnHelper.accessor("tuition", {
+		id: "tuition",
+		header: "Tuition",
+		cell: ({ row }) => {
+			const tuition = row.original.tuition;
+			if (!tuition) return <span className="text-muted-foreground">—</span>;
+
+			return (
+				<span className="font-medium">
+					${tuition.toLocaleString()}
+				</span>
+			);
+		},
+	}),
 	columnHelper.accessor("jobTitle", {
 		id: "jobTitle",
 		header: "Job Title",

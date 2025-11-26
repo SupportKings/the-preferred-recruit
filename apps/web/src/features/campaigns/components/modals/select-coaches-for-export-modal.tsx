@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
@@ -15,6 +15,7 @@ import {
 	CommandList,
 } from "@/components/ui/command";
 import { Dialog, DialogOverlay, DialogPortal } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
 	Popover,
@@ -88,6 +89,9 @@ export function SelectCoachesForExportModal({
 		maxTuition: undefined,
 	});
 
+	// Track if we've done the initial load for this modal session
+	const hasInitiallyLoaded = useRef(false);
+
 	const loadFilterOptions = useCallback(async () => {
 		try {
 			const result = await getCampaignCoachFilterOptionsAction();
@@ -100,13 +104,13 @@ export function SelectCoachesForExportModal({
 	}, []);
 
 	const loadCoaches = useCallback(
-		async (page = 1) => {
+		async (page = 1, currentFilters: CoachExportFilters) => {
 			try {
 				setIsLoading(true);
 				const result = await getCampaignCoachesAction(campaignId, {
 					page,
 					pageSize: pagination.pageSize,
-					filters,
+					filters: currentFilters,
 				});
 
 				if (result.success && result.data) {
@@ -124,16 +128,22 @@ export function SelectCoachesForExportModal({
 				setIsLoading(false);
 			}
 		},
-		[campaignId, filters, pagination.pageSize],
+		[campaignId, pagination.pageSize],
 	);
 
-	// Load filter options when modal opens
+	// Load filter options and initial data when modal opens
 	useEffect(() => {
-		if (open) {
+		if (open && !hasInitiallyLoaded.current) {
+			hasInitiallyLoaded.current = true;
+			setIsLoading(true);
 			loadFilterOptions();
-			loadCoaches();
+			loadCoaches(1, filters);
 		}
-	}, [open, loadFilterOptions, loadCoaches]);
+		// Reset when modal closes
+		if (!open) {
+			hasInitiallyLoaded.current = false;
+		}
+	}, [open, loadFilterOptions, loadCoaches, filters]);
 
 	// Set initial selection based on initialSelectedCoaches
 	useEffect(() => {
@@ -151,9 +161,10 @@ export function SelectCoachesForExportModal({
 		}
 	}, [open, coaches, initialSelectedCoaches]);
 
-	// Apply filters
-	const handleApplyFilters = () => {
-		loadCoaches(1); // Reset to first page when applying filters
+	// Update filters and auto-apply
+	const updateFilters = (newFilters: CoachExportFilters) => {
+		setFilters(newFilters);
+		loadCoaches(1, newFilters); // Reset to first page when filters change
 	};
 
 	// Table instance with server-side pagination
@@ -179,7 +190,7 @@ export function SelectCoachesForExportModal({
 							pageSize: pagination.pageSize,
 						})
 					: updater;
-			loadCoaches(newState.pageIndex + 1);
+			loadCoaches(newState.pageIndex + 1, filters);
 		},
 		getCoreRowModel: getCoreRowModel(),
 		getFilteredRowModel: getFilteredRowModel(),
@@ -205,14 +216,13 @@ export function SelectCoachesForExportModal({
 	};
 
 	const handleClearFilters = () => {
-		setFilters({
+		updateFilters({
 			divisions: [],
 			universities: [],
 			programs: [],
 			minTuition: undefined,
 			maxTuition: undefined,
 		});
-		loadCoaches(1); // Reset to first page
 	};
 
 	if (!open) return null;
@@ -258,7 +268,7 @@ export function SelectCoachesForExportModal({
 									}))}
 									selectedValues={filters.divisions || []}
 									onSelect={(values) =>
-										setFilters({ ...filters, divisions: values })
+										updateFilters({ ...filters, divisions: values })
 									}
 								/>
 
@@ -271,7 +281,7 @@ export function SelectCoachesForExportModal({
 									}))}
 									selectedValues={filters.universities || []}
 									onSelect={(values) =>
-										setFilters({ ...filters, universities: values })
+										updateFilters({ ...filters, universities: values })
 									}
 								/>
 
@@ -289,35 +299,39 @@ export function SelectCoachesForExportModal({
 											}))}
 										selectedValues={filters.programs || []}
 										onSelect={(values) =>
-											setFilters({ ...filters, programs: values })
+											updateFilters({ ...filters, programs: values })
 										}
 									/>
 								)}
 
-								<div className="ml-auto flex gap-2">
-									{filters.divisions?.length ||
+								{/* Tuition Budget Filter */}
+								<NumberRangeFilter
+									title="Tuition Budget"
+									minValue={filters.minTuition}
+									maxValue={filters.maxTuition}
+									onMinChange={(value) =>
+										updateFilters({ ...filters, minTuition: value })
+									}
+									onMaxChange={(value) =>
+										updateFilters({ ...filters, maxTuition: value })
+									}
+									placeholder={{ min: "Min ($)", max: "Max ($)" }}
+								/>
+
+								{(filters.divisions?.length ||
 									filters.universities?.length ||
-									filters.programs?.length ? (
-										<Button
-											variant="ghost"
-											size="sm"
-											onClick={handleClearFilters}
-										>
-											Clear Filters
-										</Button>
-									) : null}
+									filters.programs?.length ||
+									filters.minTuition !== undefined ||
+									filters.maxTuition !== undefined) && (
 									<Button
+										variant="ghost"
 										size="sm"
-										variant="outline"
-										onClick={handleApplyFilters}
-										disabled={isLoading}
+										className="ml-auto"
+										onClick={handleClearFilters}
 									>
-										{isLoading && (
-											<Loader2 className="mr-2 h-3 w-3 animate-spin" />
-										)}
-										Apply Filters
+										Clear Filters
 									</Button>
-								</div>
+								)}
 							</div>
 
 							<Separator />
@@ -541,6 +555,118 @@ function FacetedFilter({
 						</CommandGroup>
 					</CommandList>
 				</Command>
+			</PopoverContent>
+		</Popover>
+	);
+}
+
+// Number range filter component for min/max inputs
+interface NumberRangeFilterProps {
+	title: string;
+	minValue: number | undefined;
+	maxValue: number | undefined;
+	onMinChange: (value: number | undefined) => void;
+	onMaxChange: (value: number | undefined) => void;
+	placeholder?: { min?: string; max?: string };
+}
+
+function NumberRangeFilter({
+	title,
+	minValue,
+	maxValue,
+	onMinChange,
+	onMaxChange,
+	placeholder = { min: "Min", max: "Max" },
+}: NumberRangeFilterProps) {
+	const [open, setOpen] = useState(false);
+	const hasValue = minValue !== undefined || maxValue !== undefined;
+
+	const formatCurrency = (value: number | undefined) => {
+		if (value === undefined) return "";
+		return `$${value.toLocaleString()}`;
+	};
+
+	const displayValue = () => {
+		if (minValue !== undefined && maxValue !== undefined) {
+			return `${formatCurrency(minValue)} - ${formatCurrency(maxValue)}`;
+		}
+		if (minValue !== undefined) {
+			return `≥ ${formatCurrency(minValue)}`;
+		}
+		if (maxValue !== undefined) {
+			return `≤ ${formatCurrency(maxValue)}`;
+		}
+		return "";
+	};
+
+	return (
+		<Popover open={open} onOpenChange={setOpen}>
+			<PopoverTrigger asChild>
+				<Button variant="outline" size="sm" className="h-8 border-dashed">
+					<PlusIcon className="mr-2 h-4 w-4" />
+					{title}
+					{hasValue && (
+						<>
+							<Separator orientation="vertical" className="mx-2 h-4" />
+							<Badge
+								variant="secondary"
+								className="rounded-sm px-1 font-normal"
+							>
+								{displayValue()}
+							</Badge>
+						</>
+					)}
+				</Button>
+			</PopoverTrigger>
+			<PopoverContent className="w-[280px] p-4" align="start">
+				<div className="flex flex-col gap-4">
+					<div className="font-medium text-sm">{title}</div>
+					<div className="grid grid-cols-2 gap-3">
+						<div className="flex flex-col gap-1.5">
+							<Label className="text-muted-foreground text-xs">
+								{placeholder.min}
+							</Label>
+							<Input
+								type="number"
+								placeholder="0"
+								value={minValue ?? ""}
+								onChange={(e) =>
+									onMinChange(
+										e.target.value ? Number(e.target.value) : undefined,
+									)
+								}
+							/>
+						</div>
+						<div className="flex flex-col gap-1.5">
+							<Label className="text-muted-foreground text-xs">
+								{placeholder.max}
+							</Label>
+							<Input
+								type="number"
+								placeholder="No limit"
+								value={maxValue ?? ""}
+								onChange={(e) =>
+									onMaxChange(
+										e.target.value ? Number(e.target.value) : undefined,
+									)
+								}
+							/>
+						</div>
+					</div>
+					{hasValue && (
+						<Button
+							variant="ghost"
+							size="sm"
+							className="w-full"
+							onClick={() => {
+								onMinChange(undefined);
+								onMaxChange(undefined);
+							}}
+						>
+							Clear
+						</Button>
+					)}
+				</div>
 			</PopoverContent>
 		</Popover>
 	);

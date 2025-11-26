@@ -79,12 +79,6 @@ export async function parseExcelFile(
 	const sheets: Record<string, CoachRow[]> = {};
 
 	for (const sheetName of workbook.SheetNames) {
-		// FOR TESTING: Only process first sheet
-		if (Object.keys(sheets).length > 0) {
-			console.log(`[Excel Parser] TESTING MODE: Skipping remaining sheets`);
-			break;
-		}
-
 		// Skip tutorial or non-data sheets
 		if (
 			sheetName.toLowerCase().includes("tutorial") ||

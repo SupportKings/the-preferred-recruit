@@ -15,10 +15,55 @@ import {
 
 type Tables = Database["public"]["Tables"];
 
+/**
+ * Convert database errors to user-friendly messages
+ */
+function formatDatabaseError(error: { message: string; code?: string }, context: string): string {
+	const message = error.message;
+
+	// Handle duplicate key violations
+	if (message.includes("duplicate key value violates unique constraint")) {
+		if (message.includes("coaches_unique_id_key")) {
+			return `${context}: A coach with this unique ID already exists`;
+		}
+		if (message.includes("coaches_email_key")) {
+			return `${context}: A coach with this email already exists`;
+		}
+		if (message.includes("coaches_full_name_key")) {
+			return `${context}: A coach with this name already exists`;
+		}
+		if (message.includes("universities_")) {
+			return `${context}: A university with these details already exists`;
+		}
+		return `${context}: A record with these details already exists`;
+	}
+
+	// Handle foreign key violations
+	if (message.includes("violates foreign key constraint")) {
+		return `${context}: Referenced record not found`;
+	}
+
+	// Handle not null violations
+	if (message.includes("violates not-null constraint")) {
+		const match = message.match(/column "(\w+)"/);
+		const column = match ? match[1].replace(/_/g, " ") : "required field";
+		return `${context}: Missing required field "${column}"`;
+	}
+
+	// Default: return original message
+	return `${context}: ${message}`;
+}
+
 export async function processCoachData(
 	row: CoachRow,
 	supabase: SupabaseClient<Database>,
 ): Promise<void> {
+	// Validate email is present - skip coach if missing
+	const email = nullifyEmptyString(row["Email address"]);
+	if (!email) {
+		throw new Error("Missing email address - coach record skipped");
+	}
+
 	// Step 1: Upsert University
 	const university = await upsertUniversity(row, supabase);
 
@@ -356,7 +401,7 @@ async function upsertCoach(
 				.select()
 				.single();
 
-			if (error) throw new Error(`Failed to update coach: ${error.message}`);
+			if (error) throw new Error(formatDatabaseError(error, "Failed to update coach"));
 			return updated!;
 		}
 	}
@@ -388,7 +433,7 @@ async function upsertCoach(
 				.select()
 				.single();
 
-			if (error) throw new Error(`Failed to update coach: ${error.message}`);
+			if (error) throw new Error(formatDatabaseError(error, "Failed to update coach"));
 			return updated!;
 		}
 	}
@@ -420,7 +465,7 @@ async function upsertCoach(
 			.select()
 			.single();
 
-		if (error) throw new Error(`Failed to update coach: ${error.message}`);
+		if (error) throw new Error(formatDatabaseError(error, "Failed to update coach"));
 		return updated!;
 	}
 
@@ -438,7 +483,7 @@ async function upsertCoach(
 		.select()
 		.single();
 
-	if (error) throw new Error(`Failed to create coach: ${error.message}`);
+	if (error) throw new Error(formatDatabaseError(error, "Failed to create coach"));
 	return created!;
 }
 

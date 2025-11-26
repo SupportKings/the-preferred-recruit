@@ -32,8 +32,64 @@ export async function getCampaignCoachesAction(
 
 		const supabase = await createClient();
 
-		// Build query to get all coaches with their university jobs
-		// First get count for pagination
+		// For tuition filtering, we need to use a different approach
+		// since Supabase doesn't support filtering on joined table columns directly
+		const hasTuitionFilter =
+			filters?.minTuition !== undefined || filters?.maxTuition !== undefined;
+
+		// If we have tuition filters, get matching university IDs first
+		let tuitionFilteredUniversityIds: string[] | null = null;
+		if (hasTuitionFilter) {
+			let universityQuery = supabase
+				.from("universities")
+				.select("id")
+				.not("total_yearly_cost", "is", null);
+
+			if (filters?.minTuition !== undefined) {
+				universityQuery = universityQuery.gte(
+					"total_yearly_cost",
+					filters.minTuition,
+				);
+			}
+			if (filters?.maxTuition !== undefined) {
+				universityQuery = universityQuery.lte(
+					"total_yearly_cost",
+					filters.maxTuition,
+				);
+			}
+
+			// If user also selected specific universities, filter within those
+			if (filters?.universities && filters.universities.length > 0) {
+				universityQuery = universityQuery.in("id", filters.universities);
+			}
+
+			const { data: universities, error: uniError } = await universityQuery;
+			if (uniError) {
+				console.error("Error fetching universities for tuition filter:", uniError);
+				return {
+					success: false,
+					error: uniError.message,
+				};
+			}
+
+			tuitionFilteredUniversityIds = universities?.map((u) => u.id) || [];
+
+			// If no universities match the tuition filter, return empty results
+			if (tuitionFilteredUniversityIds.length === 0) {
+				return {
+					success: true,
+					data: [],
+					pagination: {
+						page,
+						pageSize,
+						totalCount: 0,
+						totalPages: 0,
+					},
+				};
+			}
+		}
+
+		// Build count query
 		let countQuery = supabase
 			.from("university_jobs")
 			.select("id", { count: "exact", head: true })
@@ -41,7 +97,10 @@ export async function getCampaignCoachesAction(
 			.not("coach_id", "is", null);
 
 		// Apply filters to count query
-		if (filters?.universities && filters.universities.length > 0) {
+		// If tuition filter is active, use the pre-filtered university IDs (which already includes university filter)
+		if (tuitionFilteredUniversityIds) {
+			countQuery = countQuery.in("university_id", tuitionFilteredUniversityIds);
+		} else if (filters?.universities && filters.universities.length > 0) {
 			countQuery = countQuery.in("university_id", filters.universities);
 		}
 		if (filters?.programs && filters.programs.length > 0) {
@@ -126,7 +185,10 @@ export async function getCampaignCoachesAction(
 			.range((page - 1) * pageSize, page * pageSize - 1);
 
 		// Apply filters
-		if (filters?.universities && filters.universities.length > 0) {
+		// If tuition filter is active, use the pre-filtered university IDs (which already includes university filter)
+		if (tuitionFilteredUniversityIds) {
+			query = query.in("university_id", tuitionFilteredUniversityIds);
+		} else if (filters?.universities && filters.universities.length > 0) {
 			query = query.in("university_id", filters.universities);
 		}
 
@@ -153,22 +215,6 @@ export async function getCampaignCoachesAction(
 
 				// Filter by coach IDs if provided
 				if (coachIds && coachIds.length > 0 && !coachIds.includes(coach.id)) {
-					return null;
-				}
-
-				// Apply tuition filter if specified
-				if (
-					filters?.minTuition &&
-					(!job.universities?.total_yearly_cost ||
-						job.universities.total_yearly_cost < filters.minTuition)
-				) {
-					return null;
-				}
-				if (
-					filters?.maxTuition &&
-					(!job.universities?.total_yearly_cost ||
-						job.universities.total_yearly_cost > filters.maxTuition)
-				) {
 					return null;
 				}
 
