@@ -11,7 +11,7 @@ import {
 	createAuthMiddleware,
 	emailOTP,
 } from "better-auth/plugins";
-import { passkey } from "better-auth/plugins/passkey";
+import { passkey } from "@better-auth/passkey";
 import { Pool } from "pg";
 
 export const auth = betterAuth({
