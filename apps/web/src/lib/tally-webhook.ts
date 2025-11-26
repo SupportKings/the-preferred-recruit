@@ -18,6 +18,11 @@ export interface TallyFileUpload {
 	size: number;
 }
 
+export interface TallyDropdownOption {
+	id: string;
+	text: string;
+}
+
 export interface TallyField {
 	key: string;
 	label: string;
@@ -30,6 +35,8 @@ export interface TallyField {
 		| TallyFileUpload[]
 		| null
 		| undefined;
+	/** Options array for DROPDOWN and MULTI_SELECT field types */
+	options?: TallyDropdownOption[];
 }
 
 export interface TallyWebhookPayload {
@@ -187,18 +194,96 @@ export function getFileField(
 }
 
 /**
+ * Resolves DROPDOWN/MULTI_SELECT option IDs to their text values
+ * Tally returns option IDs in the value array, with options array containing id->text mapping
+ */
+export function resolveDropdownValue(field: TallyField): string | null {
+	if (!field.options || !Array.isArray(field.options)) {
+		// No options array - might be a simple string value
+		if (typeof field.value === "string") {
+			return field.value;
+		}
+		return null;
+	}
+
+	// Value is an array of option IDs
+	if (Array.isArray(field.value) && field.value.length > 0) {
+		const selectedId = field.value[0];
+		const option = field.options.find((opt) => opt.id === selectedId);
+		return option?.text || null;
+	}
+
+	return null;
+}
+
+/**
+ * Resolves MULTI_SELECT option IDs to their text values (returns all selected)
+ */
+export function resolveMultiSelectValues(field: TallyField): string[] {
+	if (!field.options || !Array.isArray(field.options)) {
+		// No options array - might be a simple string array
+		if (Array.isArray(field.value)) {
+			return field.value.filter((v): v is string => typeof v === "string");
+		}
+		return [];
+	}
+
+	// Value is an array of option IDs
+	if (Array.isArray(field.value)) {
+		return field.value
+			.map((selectedId) => {
+				const option = field.options?.find((opt) => opt.id === selectedId);
+				return option?.text || null;
+			})
+			.filter((text): text is string => text !== null);
+	}
+
+	return [];
+}
+
+/**
  * Gets a boolean field value (for yes/no questions)
+ * Handles both direct boolean values and DROPDOWN fields with Yes/No options
  */
 export function getBooleanField(
 	fields: TallyField[],
 	keyOrLabel: string,
 ): boolean | null {
-	const value = getFieldValue(fields, keyOrLabel);
-	if (typeof value === "boolean") {
-		return value;
+	const field = fields.find(
+		(f) =>
+			f.key.toLowerCase() === keyOrLabel.toLowerCase() ||
+			f.label.toLowerCase() === keyOrLabel.toLowerCase(),
+	);
+
+	if (!field) return null;
+
+	// Direct boolean value
+	if (typeof field.value === "boolean") {
+		return field.value;
 	}
-	if (typeof value === "string") {
-		const lower = value.toLowerCase();
+
+	// DROPDOWN with options - resolve the selected option text
+	if (
+		field.type === "DROPDOWN" &&
+		field.options &&
+		Array.isArray(field.value)
+	) {
+		const resolvedText = resolveDropdownValue(field);
+		if (resolvedText) {
+			const lower = resolvedText.toLowerCase();
+			if (lower === "yes" || lower === "true" || lower === "1") {
+				return true;
+			}
+			if (lower === "no" || lower === "false" || lower === "0") {
+				return false;
+			}
+		}
+		return null;
+	}
+
+	// Direct string value
+	if (typeof field.value === "string") {
+		const lower = field.value.toLowerCase();
 		if (lower === "yes" || lower === "true" || lower === "1") {
 			return true;
 		}
@@ -206,6 +291,7 @@ export function getBooleanField(
 			return false;
 		}
 	}
+
 	return null;
 }
 
@@ -225,38 +311,30 @@ export const TALLY_FIELD_MAPPINGS = {
 	// Full Name → athletes.full_name
 	fullName: ["Full Name", "full_name", "name"],
 
+	// Email → athletes.contact_email
+	email: ["Email address", "Email", "email", "contact_email"],
+
+	// Phone → athletes.phone
+	phone: ["Phone number", "Phone", "phone_number", "phone"],
+
 	// Graduation Year → athletes.graduation_year
 	graduationYear: ["Graduation Year", "graduation_year", "grad_year"],
 
-	// Cumulative Highschool GPA → athletes.gpa
-	gpa: ["Cumulative Highschool GPA", "Cumulative GPA", "GPA", "gpa"],
+	// Cumulative GPA → athletes.gpa
+	gpa: ["Cumulative GPA", "Cumulative Highschool GPA", "GPA", "gpa"],
 
-	// SAT/ACT (if taken) → Parse to athletes.sat_score and/or athletes.act_score
-	// Example: "31 ACT" or "1400 SAT" or "31 ACT, 1400 SAT"
-	satActCombined: ["SAT/ACT (if taken)", "SAT/ACT", "sat_act"],
-	actScore: ["ACT", "ACT Score", "act_score"],
-	satScore: ["SAT", "SAT Score", "sat_score"],
+	// SAT/ACT scores - separate fields
+	actScore: ["ACT Score", "ACT", "act_score"],
+	satScore: ["SAT Score", "SAT", "sat_score"],
 
-	// High School Name & Location → athletes.high_school, athletes.city, athletes.state
-	// Example: "Sage Hill School, Newport Coast CA"
-	highSchoolLocation: [
-		"High School Name & Location",
-		"High School Name",
-		"High School",
-		"high_school",
-	],
-
-	// List every Personal Record → athlete_results table + onboarding_form_data.personal_records_raw
-	// Example: "10.75 100m; 22.11 200m"
-	personalRecords: [
-		"List every Personal Record to the .001 or CM/Inch (by event)",
-		"Personal Records",
-		"PRs",
-		"Times",
-	],
+	// High School - now 3 separate fields in actual form
+	highSchoolName: ["High School Name", "High School", "high_school"],
+	highSchoolCity: ["High School City", "City", "city"],
+	highSchoolState: ["High School State", "State", "state"],
 
 	// Highlight Video / Google Drive Link → athletes.google_drive_folder_url
 	highlightVideoUrl: [
+		"Highlight Video / Drive Link",
 		"Highlight Video / Google Drive Link (transcripts + videos folder)",
 		"Highlight Video",
 		"Google Drive Link",
@@ -264,14 +342,19 @@ export const TALLY_FIELD_MAPPINGS = {
 		"google_drive_folder_url",
 	],
 
-	// Instagram Handle → athletes.instagram_handle
-	instagramHandle: ["Instagram Handle", "Instagram", "instagram_handle"],
+	// Instagram Handle → athletes.instagram_handle (note: uses INPUT_PHONE_NUMBER type in form)
+	instagramHandle: [
+		"Instagram Handle (@)",
+		"Instagram Handle",
+		"Instagram",
+		"instagram_handle",
+	],
 
-	// NCAA Eligibility # → onboarding_form_data.ncaa_eligibility_url
+	// NCAA Eligibility URL → onboarding_form_data.ncaa_eligibility_url
 	ncaaEligibilityUrl: [
+		"NCAA Eligibility URL",
 		"NCAA Eligibility #",
 		"NCAA Eligibility",
-		"NCAA Eligibility URL",
 	],
 
 	// Intended Major → onboarding_form_data.intended_major
@@ -283,6 +366,7 @@ export const TALLY_FIELD_MAPPINGS = {
 
 	// Top Schools You're Interested In → school_lead_lists + onboarding_form_data.top_schools
 	topSchools: [
+		"Top Schools You're Interested In Right Now:",
 		"Top Schools You're Interested In Right Now",
 		"Top schools interested in",
 		"Target schools",
@@ -290,6 +374,7 @@ export const TALLY_FIELD_MAPPINGS = {
 
 	// Schools You're Already in Contact With → athlete_applications (stage: ongoing)
 	schoolsInContact: [
+		"Schools You're Already in Contact With (be very specific and write out whole name of school, if not we might accidentally re-email a current school, AND THATS VERY AWKWARD):",
 		"Schools You're Already in Contact With (be very specific and write out whole name of school, if not we might accidentally re email a current school, AND THATS VERY AWKWARD)",
 		"Schools You're Already in Contact With",
 		"Schools already in contact",
@@ -298,23 +383,38 @@ export const TALLY_FIELD_MAPPINGS = {
 
 	// Schools You Have Received OFFICIAL Offers From → athlete_applications (stage: offer)
 	schoolsWithOffers: [
+		"Schools You Have Received OFFICIAL Offers From:",
 		"Schools You Have Received OFFICIAL Offers From",
 		"Schools with OFFICIAL offers",
 		"Official offers",
 	],
 
+	// Schools You Have Applied To → onboarding_form_data.schools_applied_to
+	schoolsAppliedTo: [
+		"Schools You Have Applied To:",
+		"Schools You Have Applied To",
+		"Schools applied to",
+	],
+
 	// States You Do NOT Want → onboarding_form_data.states_not_wanted
 	statesNotWanted: [
+		"States you do NOT want:",
 		"States You Do NOT Want to Attend School In (please look at a US map and be VERY specific, we will remove these states from your email campaign",
 		"States You Do NOT Want to Attend School In",
 		"States you do NOT want",
 		"States to avoid",
 	],
 
-	// Schools You Have Applied To → onboarding_form_data.schools_applied_to
-	schoolsAppliedTo: ["Schools You Have Applied To", "Schools applied to"],
+	// Colleges NOT wanted → onboarding_form_data.colleges_not_wanted
+	collegesNotWanted: [
+		"Colleges NOT wanted:",
+		"Colleges You Do NOT Want to Be Recruited By (think hard)",
+		"Colleges You Do NOT Want to Be Recruited By",
+		"Colleges NOT wanted",
+		"Schools to avoid",
+	],
 
-	// Divisions You're Willing AND capable to Compete At → onboarding_form_data.divisions_willing
+	// Divisions You're Willing AND capable to Compete At → onboarding_form_data.divisions_willing (MULTI_SELECT)
 	divisionsWilling: [
 		"Divisions You're Willing AND capable to Compete At (we will audit this with you on call)",
 		"Divisions You're Willing AND capable to Compete At",
@@ -322,31 +422,25 @@ export const TALLY_FIELD_MAPPINGS = {
 		"Divisions willing to compete",
 	],
 
-	// Colleges You Do NOT Want to Be Recruited By → onboarding_form_data.colleges_not_wanted
-	collegesNotWanted: [
-		"Colleges You Do NOT Want to Be Recruited By (think hard)",
-		"Colleges You Do NOT Want to Be Recruited By",
-		"Colleges NOT wanted",
-		"Schools to avoid",
-	],
-
 	// Most Important Qualities You're Looking For → onboarding_form_data.most_important_qualities
 	mostImportantQualities: [
+		"Most Important Qualities in a school:",
 		"Most Important Qualities You're Looking For in a School",
 		"Most Important Qualities",
 		"Important qualities in a school",
 	],
 
-	// Would you attend a Religious Affiliated school → onboarding_form_data.religious_affiliation
+	// Would you attend a Religious Affiliated school → onboarding_form_data.religious_affiliation (DROPDOWN)
 	religiousAffiliation: [
-		"Would you attend a Religious Affiliated school: (yes/no/N/A)",
 		"Would you attend a Religious Affiliated school",
+		"Would you attend a Religious Affiliated school: (yes/no/N/A)",
 		"Religious-affiliated school",
 		"Religious preference",
 	],
 
-	// Interested in Competing at an HBCU? → onboarding_form_data.hbcu_interest
+	// Interested in HBCU? → onboarding_form_data.hbcu_interest (DROPDOWN)
 	hbcuInterest: [
+		"Interested in HBCU?",
 		"Interested in Competing at an HBCU? (yes/no)",
 		"Interested in Competing at an HBCU",
 		"Interested in HBCU",
@@ -355,20 +449,21 @@ export const TALLY_FIELD_MAPPINGS = {
 
 	// Do U.S. News Rankings Affect Your Decision? → onboarding_form_data.us_news_preference
 	usNewsPreference: [
+		"Do U.S. News Rankings Affect Your Decision?",
 		"Do U.S. News Rankings Affect Your Decision? (top 200, top 100, top 50?)",
 		"Do U.S. News Rankings Affect Your Decision",
 		"U.S. News preference",
 		"School ranking preference",
 	],
 
-	// School Size Preference → onboarding_form_data.school_size_preference
+	// School Size Preference → onboarding_form_data.school_size_preference (DROPDOWN)
 	schoolSizePreference: [
-		"School Size Preference",
 		"School size preference",
+		"School Size Preference",
 		"School size",
 	],
 
-	// Do you want to go to a military academy? → onboarding_form_data.military_academy
+	// Do you want to go to a military academy? → onboarding_form_data.military_academy (DROPDOWN)
 	militaryAcademy: [
 		"Do you want to go to a military academy?",
 		"Military academy",
@@ -377,21 +472,11 @@ export const TALLY_FIELD_MAPPINGS = {
 
 	// Annual College Tuition Budget → onboarding_form_data.tuition_budget
 	tuitionBudget: [
+		"Annual College Tuition Budget (if discussed with family):",
 		"Annual College Tuition Budget (if discussed with family)",
 		"Annual College Tuition Budget",
 		"Annual tuition budget",
 		"Tuition budget",
-	],
-
-	// ========================================================================
-	// SECTION: Athletic Background
-	// ========================================================================
-
-	// Most Impressive Career Achievement → onboarding_form_data.career_achievement
-	careerAchievement: [
-		"Most Impressive Career Achievement: (e.g., State Finalist, Junior Olympics, Nationals)",
-		"Most Impressive Career Achievement",
-		"Career achievement",
 	],
 
 	// ========================================================================
@@ -400,6 +485,7 @@ export const TALLY_FIELD_MAPPINGS = {
 
 	// What College Coaches Should Know → onboarding_form_data.work_ethic_blurb
 	workEthicBlurb: [
+		"What College Coaches Should Know About Your Personality or Mindset:",
 		"What College Coaches Should Know About Your Personality or Mindset",
 		"What College Coaches Should Know",
 		"Work ethic",
@@ -412,6 +498,7 @@ export const TALLY_FIELD_MAPPINGS = {
 
 	// Challenges You've Overcome → onboarding_form_data.challenges_overcome
 	challengesOvercome: [
+		"Challenges You've Overcome in Your Journey (do not include injuries):",
 		"Challenges You've Overcome in Your Journey (do not include injuries)",
 		"Challenges You've Overcome",
 		"Challenges",
@@ -419,6 +506,7 @@ export const TALLY_FIELD_MAPPINGS = {
 
 	// What Makes Your Story Different → onboarding_form_data.personal_story
 	personalStory: [
+		"What Makes Your Story Different From Other Athletes (this is your WHY for a coach to recruit you):",
 		"What Makes Your Story Different From Other Athletes (this is your WHY for a coach to recruit you)",
 		"What Makes Your Story Different",
 		"Personal story",
@@ -427,6 +515,7 @@ export const TALLY_FIELD_MAPPINGS = {
 
 	// Your Ultimate Goal → onboarding_form_data.ultimate_goal
 	ultimateGoal: [
+		"Your Ultimate Goal in the College recruitment process (Long-term athletic/academic goals):",
 		"Your Ultimate Goal in the College recruitment process",
 		"Your Ultimate Goal",
 		"Ultimate goal",
@@ -435,6 +524,7 @@ export const TALLY_FIELD_MAPPINGS = {
 
 	// Type of Team Environment You Thrive In → onboarding_form_data.team_environment
 	teamEnvironment: [
+		"Type of Team Environment You Thrive In - Preferred Team Culture:",
 		"Type of Team Environment You Thrive In",
 		"Team environment preference",
 		"Team environment",
@@ -442,13 +532,15 @@ export const TALLY_FIELD_MAPPINGS = {
 
 	// Type of Coaching You Respond to Best → onboarding_form_data.coaching_style_preference
 	coachingStylePreference: [
+		"Type of Coaching You Respond to Best:",
 		"Type of Coaching You Respond to Best",
 		"Coaching style preference",
 		"Coaching style",
 	],
 
-	// ANYTHING ELSE WE NEED TO KNOW → onboarding_form_data.additional_info
+	// Anything Else We Need to Know → onboarding_form_data.additional_info
 	additionalInfo: [
+		"Anything Else We Need to Know About You?",
 		"ANYTHING ELSE WE NEED TO KNOW ABOUT YOU",
 		"Additional information",
 		"Standout information",
@@ -509,17 +601,14 @@ export const TALLY_FIELD_MAPPINGS = {
 	// Hidden field for updates
 	submissionId: ["submission_id", "tally_submission_id"],
 
-	// Poster need check (for conditional redirect)
+	// Poster need check (for conditional redirect) - DROPDOWN with Yes/No options
 	needsPoster: [
+		"Do you need poster?",
 		"Do you need poster",
 		"Need poster",
 		"Poster needed",
 		"needs_poster",
 	],
-
-	// Contact fields (may be auto-filled or separate)
-	email: ["Email", "email", "contact_email"],
-	phone: ["Phone", "phone_number", "phone"],
 } as const;
 
 /**
@@ -608,5 +697,51 @@ export function findFileValue(
 				typeof v === "object" && v !== null && "url" in v && "mimeType" in v,
 		);
 	}
+	return [];
+}
+
+/**
+ * Gets a DROPDOWN value (resolves option ID to text) using multiple possible labels
+ */
+export function findDropdownValue(
+	fields: TallyField[],
+	possibleLabels: readonly string[],
+): string | null {
+	const field = findField(fields, possibleLabels);
+	if (!field) return null;
+
+	// If field has options, resolve the value
+	if (field.options && field.type === "DROPDOWN") {
+		return resolveDropdownValue(field);
+	}
+
+	// Fallback to direct string value
+	if (typeof field.value === "string") {
+		return field.value.trim() || null;
+	}
+
+	return null;
+}
+
+/**
+ * Gets MULTI_SELECT values (resolves option IDs to text) using multiple possible labels
+ */
+export function findMultiSelectValues(
+	fields: TallyField[],
+	possibleLabels: readonly string[],
+): string[] {
+	const field = findField(fields, possibleLabels);
+	if (!field) return [];
+
+	// If field has options, resolve the values
+	if (field.options && field.type === "MULTI_SELECT") {
+		return resolveMultiSelectValues(field);
+	}
+
+	// Fallback to direct array values
+	if (Array.isArray(field.value)) {
+		return field.value.filter((v): v is string => typeof v === "string");
+	}
+
 	return [];
 }

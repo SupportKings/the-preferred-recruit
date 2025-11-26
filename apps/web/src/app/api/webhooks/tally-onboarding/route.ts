@@ -1,9 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 import {
+	findDropdownValue,
 	findField,
 	findFileValue,
 	findIntegerValue,
+	findMultiSelectValues,
 	findNumberValue,
 	findStringValue,
 	getBooleanField,
@@ -13,7 +15,7 @@ import {
 	verifyTallySignature,
 } from "@/lib/tally-webhook";
 
-import { createClient } from "@/utils/supabase/serviceRole";
+import type { createClient } from "@/utils/supabase/serviceRole";
 
 // ============================================================================
 // Constants
@@ -105,165 +107,6 @@ async function uploadToSupabase(
 	}
 }
 
-// ============================================================================
-// SAT/ACT Combined Field Parsing
-// ============================================================================
-
-interface ParsedTestScores {
-	satScore: number | null;
-	actScore: number | null;
-}
-
-/**
- * Parses combined SAT/ACT field
- * Supports formats like: "31 ACT", "1400 SAT", "31 ACT, 1400 SAT", "ACT: 31"
- */
-function parseSatActCombined(text: string): ParsedTestScores {
-	const result: ParsedTestScores = { satScore: null, actScore: null };
-	if (!text) return result;
-
-	const normalized = text.toLowerCase();
-
-	// Look for ACT score (typically 1-36)
-	const actPatterns = [
-		/(\d{1,2})\s*act/i, // "31 ACT" or "31act"
-		/act[:\s]*(\d{1,2})/i, // "ACT: 31" or "ACT 31"
-	];
-	for (const pattern of actPatterns) {
-		const match = normalized.match(pattern);
-		if (match) {
-			const score = Number.parseInt(match[1], 10);
-			if (score >= 1 && score <= 36) {
-				result.actScore = score;
-				break;
-			}
-		}
-	}
-
-	// Look for SAT score (typically 400-1600)
-	const satPatterns = [
-		/(\d{3,4})\s*sat/i, // "1400 SAT" or "1400sat"
-		/sat[:\s]*(\d{3,4})/i, // "SAT: 1400" or "SAT 1400"
-	];
-	for (const pattern of satPatterns) {
-		const match = normalized.match(pattern);
-		if (match) {
-			const score = Number.parseInt(match[1], 10);
-			if (score >= 400 && score <= 1600) {
-				result.satScore = score;
-				break;
-			}
-		}
-	}
-
-	return result;
-}
-
-// ============================================================================
-// High School Location Parsing
-// ============================================================================
-
-interface ParsedHighSchoolLocation {
-	highSchool: string | null;
-	city: string | null;
-	state: string | null;
-}
-
-// US state abbreviations for parsing
-const US_STATE_ABBREVIATIONS = new Set([
-	"AL",
-	"AK",
-	"AZ",
-	"AR",
-	"CA",
-	"CO",
-	"CT",
-	"DE",
-	"FL",
-	"GA",
-	"HI",
-	"ID",
-	"IL",
-	"IN",
-	"IA",
-	"KS",
-	"KY",
-	"LA",
-	"ME",
-	"MD",
-	"MA",
-	"MI",
-	"MN",
-	"MS",
-	"MO",
-	"MT",
-	"NE",
-	"NV",
-	"NH",
-	"NJ",
-	"NM",
-	"NY",
-	"NC",
-	"ND",
-	"OH",
-	"OK",
-	"OR",
-	"PA",
-	"RI",
-	"SC",
-	"SD",
-	"TN",
-	"TX",
-	"UT",
-	"VT",
-	"VA",
-	"WA",
-	"WV",
-	"WI",
-	"WY",
-	"DC",
-]);
-
-/**
- * Parses "High School Name & Location" field
- * Example: "Sage Hill School, Newport Coast CA" → { highSchool: "Sage Hill School", city: "Newport Coast", state: "CA" }
- */
-function parseHighSchoolLocation(text: string): ParsedHighSchoolLocation {
-	const result: ParsedHighSchoolLocation = {
-		highSchool: null,
-		city: null,
-		state: null,
-	};
-	if (!text) return result;
-
-	// Try to split by comma first (School Name, City State)
-	const commaParts = text.split(",").map((p) => p.trim());
-
-	if (commaParts.length >= 2) {
-		result.highSchool = commaParts[0];
-
-		// Parse the location part (City State or City, State)
-		const locationPart = commaParts.slice(1).join(", ").trim();
-
-		// Look for state abbreviation at the end
-		const words = locationPart.split(/\s+/);
-		const lastWord = words[words.length - 1]?.toUpperCase();
-
-		if (lastWord && US_STATE_ABBREVIATIONS.has(lastWord)) {
-			result.state = lastWord;
-			result.city = words.slice(0, -1).join(" ").replace(/,\s*$/, "") || null;
-		} else {
-			// No state found, treat entire location as city
-			result.city = locationPart || null;
-		}
-	} else {
-		// No comma, just use as high school name
-		result.highSchool = text;
-	}
-
-	return result;
-}
-
 /**
  * Converts a label to a snake_case key for JSONB storage
  */
@@ -350,15 +193,13 @@ function extractOnboardingFormData(
 	);
 	if (schoolsApplied) data.schools_applied_to = schoolsApplied;
 
-	// Divisions willing to compete
-	const divisionsField = findField(
+	// Divisions willing to compete (MULTI_SELECT - resolve option IDs to text)
+	const divisionsTexts = findMultiSelectValues(
 		fields,
 		TALLY_FIELD_MAPPINGS.divisionsWilling,
 	);
-	if (divisionsField?.value) {
-		data.divisions_willing = Array.isArray(divisionsField.value)
-			? divisionsField.value
-			: [divisionsField.value];
+	if (divisionsTexts.length > 0) {
+		data.divisions_willing = divisionsTexts;
 	}
 
 	// Colleges NOT wanted
@@ -375,30 +216,30 @@ function extractOnboardingFormData(
 	);
 	if (qualities) data.most_important_qualities = qualities;
 
-	// Religious affiliation preference
-	const religious = findStringValue(
+	// Religious affiliation preference (DROPDOWN - resolve option ID to text)
+	const religious = findDropdownValue(
 		fields,
 		TALLY_FIELD_MAPPINGS.religiousAffiliation,
 	);
 	if (religious) data.religious_affiliation = religious;
 
-	// HBCU interest
-	const hbcu = findStringValue(fields, TALLY_FIELD_MAPPINGS.hbcuInterest);
+	// HBCU interest (DROPDOWN - resolve option ID to text)
+	const hbcu = findDropdownValue(fields, TALLY_FIELD_MAPPINGS.hbcuInterest);
 	if (hbcu) data.hbcu_interest = hbcu;
 
 	// U.S. News preference
 	const usNews = findStringValue(fields, TALLY_FIELD_MAPPINGS.usNewsPreference);
 	if (usNews) data.us_news_preference = usNews;
 
-	// School size preference
-	const schoolSize = findStringValue(
+	// School size preference (DROPDOWN - resolve option ID to text)
+	const schoolSize = findDropdownValue(
 		fields,
 		TALLY_FIELD_MAPPINGS.schoolSizePreference,
 	);
 	if (schoolSize) data.school_size_preference = schoolSize;
 
-	// Military academy interest
-	const military = findStringValue(
+	// Military academy interest (DROPDOWN - resolve option ID to text)
+	const military = findDropdownValue(
 		fields,
 		TALLY_FIELD_MAPPINGS.militaryAcademy,
 	);
@@ -407,17 +248,6 @@ function extractOnboardingFormData(
 	// Tuition budget
 	const budget = findStringValue(fields, TALLY_FIELD_MAPPINGS.tuitionBudget);
 	if (budget) data.tuition_budget = budget;
-
-	// ========================================================================
-	// SECTION: Athletic Background
-	// ========================================================================
-
-	// Career achievement
-	const achievement = findStringValue(
-		fields,
-		TALLY_FIELD_MAPPINGS.careerAchievement,
-	);
-	if (achievement) data.career_achievement = achievement;
 
 	// ========================================================================
 	// SECTION: Work Ethic & Character
@@ -468,14 +298,6 @@ function extractOnboardingFormData(
 	if (additional) data.additional_info = additional;
 
 	// ========================================================================
-	// SECTION: Personal Records
-	// ========================================================================
-
-	// Personal records (raw text)
-	const prs = findStringValue(fields, TALLY_FIELD_MAPPINGS.personalRecords);
-	if (prs) data.personal_records_raw = prs;
-
-	// ========================================================================
 	// SECTION: Poster Form Fields (if included)
 	// ========================================================================
 
@@ -504,8 +326,8 @@ function extractOnboardingFormData(
 	// SYSTEM FIELDS
 	// ========================================================================
 
-	// Store needs_poster for redirect logic
-	const needsPoster = getBooleanField(fields, "Do you need poster");
+	// Store needs_poster for redirect logic (DROPDOWN with Yes/No options)
+	const needsPoster = getBooleanField(fields, "Do you need poster?");
 	if (needsPoster !== null) data.needs_poster = needsPoster;
 
 	// ========================================================================
@@ -1020,7 +842,8 @@ export async function POST(request: NextRequest) {
 
 		// Verify webhook signature
 		const signature = request.headers.get("Tally-Signature");
-		const signingSecret = process.env.TALLY_ATHLETE_KICKOFF_WEBHOOK_SIGNING_SECRET;
+		const signingSecret =
+			process.env.TALLY_ATHLETE_KICKOFF_WEBHOOK_SIGNING_SECRET;
 
 		if (!signingSecret) {
 			console.error(
@@ -1045,16 +868,39 @@ export async function POST(request: NextRequest) {
 		// Parse the payload
 		const payload = JSON.parse(rawBody);
 
-		// DEBUG MODE: Just log the payload and return immediately
+		// DEBUG MODE: Log payload and test redirect logic
 		console.log("=".repeat(80));
 		console.log("[Tally Webhook DEBUG] RAW PAYLOAD:");
 		console.log("=".repeat(80));
 		console.log(JSON.stringify(payload, null, 2));
 		console.log("=".repeat(80));
 
+		// Test redirect logic based on "Do you need poster?" answer
+		const { fields } = payload.data;
+		const needsPosterDebug = getBooleanField(fields, "Do you need poster?");
+
+		let debugRedirectUrl: string;
+		if (needsPosterDebug) {
+			// Redirect to poster form (without athleteId since we're not processing)
+			debugRedirectUrl = "https://tally.so/r/RGWMNl";
+		} else {
+			// Redirect to Calendly
+			debugRedirectUrl = CALENDLY_URL;
+		}
+
+		console.log("=".repeat(80));
+		console.log("[Tally Webhook DEBUG] REDIRECT LOGIC TEST:");
+		console.log(
+			`  - "Do you need poster?" answer resolved to: ${needsPosterDebug}`,
+		);
+		console.log(`  - Would redirect to: ${debugRedirectUrl}`);
+		console.log("=".repeat(80));
+
 		return NextResponse.json({
 			success: true,
-			message: "DEBUG MODE: Payload logged, no processing done",
+			message: "DEBUG MODE: Payload logged, redirect logic tested",
+			needsPoster: needsPosterDebug,
+			redirectUrl: debugRedirectUrl,
 			payload,
 		});
 
@@ -1129,43 +975,25 @@ export async function POST(request: NextRequest) {
 		const gpa = findNumberValue(fields, TALLY_FIELD_MAPPINGS.gpa);
 		if (gpa) athleteData.gpa = gpa;
 
-		// Try separate ACT/SAT fields first, then fall back to combined field
-		let actScore = findIntegerValue(fields, TALLY_FIELD_MAPPINGS.actScore);
-		let satScore = findIntegerValue(fields, TALLY_FIELD_MAPPINGS.satScore);
-
-		// If separate fields are empty, try parsing the combined SAT/ACT field
-		if (!actScore && !satScore) {
-			const satActCombined = findStringValue(
-				fields,
-				TALLY_FIELD_MAPPINGS.satActCombined,
-			);
-			if (satActCombined) {
-				const parsed = parseSatActCombined(satActCombined);
-				actScore = parsed.actScore;
-				satScore = parsed.satScore;
-				console.log(
-					`[Tally Webhook] Parsed SAT/ACT from combined field: ACT=${actScore}, SAT=${satScore}`,
-				);
-			}
-		}
+		// ACT/SAT scores (separate fields in actual form)
+		const actScore = findIntegerValue(fields, TALLY_FIELD_MAPPINGS.actScore);
 		if (actScore) athleteData.act_score = actScore;
+
+		const satScore = findIntegerValue(fields, TALLY_FIELD_MAPPINGS.satScore);
 		if (satScore) athleteData.sat_score = satScore;
 
-		// Try to parse combined high school location field
-		const highSchoolLocationRaw = findStringValue(
+		// High School - now 3 separate fields in actual form
+		const highSchool = findStringValue(
 			fields,
-			TALLY_FIELD_MAPPINGS.highSchoolLocation,
+			TALLY_FIELD_MAPPINGS.highSchoolName,
 		);
-		if (highSchoolLocationRaw) {
-			const parsedLocation = parseHighSchoolLocation(highSchoolLocationRaw);
-			if (parsedLocation.highSchool)
-				athleteData.high_school = parsedLocation.highSchool;
-			if (parsedLocation.city) athleteData.city = parsedLocation.city;
-			if (parsedLocation.state) athleteData.state = parsedLocation.state;
-			console.log(
-				`[Tally Webhook] Parsed high school location: ${JSON.stringify(parsedLocation)}`,
-			);
-		}
+		if (highSchool) athleteData.high_school = highSchool;
+
+		const city = findStringValue(fields, TALLY_FIELD_MAPPINGS.highSchoolCity);
+		if (city) athleteData.city = city;
+
+		const state = findStringValue(fields, TALLY_FIELD_MAPPINGS.highSchoolState);
+		if (state) athleteData.state = state;
 
 		const instagramHandle = findStringValue(
 			fields,
@@ -1406,8 +1234,8 @@ export async function POST(request: NextRequest) {
 			}
 		}
 
-		// Determine redirect URL based on poster need
-		const needsPoster = getBooleanField(fields, "Do you need poster");
+		// Determine redirect URL based on poster need (DROPDOWN with Yes/No options)
+		const needsPoster = getBooleanField(fields, "Do you need poster?");
 		let redirectUrl: string;
 
 		if (needsPoster) {
