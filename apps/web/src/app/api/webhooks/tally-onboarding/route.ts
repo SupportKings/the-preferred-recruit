@@ -1020,11 +1020,11 @@ export async function POST(request: NextRequest) {
 
 		// Verify webhook signature
 		const signature = request.headers.get("Tally-Signature");
-		const signingSecret = process.env.TALLY_WEBHOOK_SIGNING_SECRET;
+		const signingSecret = process.env.TALLY_ATHLETE_KICKOFF_WEBHOOK_SIGNING_SECRET;
 
 		if (!signingSecret) {
 			console.error(
-				"Missing TALLY_WEBHOOK_SIGNING_SECRET environment variable",
+				"Missing TALLY_ATHLETE_KICKOFF_WEBHOOK_SIGNING_SECRET environment variable",
 			);
 			return NextResponse.json(
 				{ error: "Webhook not configured" },
