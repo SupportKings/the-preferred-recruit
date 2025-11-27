@@ -52,12 +52,14 @@ export class DiscordBot {
 				const guild = this.client.guilds.cache.get(guildId);
 
 				if (!guild) {
-					console.error(`Guild not found! Available guilds: ${this.client.guilds.cache.map(g => `${g.name} (${g.id})`).join(", ")}`);
+					console.error(
+						`Guild not found! Available guilds: ${this.client.guilds.cache.map((g) => `${g.name} (${g.id})`).join(", ")}`,
+					);
 					return;
 				}
 
 				console.log(`Found guild: ${guild.name}`);
-				console.log(`Fetching invites for guild...`);
+				console.log("Fetching invites for guild...");
 
 				const firstInvites = await guild.invites.fetch();
 				this.invites.set(guild.id, firstInvites);
