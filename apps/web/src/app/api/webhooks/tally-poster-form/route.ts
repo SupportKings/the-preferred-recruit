@@ -82,7 +82,7 @@ async function uploadToSupabase(
 			return null;
 		}
 
-		// Generate unique filename
+		// Generate unique filename with subfolder
 		const extension = file.name.split(".").pop() || "bin";
 		const fileName = `${athleteId}/${prefix}-${Date.now()}.${extension}`;
 
@@ -273,7 +273,7 @@ export async function POST(request: NextRequest) {
 				"athlete-assets",
 				athleteId,
 				primaryImages[0],
-				"poster-primary",
+				"images/poster-primary",
 			);
 			if (url) posterUrls.poster_primary_url = url;
 		}
@@ -290,7 +290,7 @@ export async function POST(request: NextRequest) {
 				"athlete-assets",
 				athleteId,
 				secondaryImages[0],
-				"poster-2",
+				"images/poster-2",
 			);
 			if (url) posterUrls.poster_image_2_url = url;
 		}
@@ -307,7 +307,7 @@ export async function POST(request: NextRequest) {
 				"athlete-assets",
 				athleteId,
 				tertiaryImages[0],
-				"poster-3",
+				"images/poster-3",
 			);
 			if (url) posterUrls.poster_image_3_url = url;
 		}
@@ -317,7 +317,7 @@ export async function POST(request: NextRequest) {
 		);
 
 		// ========================================================================
-		// Upload Videos to athlete-videos bucket
+		// Upload Videos to athlete-assets/videos subfolder
 		// ========================================================================
 		const videoUrls: string[] = [];
 
@@ -327,10 +327,10 @@ export async function POST(request: NextRequest) {
 			console.log("[Tally Poster Form] Uploading video 1...");
 			const url = await uploadToSupabase(
 				supabase,
-				"athlete-videos",
+				"athlete-assets",
 				athleteId,
 				video1Files[0],
-				"poster-video-1",
+				"videos/poster-video-1",
 			);
 			if (url) videoUrls.push(url);
 		}
@@ -353,10 +353,10 @@ export async function POST(request: NextRequest) {
 				console.log("[Tally Poster Form] Uploading video 2...");
 				const url = await uploadToSupabase(
 					supabase,
-					"athlete-videos",
+					"athlete-assets",
 					athleteId,
 					video2Files[0],
-					"poster-video-2",
+					"videos/poster-video-2",
 				);
 				if (url) videoUrls.push(url);
 			}
@@ -449,8 +449,9 @@ export async function GET() {
 			video2: "Additional video 2 (optional)",
 		},
 		storage: {
-			images: "athlete-assets bucket",
-			videos: "athlete-videos bucket",
+			bucket: "athlete-assets",
+			images: "{athleteId}/images/poster-*.ext",
+			videos: "{athleteId}/videos/poster-video-*.ext",
 		},
 		redirectUrl: CALENDLY_URL,
 	});
