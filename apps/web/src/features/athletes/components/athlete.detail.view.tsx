@@ -246,7 +246,7 @@ export default function AthleteDetailView({
 				</div>
 			</div>
 
-			{/* Basic Information Grid - 7 subsections in grid */}
+			{/* Basic Information Grid - 9 subsections in grid */}
 			<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
 				<AthleteIdentityContact
 					athlete={athlete}

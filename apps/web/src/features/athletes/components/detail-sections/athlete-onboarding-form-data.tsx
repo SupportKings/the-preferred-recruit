@@ -1,15 +1,9 @@
 "use client";
 
-import { useState } from "react";
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-	Collapsible,
-	CollapsibleContent,
-	CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { ExpandableContent } from "@/components/ui/expandable-content";
 
-import { ChevronDown, ChevronUp, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
 
 interface AthleteOnboardingFormDataProps {
 	athlete: {
@@ -64,18 +58,38 @@ function formatValue(value: unknown): string {
 	return String(value);
 }
 
+/**
+ * Formats a date string for display
+ */
+function formatDate(dateString: string | null | undefined): string {
+	if (!dateString) return "Not available";
+	try {
+		return new Date(dateString).toLocaleDateString("en-US", {
+			year: "numeric",
+			month: "long",
+			day: "numeric",
+			hour: "2-digit",
+			minute: "2-digit",
+		});
+	} catch {
+		return dateString;
+	}
+}
+
 export function AthleteOnboardingFormData({
 	athlete,
 }: AthleteOnboardingFormDataProps) {
-	const [isOpen, setIsOpen] = useState(false);
-
 	const hasSubmission = Boolean(athlete.tally_submission_id);
 	const formData = athlete.onboarding_form_data;
 	const formDataEntries = formData ? Object.entries(formData) : [];
 
-	// Filter out empty/null values and unmapped_fields for cleaner display
+	// Get submitted_at from form data
+	const submittedAt = formData?.submitted_at as string | null | undefined;
+
+	// Filter out empty/null values, unmapped_fields, and submitted_at for cleaner display
 	const displayEntries = formDataEntries.filter(([key, value]) => {
 		if (key === "unmapped_fields") return false;
+		if (key === "submitted_at") return false;
 		if (value === null || value === undefined || value === "") return false;
 		if (Array.isArray(value) && value.length === 0) return false;
 		return true;
@@ -83,42 +97,39 @@ export function AthleteOnboardingFormData({
 
 	return (
 		<Card>
-			<Collapsible open={isOpen} onOpenChange={setIsOpen}>
-				<CardHeader className="pb-3">
-					<CardTitle className="flex items-center justify-between">
-						<div className="flex items-center gap-2">
-							<FileText className="h-5 w-5" />
-							Kickoff Form Answers
-						</div>
-						{hasSubmission && (
-							<CollapsibleTrigger className="rounded-md p-1 hover:bg-muted">
-								{isOpen ? (
-									<ChevronUp className="h-5 w-5" />
-								) : (
-									<ChevronDown className="h-5 w-5" />
-								)}
-							</CollapsibleTrigger>
-						)}
-					</CardTitle>
-				</CardHeader>
+			<CardHeader className="pb-3">
+				<CardTitle className="flex items-center gap-2">
+					<FileText className="h-5 w-5" />
+					Kickoff Form Answers
+				</CardTitle>
+			</CardHeader>
 
-				{!hasSubmission ? (
-					<CardContent>
-						<p className="text-muted-foreground text-sm">
-							No form submission found
-						</p>
-					</CardContent>
-				) : (
-					<CollapsibleContent>
-						<CardContent className="space-y-4 pt-0">
-							{/* Tally Submission ID */}
-							<div>
-								<span className="block font-medium text-muted-foreground text-sm">
-									Tally Submission ID
-								</span>
-								<p className="font-mono text-sm">
-									{athlete.tally_submission_id}
-								</p>
+			{!hasSubmission ? (
+				<CardContent>
+					<p className="text-muted-foreground text-sm">
+						No form submission found
+					</p>
+				</CardContent>
+			) : (
+				<CardContent className="pt-0">
+					<ExpandableContent maxHeight={310}>
+						<div className="space-y-4">
+							{/* Submission Info */}
+							<div className="grid gap-4 sm:grid-cols-2">
+								<div>
+									<span className="block font-medium text-muted-foreground text-sm">
+										Tally Submission ID
+									</span>
+									<p className="font-mono text-sm">
+										{athlete.tally_submission_id}
+									</p>
+								</div>
+								<div>
+									<span className="block font-medium text-muted-foreground text-sm">
+										Submitted At
+									</span>
+									<p className="text-sm">{formatDate(submittedAt)}</p>
+								</div>
 							</div>
 
 							{/* Form Data Fields */}
@@ -138,10 +149,10 @@ export function AthleteOnboardingFormData({
 									No additional form data available
 								</p>
 							)}
-						</CardContent>
-					</CollapsibleContent>
-				)}
-			</Collapsible>
+						</div>
+					</ExpandableContent>
+				</CardContent>
+			)}
 		</Card>
 	);
 }

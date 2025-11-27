@@ -965,6 +965,8 @@ export async function POST(request: NextRequest) {
 
 		// Extract onboarding form data (JSONB)
 		const onboardingFormData = extractOnboardingFormData(fields);
+		// Add submission timestamp from Tally payload
+		onboardingFormData.submitted_at = payload.data.createdAt;
 		if (Object.keys(onboardingFormData).length > 0) {
 			athleteData.onboarding_form_data = onboardingFormData;
 		}

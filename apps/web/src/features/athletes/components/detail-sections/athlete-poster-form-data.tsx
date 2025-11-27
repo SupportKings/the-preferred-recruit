@@ -1,21 +1,9 @@
 "use client";
 
-import { useState } from "react";
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-	Collapsible,
-	CollapsibleContent,
-	CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { ExpandableContent } from "@/components/ui/expandable-content";
 
-import {
-	ChevronDown,
-	ChevronUp,
-	ExternalLink,
-	Image as ImageIcon,
-	Video,
-} from "lucide-react";
+import { ExternalLink, Image as ImageIcon, Video } from "lucide-react";
 
 interface PosterFormData {
 	submission_id?: string | null;
@@ -53,8 +41,6 @@ function formatDate(dateString: string | null | undefined): string {
 }
 
 export function AthletePosterFormData({ athlete }: AthletePosterFormDataProps) {
-	const [isOpen, setIsOpen] = useState(false);
-
 	const posterData = athlete.poster_form_data as PosterFormData | null;
 	const hasSubmission = Boolean(posterData?.submission_id);
 
@@ -70,39 +56,28 @@ export function AthletePosterFormData({ athlete }: AthletePosterFormDataProps) {
 
 	return (
 		<Card>
-			<Collapsible open={isOpen} onOpenChange={setIsOpen}>
-				<CardHeader className="pb-3">
-					<CardTitle className="flex items-center justify-between">
-						<div className="flex items-center gap-2">
-							<ImageIcon className="h-5 w-5" />
-							Poster Form Submission
-						</div>
-						{hasSubmission && (
-							<CollapsibleTrigger className="rounded-md p-1 hover:bg-muted">
-								{isOpen ? (
-									<ChevronUp className="h-5 w-5" />
-								) : (
-									<ChevronDown className="h-5 w-5" />
-								)}
-							</CollapsibleTrigger>
-						)}
-					</CardTitle>
-				</CardHeader>
+			<CardHeader className="pb-3">
+				<CardTitle className="flex items-center gap-2">
+					<ImageIcon className="h-5 w-5" />
+					Poster Form Submission
+				</CardTitle>
+			</CardHeader>
 
-				{!hasSubmission ? (
-					<CardContent>
-						<p className="text-muted-foreground text-sm">
-							No poster form submission found
-						</p>
-					</CardContent>
-				) : (
-					<CollapsibleContent>
-						<CardContent className="space-y-4 pt-0">
+			{!hasSubmission ? (
+				<CardContent>
+					<p className="text-muted-foreground text-sm">
+						No poster form submission found
+					</p>
+				</CardContent>
+			) : (
+				<CardContent className="pt-0">
+					<ExpandableContent maxHeight={310}>
+						<div className="space-y-4">
 							{/* Submission Info */}
 							<div className="grid gap-4 sm:grid-cols-2">
 								<div>
 									<span className="block font-medium text-muted-foreground text-sm">
-										Submission ID
+										Tally Submission ID
 									</span>
 									<p className="font-mono text-sm">
 										{posterData?.submission_id || "Not available"}
@@ -201,10 +176,10 @@ export function AthletePosterFormData({ athlete }: AthletePosterFormDataProps) {
 									</p>
 								)}
 							</div>
-						</CardContent>
-					</CollapsibleContent>
-				)}
-			</Collapsible>
+						</div>
+					</ExpandableContent>
+				</CardContent>
+			)}
 		</Card>
 	);
 }
