@@ -3,7 +3,8 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ExpandableContent } from "@/components/ui/expandable-content";
 
-import { ExternalLink, Image as ImageIcon, Video } from "lucide-react";
+import { Copy, ExternalLink, Image as ImageIcon, Video } from "lucide-react";
+import { toast } from "sonner";
 
 interface PosterFormData {
 	submission_id?: string | null;
@@ -15,6 +16,7 @@ interface PosterFormData {
 
 interface AthletePosterFormDataProps {
 	athlete: {
+		id: string;
 		poster_form_data?: PosterFormData | null;
 		poster_primary_url?: string | null;
 		poster_image_2_url?: string | null;
@@ -38,6 +40,14 @@ function formatDate(dateString: string | null | undefined): string {
 	} catch {
 		return dateString;
 	}
+}
+
+/**
+ * Copies text to clipboard and shows toast
+ */
+function copyToClipboard(text: string) {
+	navigator.clipboard.writeText(text);
+	toast.success("URL copied to clipboard");
 }
 
 export function AthletePosterFormData({ athlete }: AthletePosterFormDataProps) {
@@ -64,10 +74,32 @@ export function AthletePosterFormData({ athlete }: AthletePosterFormDataProps) {
 			</CardHeader>
 
 			{!hasSubmission ? (
-				<CardContent>
+				<CardContent className="space-y-3">
 					<p className="text-muted-foreground text-sm">
-						No poster form submission found
+						No poster form submission yet
 					</p>
+					<div className="rounded-md border bg-muted/50 p-3">
+						<p className="mb-2 text-sm">
+							Copy this link and send to Athlete to fill out Poster form:
+						</p>
+						<div className="flex items-center gap-2">
+							<span className="flex-1 break-all text-muted-foreground text-xs">
+								{`https://tally.so/r/RGWMNl?athleteId=${athlete.id}`}
+							</span>
+							<button
+								type="button"
+								onClick={() =>
+									copyToClipboard(
+										`https://tally.so/r/RGWMNl?athleteId=${athlete.id}`,
+									)
+								}
+								className="shrink-0 rounded-md border bg-background p-2 transition-colors hover:bg-muted"
+								title="Copy URL"
+							>
+								<Copy className="h-4 w-4" />
+							</button>
+						</div>
+					</div>
 				</CardContent>
 			) : (
 				<CardContent className="pt-0">
