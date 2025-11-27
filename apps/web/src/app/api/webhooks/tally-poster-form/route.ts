@@ -16,6 +16,7 @@ const CALENDLY_URL =
 	"https://calendly.com/coachmalik-thepreferredrecruit/onboarding";
 
 // Field mappings for poster form (based on actual Tally payload)
+// Note: Tally labels can have newlines and HTML entities, so we use partial matching
 const POSTER_FIELD_MAPPINGS = {
 	athleteId: ["athleteId"],
 	eventsAndTimes: [
@@ -25,9 +26,14 @@ const POSTER_FIELD_MAPPINGS = {
 	standoutInfo: [
 		"Please add any additional information about yourself that makes you stand out",
 	],
-	posterPrimary: ["Upload Images of yourself that YOU want on the poster"],
-	posterImage2: ["2nd image (Optional)"],
-	posterImage3: ["3rd Image (Optional)"],
+	// Label in Tally includes "1st Image" on next line
+	posterPrimary: [
+		"Upload Images of yourself that YOU want on the poster",
+		"Upload Images of yourself that YOU want on the poster\n1st Image",
+	],
+	// Label can be "2nd Image (Optional)" or "2nd image (Optional)" (case varies)
+	posterImage2: ["2nd Image (Optional)", "2nd image (Optional)"],
+	posterImage3: ["3rd Image (Optional)", "3rd image (Optional)"],
 	video1: [
 		"(Optional) Upload ANY ADDITIONAL videos of your competitions, practice sessions, or impressive lifts (we typically have these in your google drive so do not worry about this one)",
 	],
@@ -113,7 +119,7 @@ async function uploadToSupabase(
 }
 
 /**
- * Finds a string value from fields by matching labels
+ * Finds a string value from fields by matching labels (supports partial matching)
  */
 function findStringValue(
 	fields: TallyWebhookPayload["data"]["fields"],
@@ -123,6 +129,7 @@ function findStringValue(
 		const field = fields.find(
 			(f) =>
 				f.label?.toLowerCase() === label.toLowerCase() ||
+				f.label?.toLowerCase().includes(label.toLowerCase()) ||
 				f.key?.toLowerCase() === label.toLowerCase(),
 		);
 		if (field && typeof field.value === "string") {
@@ -133,7 +140,7 @@ function findStringValue(
 }
 
 /**
- * Finds file uploads from fields by matching labels
+ * Finds file uploads from fields by matching labels (supports partial matching)
  */
 function findFileValue(
 	fields: TallyWebhookPayload["data"]["fields"],
@@ -143,6 +150,7 @@ function findFileValue(
 		const field = fields.find(
 			(f) =>
 				f.label?.toLowerCase() === label.toLowerCase() ||
+				f.label?.toLowerCase().includes(label.toLowerCase()) ||
 				f.key?.toLowerCase() === label.toLowerCase(),
 		);
 		if (field && Array.isArray(field.value)) {
@@ -218,12 +226,34 @@ export async function POST(request: NextRequest) {
 
 		console.log(`[Tally Poster Form] Athlete ID: ${athleteId}`);
 
+		// Debug: Log FULL PAYLOAD for debugging
+		console.log("[Tally Poster Form] ========== FULL PAYLOAD DEBUG ==========");
+		console.log(JSON.stringify(payload, null, 2));
+		console.log("[Tally Poster Form] ========== END FULL PAYLOAD ==========");
+
 		// Debug: Log all field labels to identify correct mappings
 		console.log("[Tally Poster Form] All field labels:");
 		for (const field of fields) {
 			console.log(
 				`  - Label: "${field.label}" | Key: "${field.key}" | Type: ${field.type}`,
 			);
+			// Log file upload details
+			if (field.type === "FILE_UPLOAD" && Array.isArray(field.value)) {
+				console.log(`    Files: ${field.value.length} file(s)`);
+				for (const file of field.value) {
+					if (typeof file === "object" && file !== null && "url" in file) {
+						console.log(
+							`      - ${(file as TallyFileUpload).name} (${(file as TallyFileUpload).mimeType})`,
+						);
+					}
+				}
+			}
+			// Log text values
+			if (field.type === "TEXTAREA" && typeof field.value === "string") {
+				console.log(
+					`    Value: "${field.value.substring(0, 100)}${field.value.length > 100 ? "..." : ""}"`,
+				);
+			}
 		}
 
 		// Initialize Supabase client
