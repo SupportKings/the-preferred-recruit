@@ -118,9 +118,26 @@ export class DiscordBot {
 				if (oldInvites) {
 					usedInvite = newInvites.find((inv) => {
 						const oldInv = oldInvites.get(inv.code);
-						return oldInv && inv.uses && oldInv.uses && inv.uses > oldInv.uses;
+						// Compare uses - handle cases where old uses was 0
+						const oldUses = oldInv?.uses ?? 0;
+						const newUses = inv.uses ?? 0;
+						return oldInv && newUses > oldUses;
 					});
+
+					// If no match found, check for new invites that weren't in old cache
+					if (!usedInvite) {
+						usedInvite = newInvites.find((inv) => {
+							const oldInv = oldInvites.get(inv.code);
+							// New invite not in old cache with at least 1 use
+							return !oldInv && (inv.uses ?? 0) > 0;
+						});
+					}
 				}
+
+				console.log(`Detected invite code: ${usedInvite?.code ?? "none"}`);
+				console.log(
+					`Old invites count: ${oldInvites?.size ?? 0}, New invites count: ${newInvites.size}`,
+				);
 
 				// Update invite cache
 				this.invites.set(member.guild.id, newInvites);
