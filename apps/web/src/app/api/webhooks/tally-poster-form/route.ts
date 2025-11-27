@@ -199,13 +199,23 @@ export async function POST(request: NextRequest) {
 			);
 		}
 
-		// Extract athleteId from hidden field (by key)
-		const athleteId = getStringValueByKey(fields, POSTER_FIELD_KEYS.athleteId);
+		// Extract athleteId from hidden field (by label - key is dynamic for hidden fields)
+		const athleteIdField = fields.find(
+			(f) =>
+				f.type === "HIDDEN_FIELDS" && f.label?.toLowerCase() === "athleteid",
+		);
+		const athleteId =
+			athleteIdField && typeof athleteIdField.value === "string"
+				? athleteIdField.value.trim() || null
+				: null;
 
 		if (!athleteId) {
 			console.error("[Tally Poster Form] Missing required field: athleteId");
 			console.error(
-				`[Tally Poster Form] Expected key: ${POSTER_FIELD_KEYS.athleteId}`,
+				"[Tally Poster Form] Available hidden fields:",
+				fields
+					.filter((f) => f.type === "HIDDEN_FIELDS")
+					.map((f) => `${f.label}: ${f.value}`),
 			);
 			return NextResponse.json(
 				{ error: "Missing required field: athleteId" },
