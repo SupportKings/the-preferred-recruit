@@ -871,16 +871,16 @@ export async function POST(request: NextRequest) {
 		);
 
 		// DEBUG: Uncomment below to log full payload for debugging
-		// console.log(
-		// 	"[Tally Webhook] Full payload:",
-		// 	JSON.stringify(payload, null, 2),
-		// );
-		// console.log("[Tally Webhook] Fields received:");
-		// for (const field of payload.data.fields) {
-		// 	console.log(
-		// 		`  - "${field.label}" (${field.type}): ${JSON.stringify(field.value)}`,
-		// 	);
-		// }
+		console.log(
+			"[Tally Webhook] Full payload:",
+			JSON.stringify(payload, null, 2),
+		);
+		console.log("[Tally Webhook] Fields received:");
+		for (const field of payload.data.fields) {
+			console.log(
+				`  - "${field.label}" (${field.type}): ${JSON.stringify(field.value)}`,
+			);
+		}
 
 		// Extract fields
 		const { fields } = payload.data;
