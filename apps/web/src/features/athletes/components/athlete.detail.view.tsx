@@ -27,6 +27,7 @@ import { AthleteContractBilling } from "./detail-sections/athlete-contract-billi
 import { AthleteIdentityContact } from "./detail-sections/athlete-identity-contact";
 import { AthleteLeadListsSection } from "./detail-sections/athlete-lead-lists-section";
 import { AthleteLocationEducation } from "./detail-sections/athlete-location-education";
+import { AthleteOnboardingFormData } from "./detail-sections/athlete-onboarding-form-data";
 import { AthleteProfileResources } from "./detail-sections/athlete-profile-resources";
 import { AthleteResultsSection } from "./detail-sections/athlete-results-section";
 import { AthleteSalesEngagement } from "./detail-sections/athlete-sales-engagement";
@@ -301,6 +302,9 @@ export default function AthleteDetailView({
 					onCancel={handleCancel}
 				/>
 			</div>
+
+			{/* Kickoff Form Answers */}
+			<AthleteOnboardingFormData athlete={athlete} />
 
 			{/* Relationship Tabs */}
 			<Tabs defaultValue="checklist" className="w-full">
