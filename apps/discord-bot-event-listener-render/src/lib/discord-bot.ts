@@ -115,10 +115,23 @@ export class DiscordBot {
 				// Find which invite was used by comparing use counts
 				let usedInvite: Invite | undefined;
 
+				// Debug: Log all invites with changed use counts
+				console.log("Comparing invite use counts...");
+
 				if (oldInvites) {
+					for (const [code, newInv] of newInvites) {
+						const oldInv = oldInvites.get(code);
+						const oldUses = oldInv?.uses ?? 0;
+						const newUses = newInv.uses ?? 0;
+						if (oldUses !== newUses) {
+							console.log(
+								`Invite ${code}: ${oldUses} -> ${newUses} (changed)`,
+							);
+						}
+					}
+
 					usedInvite = newInvites.find((inv) => {
 						const oldInv = oldInvites.get(inv.code);
-						// Compare uses - handle cases where old uses was 0
 						const oldUses = oldInv?.uses ?? 0;
 						const newUses = inv.uses ?? 0;
 						return oldInv && newUses > oldUses;
@@ -128,7 +141,6 @@ export class DiscordBot {
 					if (!usedInvite) {
 						usedInvite = newInvites.find((inv) => {
 							const oldInv = oldInvites.get(inv.code);
-							// New invite not in old cache with at least 1 use
 							return !oldInv && (inv.uses ?? 0) > 0;
 						});
 					}
