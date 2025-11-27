@@ -302,10 +302,6 @@ export default function AthleteDetailView({
 					onSave={handleSave}
 					onCancel={handleCancel}
 				/>
-			</div>
-
-			{/* Form Submissions */}
-			<div className="grid gap-6 lg:grid-cols-2">
 				<AthleteOnboardingFormData athlete={athlete} />
 				<AthletePosterFormData athlete={athlete} />
 			</div>

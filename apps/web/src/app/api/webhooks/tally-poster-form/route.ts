@@ -218,6 +218,14 @@ export async function POST(request: NextRequest) {
 
 		console.log(`[Tally Poster Form] Athlete ID: ${athleteId}`);
 
+		// Debug: Log all field labels to identify correct mappings
+		console.log("[Tally Poster Form] All field labels:");
+		for (const field of fields) {
+			console.log(
+				`  - Label: "${field.label}" | Key: "${field.key}" | Type: ${field.type}`,
+			);
+		}
+
 		// Initialize Supabase client
 		const supabase = await createClient();
 
