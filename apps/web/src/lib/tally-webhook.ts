@@ -360,6 +360,14 @@ export const TALLY_FIELD_MAPPINGS = {
 	// Intended Major → onboarding_form_data.intended_major
 	intendedMajor: ["Intended Major", "Major"],
 
+	// Personal Records (PRs) → onboarding_form_data.personal_records_raw + athlete_results
+	personalRecords: [
+		"Personal Records (PRs) in Your Main Events:",
+		"Personal Records (PRs) in Your Main Events",
+		"Personal Records",
+		"PRs",
+	],
+
 	// ========================================================================
 	// SECTION: Current Recruiting Status
 	// ========================================================================
@@ -490,6 +498,13 @@ export const TALLY_FIELD_MAPPINGS = {
 		"What College Coaches Should Know",
 		"Work ethic",
 		"Character blurb",
+	],
+
+	// Most Impressive Career Achievement → onboarding_form_data.career_achievement
+	careerAchievement: [
+		"Most Impressive Career Achievement:",
+		"Most Impressive Career Achievement",
+		"Career achievement",
 	],
 
 	// ========================================================================

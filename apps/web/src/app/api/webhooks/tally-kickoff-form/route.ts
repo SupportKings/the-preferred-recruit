@@ -144,6 +144,13 @@ function extractOnboardingFormData(
 	const major = findStringValue(fields, TALLY_FIELD_MAPPINGS.intendedMajor);
 	if (major) data.intended_major = major;
 
+	// Personal Records (raw text - always saved, also parsed into athlete_results separately)
+	const personalRecords = findStringValue(
+		fields,
+		TALLY_FIELD_MAPPINGS.personalRecords,
+	);
+	if (personalRecords) data.personal_records_raw = personalRecords;
+
 	// ========================================================================
 	// SECTION: Current Recruiting Status
 	// ========================================================================
@@ -246,6 +253,13 @@ function extractOnboardingFormData(
 		TALLY_FIELD_MAPPINGS.workEthicBlurb,
 	);
 	if (workEthic) data.work_ethic_blurb = workEthic;
+
+	// Most impressive career achievement
+	const careerAchievement = findStringValue(
+		fields,
+		TALLY_FIELD_MAPPINGS.careerAchievement,
+	);
+	if (careerAchievement) data.career_achievement = careerAchievement;
 
 	// ========================================================================
 	// SECTION: Personal Story / Differentiator
