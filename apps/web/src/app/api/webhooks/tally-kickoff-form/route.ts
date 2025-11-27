@@ -107,18 +107,6 @@ async function uploadToSupabase(
 }
 
 /**
- * Converts a label to a snake_case key for JSONB storage
- */
-function labelToSnakeCase(label: string): string {
-	return label
-		.toLowerCase()
-		.replace(/[^a-z0-9\s]/g, "") // Remove special characters
-		.replace(/\s+/g, "_") // Replace spaces with underscores
-		.replace(/_+/g, "_") // Remove duplicate underscores
-		.replace(/^_|_$/g, ""); // Remove leading/trailing underscores
-}
-
-/**
  * Gets all known field labels from TALLY_FIELD_MAPPINGS
  */
 function getKnownFieldLabels(): Set<string> {
@@ -332,6 +320,7 @@ function extractOnboardingFormData(
 	// ========================================================================
 	// CATCH-ALL: Store any unmapped fields
 	// This ensures new fields added to the Tally form are automatically captured
+	// Uses original label as key to avoid remapping later
 	// ========================================================================
 
 	const unmappedFields: Record<string, unknown> = {};
@@ -365,20 +354,16 @@ function extractOnboardingFormData(
 			continue;
 		}
 
-		// Convert label to snake_case key
-		const snakeKey = labelToSnakeCase(field.label);
-		if (!snakeKey) continue;
+		// Skip fields with no label
+		if (!field.label) continue;
 
-		// Store the unmapped field
-		unmappedFields[snakeKey] = {
-			label: field.label,
-			value: field.value,
+		// Store the unmapped field using original label as key
+		unmappedFields[field.label] = {
 			type: field.type,
+			value: field.value,
 		};
 
-		console.log(
-			`[Tally Webhook] Captured unmapped field "${field.label}" → ${snakeKey}`,
-		);
+		console.log(`[Tally Webhook] Captured unmapped field: "${field.label}"`);
 	}
 
 	// Add unmapped fields to the data object under a special key

@@ -28,6 +28,7 @@ import { AthleteIdentityContact } from "./detail-sections/athlete-identity-conta
 import { AthleteLeadListsSection } from "./detail-sections/athlete-lead-lists-section";
 import { AthleteLocationEducation } from "./detail-sections/athlete-location-education";
 import { AthleteOnboardingFormData } from "./detail-sections/athlete-onboarding-form-data";
+import { AthletePosterFormData } from "./detail-sections/athlete-poster-form-data";
 import { AthleteProfileResources } from "./detail-sections/athlete-profile-resources";
 import { AthleteResultsSection } from "./detail-sections/athlete-results-section";
 import { AthleteSalesEngagement } from "./detail-sections/athlete-sales-engagement";
@@ -303,8 +304,11 @@ export default function AthleteDetailView({
 				/>
 			</div>
 
-			{/* Kickoff Form Answers */}
-			<AthleteOnboardingFormData athlete={athlete} />
+			{/* Form Submissions */}
+			<div className="grid gap-6 lg:grid-cols-2">
+				<AthleteOnboardingFormData athlete={athlete} />
+				<AthletePosterFormData athlete={athlete} />
+			</div>
 
 			{/* Relationship Tabs */}
 			<Tabs defaultValue="checklist" className="w-full">
