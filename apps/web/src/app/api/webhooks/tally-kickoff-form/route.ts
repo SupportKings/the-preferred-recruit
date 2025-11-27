@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 import {
+	extractAchievementsByKey,
+	extractPRsByKey,
 	findDropdownValue,
 	findFileValue,
 	findIntegerValue,
@@ -8,6 +10,7 @@ import {
 	findNumberValue,
 	findStringValue,
 	getBooleanField,
+	getKnownFieldKeys,
 	TALLY_FIELD_MAPPINGS,
 	type TallyFileUpload,
 	type TallyWebhookPayload,
@@ -144,12 +147,20 @@ function extractOnboardingFormData(
 	const major = findStringValue(fields, TALLY_FIELD_MAPPINGS.intendedMajor);
 	if (major) data.intended_major = major;
 
-	// Personal Records (raw text - always saved, also parsed into athlete_results separately)
-	const personalRecords = findStringValue(
-		fields,
-		TALLY_FIELD_MAPPINGS.personalRecords,
-	);
-	if (personalRecords) data.personal_records_raw = personalRecords;
+	// Personal Records - extracted by field key (dynamic labels)
+	// PRs are stored as array since each PR is a separate field with the value as the label
+	const prs = extractPRsByKey(fields);
+	if (prs.length > 0) {
+		data.personal_records = prs;
+		// Also store as raw text for backward compatibility with PR parsing
+		data.personal_records_raw = prs.join("; ");
+	}
+
+	// Achievements - extracted by field key (dynamic labels)
+	const achievements = extractAchievementsByKey(fields);
+	if (achievements.length > 0) {
+		data.achievements = achievements;
+	}
 
 	// ========================================================================
 	// SECTION: Current Recruiting Status
@@ -338,10 +349,16 @@ function extractOnboardingFormData(
 	// ========================================================================
 
 	const unmappedFields: Record<string, unknown> = {};
+	const knownKeys = getKnownFieldKeys();
 
 	for (const field of fields) {
 		const labelLower = field.label.toLowerCase();
 		const keyLower = field.key.toLowerCase();
+
+		// Skip if this field is already mapped by key (most reliable)
+		if (knownKeys.has(field.key)) {
+			continue;
+		}
 
 		// Skip if this field is already mapped (known label or key)
 		if (knownLabels.has(labelLower) || knownLabels.has(keyLower)) {
@@ -871,16 +888,16 @@ export async function POST(request: NextRequest) {
 		);
 
 		// DEBUG: Uncomment below to log full payload for debugging
-		console.log(
-			"[Tally Webhook] Full payload:",
-			JSON.stringify(payload, null, 2),
-		);
-		console.log("[Tally Webhook] Fields received:");
-		for (const field of payload.data.fields) {
-			console.log(
-				`  - "${field.label}" (${field.type}): ${JSON.stringify(field.value)}`,
-			);
-		}
+		// console.log(
+		// 	"[Tally Webhook] Full payload:",
+		// 	JSON.stringify(payload, null, 2),
+		// );
+		// console.log("[Tally Webhook] Fields received:");
+		// for (const field of payload.data.fields) {
+		// 	console.log(
+		// 		`  - "${field.label}" (${field.type}): ${JSON.stringify(field.value)}`,
+		// 	);
+		// }
 
 		// Extract fields
 		const { fields } = payload.data;

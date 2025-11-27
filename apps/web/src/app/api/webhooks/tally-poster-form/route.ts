@@ -227,24 +227,24 @@ export async function POST(request: NextRequest) {
 		console.log(`[Tally Poster Form] Athlete ID: ${athleteId}`);
 
 		// DEBUG: Uncomment below to log full payload for debugging
-		// console.log("[Tally Poster Form] ========== FULL PAYLOAD DEBUG ==========");
-		// console.log(JSON.stringify(payload, null, 2));
-		// console.log("[Tally Poster Form] ========== END FULL PAYLOAD ==========");
-		// console.log("[Tally Poster Form] All field labels:");
-		// for (const field of fields) {
-		// 	console.log(`  - Label: "${field.label}" | Key: "${field.key}" | Type: ${field.type}`);
-		// 	if (field.type === "FILE_UPLOAD" && Array.isArray(field.value)) {
-		// 		console.log(`    Files: ${field.value.length} file(s)`);
-		// 		for (const file of field.value) {
-		// 			if (typeof file === "object" && file !== null && "url" in file) {
-		// 				console.log(`      - ${(file as TallyFileUpload).name} (${(file as TallyFileUpload).mimeType})`);
-		// 			}
-		// 		}
-		// 	}
-		// 	if (field.type === "TEXTAREA" && typeof field.value === "string") {
-		// 		console.log(`    Value: "${field.value.substring(0, 100)}${field.value.length > 100 ? "..." : ""}"`);
-		// 	}
-		// }
+		console.log("[Tally Poster Form] ========== FULL PAYLOAD DEBUG ==========");
+		console.log(JSON.stringify(payload, null, 2));
+		console.log("[Tally Poster Form] ========== END FULL PAYLOAD ==========");
+		console.log("[Tally Poster Form] All field labels:");
+		for (const field of fields) {
+			console.log(`  - Label: "${field.label}" | Key: "${field.key}" | Type: ${field.type}`);
+			if (field.type === "FILE_UPLOAD" && Array.isArray(field.value)) {
+				console.log(`    Files: ${field.value.length} file(s)`);
+				for (const file of field.value) {
+					if (typeof file === "object" && file !== null && "url" in file) {
+						console.log(`      - ${(file as TallyFileUpload).name} (${(file as TallyFileUpload).mimeType})`);
+					}
+				}
+			}
+			if (field.type === "TEXTAREA" && typeof field.value === "string") {
+				console.log(`    Value: "${field.value.substring(0, 100)}${field.value.length > 100 ? "..." : ""}"`);
+			}
+		}
 
 		// Initialize Supabase client
 		const supabase = await createClient();
