@@ -188,20 +188,7 @@ export async function POST(request: NextRequest) {
 		);
 		console.log("-".repeat(80));
 
-		// Extract athleteId from hidden field (by key)
-		const athleteId = getStringValueByKey(fields, POSTER_FIELD_KEYS.athleteId);
-
-		if (!athleteId) {
-			console.error("[Tally Poster Form] Missing required field: athleteId");
-			return NextResponse.json(
-				{ error: "Missing required field: athleteId" },
-				{ status: 400 },
-			);
-		}
-
-		console.log(`[Tally Poster Form] Athlete ID: ${athleteId}`);
-
-		// Always log full payload for debugging
+		// Always log full payload for debugging FIRST (before any validation)
 		console.log("[Tally Poster Form] ========== FULL PAYLOAD ==========");
 		console.log(JSON.stringify(payload, null, 2));
 		console.log("[Tally Poster Form] ========== END PAYLOAD ==========");
@@ -211,6 +198,22 @@ export async function POST(request: NextRequest) {
 				`  - "${field.label}" (${field.type}) [key: ${field.key}]: ${JSON.stringify(field.value)}`,
 			);
 		}
+
+		// Extract athleteId from hidden field (by key)
+		const athleteId = getStringValueByKey(fields, POSTER_FIELD_KEYS.athleteId);
+
+		if (!athleteId) {
+			console.error("[Tally Poster Form] Missing required field: athleteId");
+			console.error(
+				`[Tally Poster Form] Expected key: ${POSTER_FIELD_KEYS.athleteId}`,
+			);
+			return NextResponse.json(
+				{ error: "Missing required field: athleteId" },
+				{ status: 400 },
+			);
+		}
+
+		console.log(`[Tally Poster Form] Athlete ID: ${athleteId}`);
 
 		// Initialize Supabase client
 		const supabase = await createClient();
