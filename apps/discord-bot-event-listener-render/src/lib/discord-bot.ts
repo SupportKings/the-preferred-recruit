@@ -1,6 +1,5 @@
 import {
 	Client,
-	type Collection,
 	GatewayIntentBits,
 	type GuildMember,
 	type Invite,
@@ -18,9 +17,13 @@ interface Athlete {
 	discord_username: string | null;
 }
 
+// Store invite codes -> use counts (not full Invite objects)
+// This is the pattern recommended by the discord.js community
+type InviteCache = Map<string, number>;
+
 export class DiscordBot {
 	private client: Client;
-	private invites: Map<string, Collection<string, Invite>> = new Map();
+	private invites: Map<string, InviteCache> = new Map();
 	private pool: pg.Pool;
 
 	constructor() {
@@ -62,9 +65,13 @@ export class DiscordBot {
 				console.log("Fetching invites for guild...");
 
 				const firstInvites = await guild.invites.fetch();
-				this.invites.set(guild.id, firstInvites);
+				// Store only code -> uses mapping
+				const inviteCache: InviteCache = new Map(
+					firstInvites.map((invite) => [invite.code, invite.uses ?? 0]),
+				);
+				this.invites.set(guild.id, inviteCache);
 				console.log(
-					`Cached ${firstInvites.size} invites for guild: ${guild.name}`,
+					`Cached ${inviteCache.size} invites for guild: ${guild.name}`,
 				);
 			} catch (error) {
 				console.error("Failed to cache invites:", error);
@@ -75,31 +82,27 @@ export class DiscordBot {
 			}
 		});
 
-		// New invite created - update cache
-		this.client.on("inviteCreate", async (invite) => {
+		// New invite created - add to cache
+		this.client.on("inviteCreate", (invite) => {
 			if (!invite.guild) return;
 
-			try {
-				const guild = await this.client.guilds.fetch(invite.guild.id);
-				const invites = await guild.invites.fetch();
-				this.invites.set(guild.id, invites);
-				console.log("Updated invite cache after new invite created");
-			} catch (error) {
-				console.error("Failed to update invite cache:", error);
+			const guildInvites = this.invites.get(invite.guild.id);
+			if (guildInvites) {
+				guildInvites.set(invite.code, invite.uses ?? 0);
+				console.log(
+					`Added new invite ${invite.code} to cache (uses: ${invite.uses ?? 0})`,
+				);
 			}
 		});
 
-		// Invite deleted - update cache
-		this.client.on("inviteDelete", async (invite) => {
+		// Invite deleted - remove from cache
+		this.client.on("inviteDelete", (invite) => {
 			if (!invite.guild) return;
 
-			try {
-				const guild = await this.client.guilds.fetch(invite.guild.id);
-				const invites = await guild.invites.fetch();
-				this.invites.set(guild.id, invites);
-				console.log("Updated invite cache after invite deleted");
-			} catch (error) {
-				console.error("Failed to update invite cache:", error);
+			const guildInvites = this.invites.get(invite.guild.id);
+			if (guildInvites) {
+				guildInvites.delete(invite.code);
+				console.log(`Removed invite ${invite.code} from cache`);
 			}
 		});
 
@@ -108,51 +111,56 @@ export class DiscordBot {
 			console.log(`New member joined: ${member.user.tag}`);
 
 			try {
-				// Fetch current invites
+				// Fetch current invites from Discord
 				const newInvites = await member.guild.invites.fetch();
 				const oldInvites = this.invites.get(member.guild.id);
 
 				// Find which invite was used by comparing use counts
 				let usedInvite: Invite | undefined;
 
-				// Debug: Log all invites with changed use counts
 				console.log("Comparing invite use counts...");
 
 				if (oldInvites) {
-					for (const [code, newInv] of newInvites) {
-						const oldInv = oldInvites.get(code);
-						const oldUses = oldInv?.uses ?? 0;
-						const newUses = newInv.uses ?? 0;
-						if (oldUses !== newUses) {
-							console.log(
-								`Invite ${code}: ${oldUses} -> ${newUses} (changed)`,
-							);
-						}
-					}
-
+					// Find the invite where uses increased
 					usedInvite = newInvites.find((inv) => {
-						const oldInv = oldInvites.get(inv.code);
-						const oldUses = oldInv?.uses ?? 0;
+						const oldUses = oldInvites.get(inv.code) ?? 0;
 						const newUses = inv.uses ?? 0;
-						return oldInv && newUses > oldUses;
+
+						if (newUses > oldUses) {
+							console.log(
+								`Invite ${inv.code}: ${oldUses} -> ${newUses} (MATCH!)`,
+							);
+							return true;
+						}
+						return false;
 					});
 
-					// If no match found, check for new invites that weren't in old cache
+					// If no match, check for invites not in old cache (created while processing)
 					if (!usedInvite) {
 						usedInvite = newInvites.find((inv) => {
-							const oldInv = oldInvites.get(inv.code);
-							return !oldInv && (inv.uses ?? 0) > 0;
+							const inOldCache = oldInvites.has(inv.code);
+							const hasUses = (inv.uses ?? 0) > 0;
+							if (!inOldCache && hasUses) {
+								console.log(
+									`New invite ${inv.code} not in cache with ${inv.uses} uses (MATCH!)`,
+								);
+								return true;
+							}
+							return false;
 						});
 					}
 				}
 
+				// Update cache with new use counts AFTER comparison
+				const newCache: InviteCache = new Map(
+					newInvites.map((invite) => [invite.code, invite.uses ?? 0]),
+				);
+				this.invites.set(member.guild.id, newCache);
+
 				console.log(`Detected invite code: ${usedInvite?.code ?? "none"}`);
 				console.log(
-					`Old invites count: ${oldInvites?.size ?? 0}, New invites count: ${newInvites.size}`,
+					`Old cache size: ${oldInvites?.size ?? 0}, New cache size: ${newCache.size}`,
 				);
-
-				// Update invite cache
-				this.invites.set(member.guild.id, newInvites);
 
 				// If no invite code detected, skip processing
 				if (!usedInvite?.code) {
