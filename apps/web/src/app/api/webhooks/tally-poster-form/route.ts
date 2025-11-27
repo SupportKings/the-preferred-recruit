@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 import {
+	findFieldByKey,
 	type TallyFileUpload,
 	type TallyWebhookPayload,
 	verifyTallySignature,
@@ -15,29 +16,17 @@ import { createClient } from "@/utils/supabase/serviceRole";
 const CALENDLY_URL =
 	"https://calendly.com/coachmalik-thepreferredrecruit/onboarding";
 
-// Field mappings for poster form (based on actual Tally payload)
-// Note: Tally labels can have newlines and HTML entities, so we use partial matching
-const POSTER_FIELD_MAPPINGS = {
-	athleteId: ["athleteId"],
-	eventsAndTimes: [
-		"Events & Times you want included",
-		"Events &amp; Times you want included",
-	],
-	standoutInfo: [
-		"Please add any additional information about yourself that makes you stand out",
-	],
-	// Label in Tally includes "1st Image" on next line
-	posterPrimary: [
-		"Upload Images of yourself that YOU want on the poster",
-		"Upload Images of yourself that YOU want on the poster\n1st Image",
-	],
-	// Label can be "2nd Image (Optional)" or "2nd image (Optional)" (case varies)
-	posterImage2: ["2nd Image (Optional)", "2nd image (Optional)"],
-	posterImage3: ["3rd Image (Optional)", "3rd image (Optional)"],
-	video1: [
-		"(Optional) Upload ANY ADDITIONAL videos of your competitions, practice sessions, or impressive lifts (we typically have these in your google drive so do not worry about this one)",
-	],
-	// video2 has null label, will match by field type and position
+// Field key mappings for poster form (question IDs from Tally)
+// Keys are stable identifiers that don't change when labels are modified
+const POSTER_FIELD_KEYS = {
+	athleteId: "question_rPvbx6", // Hidden field
+	eventsAndTimes: "question_RPOvQJ",
+	standoutInfo: "question_POovNb",
+	posterPrimary: "question_OGRdZ8",
+	posterImage2: "question_rPXGQv",
+	posterImage3: "question_4rZAYO",
+	video1: "question_VJrvav",
+	video2: "question_jPK5rE",
 } as const;
 
 // ============================================================================
@@ -119,46 +108,32 @@ async function uploadToSupabase(
 }
 
 /**
- * Finds a string value from fields by matching labels (supports partial matching)
+ * Gets a string value from a field by its key
  */
-function findStringValue(
+function getStringValueByKey(
 	fields: TallyWebhookPayload["data"]["fields"],
-	labels: readonly string[],
+	key: string,
 ): string | null {
-	for (const label of labels) {
-		const field = fields.find(
-			(f) =>
-				f.label?.toLowerCase() === label.toLowerCase() ||
-				f.label?.toLowerCase().includes(label.toLowerCase()) ||
-				f.key?.toLowerCase() === label.toLowerCase(),
-		);
-		if (field && typeof field.value === "string") {
-			return field.value.trim() || null;
-		}
+	const field = findFieldByKey(fields, key);
+	if (field && typeof field.value === "string") {
+		return field.value.trim() || null;
 	}
 	return null;
 }
 
 /**
- * Finds file uploads from fields by matching labels (supports partial matching)
+ * Gets file uploads from a field by its key
  */
-function findFileValue(
+function getFileValueByKey(
 	fields: TallyWebhookPayload["data"]["fields"],
-	labels: readonly string[],
+	key: string,
 ): TallyFileUpload[] {
-	for (const label of labels) {
-		const field = fields.find(
-			(f) =>
-				f.label?.toLowerCase() === label.toLowerCase() ||
-				f.label?.toLowerCase().includes(label.toLowerCase()) ||
-				f.key?.toLowerCase() === label.toLowerCase(),
+	const field = findFieldByKey(fields, key);
+	if (field && Array.isArray(field.value)) {
+		return field.value.filter(
+			(v): v is TallyFileUpload =>
+				typeof v === "object" && v !== null && "url" in v && "mimeType" in v,
 		);
-		if (field && Array.isArray(field.value)) {
-			return field.value.filter(
-				(v): v is TallyFileUpload =>
-					typeof v === "object" && v !== null && "url" in v && "mimeType" in v,
-			);
-		}
 	}
 	return [];
 }
@@ -213,8 +188,8 @@ export async function POST(request: NextRequest) {
 		);
 		console.log("-".repeat(80));
 
-		// Extract athleteId from hidden field
-		const athleteId = findStringValue(fields, POSTER_FIELD_MAPPINGS.athleteId);
+		// Extract athleteId from hidden field (by key)
+		const athleteId = getStringValueByKey(fields, POSTER_FIELD_KEYS.athleteId);
 
 		if (!athleteId) {
 			console.error("[Tally Poster Form] Missing required field: athleteId");
@@ -226,24 +201,15 @@ export async function POST(request: NextRequest) {
 
 		console.log(`[Tally Poster Form] Athlete ID: ${athleteId}`);
 
-		// DEBUG: Uncomment below to log full payload for debugging
-		console.log("[Tally Poster Form] ========== FULL PAYLOAD DEBUG ==========");
+		// Always log full payload for debugging
+		console.log("[Tally Poster Form] ========== FULL PAYLOAD ==========");
 		console.log(JSON.stringify(payload, null, 2));
-		console.log("[Tally Poster Form] ========== END FULL PAYLOAD ==========");
-		console.log("[Tally Poster Form] All field labels:");
+		console.log("[Tally Poster Form] ========== END PAYLOAD ==========");
+		console.log("[Tally Poster Form] All fields:");
 		for (const field of fields) {
-			console.log(`  - Label: "${field.label}" | Key: "${field.key}" | Type: ${field.type}`);
-			if (field.type === "FILE_UPLOAD" && Array.isArray(field.value)) {
-				console.log(`    Files: ${field.value.length} file(s)`);
-				for (const file of field.value) {
-					if (typeof file === "object" && file !== null && "url" in file) {
-						console.log(`      - ${(file as TallyFileUpload).name} (${(file as TallyFileUpload).mimeType})`);
-					}
-				}
-			}
-			if (field.type === "TEXTAREA" && typeof field.value === "string") {
-				console.log(`    Value: "${field.value.substring(0, 100)}${field.value.length > 100 ? "..." : ""}"`);
-			}
+			console.log(
+				`  - "${field.label}" (${field.type}) [key: ${field.key}]: ${JSON.stringify(field.value)}`,
+			);
 		}
 
 		// Initialize Supabase client
@@ -265,14 +231,14 @@ export async function POST(request: NextRequest) {
 			`[Tally Poster Form] Processing for athlete: ${athlete.full_name}`,
 		);
 
-		// Extract text fields
-		const eventsAndTimes = findStringValue(
+		// Extract text fields (by key)
+		const eventsAndTimes = getStringValueByKey(
 			fields,
-			POSTER_FIELD_MAPPINGS.eventsAndTimes,
+			POSTER_FIELD_KEYS.eventsAndTimes,
 		);
-		const standoutInfo = findStringValue(
+		const standoutInfo = getStringValueByKey(
 			fields,
-			POSTER_FIELD_MAPPINGS.standoutInfo,
+			POSTER_FIELD_KEYS.standoutInfo,
 		);
 
 		console.log(
@@ -289,10 +255,10 @@ export async function POST(request: NextRequest) {
 			poster_image_3_url?: string;
 		} = {};
 
-		// Primary image
-		const primaryImages = findFileValue(
+		// Primary image (by key)
+		const primaryImages = getFileValueByKey(
 			fields,
-			POSTER_FIELD_MAPPINGS.posterPrimary,
+			POSTER_FIELD_KEYS.posterPrimary,
 		);
 		if (primaryImages.length > 0) {
 			console.log("[Tally Poster Form] Uploading primary image...");
@@ -306,10 +272,10 @@ export async function POST(request: NextRequest) {
 			if (url) posterUrls.poster_primary_url = url;
 		}
 
-		// 2nd image
-		const secondaryImages = findFileValue(
+		// 2nd image (by key)
+		const secondaryImages = getFileValueByKey(
 			fields,
-			POSTER_FIELD_MAPPINGS.posterImage2,
+			POSTER_FIELD_KEYS.posterImage2,
 		);
 		if (secondaryImages.length > 0) {
 			console.log("[Tally Poster Form] Uploading 2nd image...");
@@ -323,10 +289,10 @@ export async function POST(request: NextRequest) {
 			if (url) posterUrls.poster_image_2_url = url;
 		}
 
-		// 3rd image
-		const tertiaryImages = findFileValue(
+		// 3rd image (by key)
+		const tertiaryImages = getFileValueByKey(
 			fields,
-			POSTER_FIELD_MAPPINGS.posterImage3,
+			POSTER_FIELD_KEYS.posterImage3,
 		);
 		if (tertiaryImages.length > 0) {
 			console.log("[Tally Poster Form] Uploading 3rd image...");
@@ -349,8 +315,8 @@ export async function POST(request: NextRequest) {
 		// ========================================================================
 		const videoUrls: string[] = [];
 
-		// Video 1 (has label)
-		const video1Files = findFileValue(fields, POSTER_FIELD_MAPPINGS.video1);
+		// Video 1 (by key)
+		const video1Files = getFileValueByKey(fields, POSTER_FIELD_KEYS.video1);
 		if (video1Files.length > 0) {
 			console.log("[Tally Poster Form] Uploading video 1...");
 			const url = await uploadToSupabase(
@@ -363,31 +329,18 @@ export async function POST(request: NextRequest) {
 			if (url) videoUrls.push(url);
 		}
 
-		// Video 2 (has null label - find by type and position)
-		// It's the last FILE_UPLOAD field with null label
-		const video2Field = fields.find(
-			(f) =>
-				f.type === "FILE_UPLOAD" &&
-				f.label === null &&
-				Array.isArray(f.value) &&
-				f.value.length > 0,
-		);
-		if (video2Field && Array.isArray(video2Field.value)) {
-			const video2Files = video2Field.value.filter(
-				(v): v is TallyFileUpload =>
-					typeof v === "object" && v !== null && "url" in v && "mimeType" in v,
+		// Video 2 (by key)
+		const video2Files = getFileValueByKey(fields, POSTER_FIELD_KEYS.video2);
+		if (video2Files.length > 0) {
+			console.log("[Tally Poster Form] Uploading video 2...");
+			const url = await uploadToSupabase(
+				supabase,
+				"athlete-assets",
+				athleteId,
+				video2Files[0],
+				"videos/poster-video-2",
 			);
-			if (video2Files.length > 0) {
-				console.log("[Tally Poster Form] Uploading video 2...");
-				const url = await uploadToSupabase(
-					supabase,
-					"athlete-assets",
-					athleteId,
-					video2Files[0],
-					"videos/poster-video-2",
-				);
-				if (url) videoUrls.push(url);
-			}
+			if (url) videoUrls.push(url);
 		}
 
 		console.log(`[Tally Poster Form] Uploaded ${videoUrls.length} video(s)`);

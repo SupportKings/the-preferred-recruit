@@ -368,9 +368,20 @@ export const TALLY_FIELD_KEYS: Record<string, string> = {
 	question_POo4k0: "additionalInfo",
 
 	// ========================================================================
-	// System Fields
+	// System Fields (Kickoff Form)
 	// ========================================================================
 	question_gGBg64: "needsPoster",
+
+	// ========================================================================
+	// Poster Form Fields
+	// ========================================================================
+	question_RPOvQJ: "poster_eventsAndTimes",
+	question_POovNb: "poster_standoutInfo",
+	question_OGRdZ8: "poster_primaryImage",
+	question_rPXGQv: "poster_image2",
+	question_4rZAYO: "poster_image3",
+	question_VJrvav: "poster_video1",
+	question_jPK5rE: "poster_video2",
 };
 
 /**
