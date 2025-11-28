@@ -903,7 +903,21 @@ export async function POST(request: NextRequest) {
 		const { fields } = payload.data;
 		const tallySubmissionId = payload.data.submissionId;
 
-		// Check if this is an update (submission_id hidden field present)
+		// Check for athleteId hidden field (for updating existing athlete from Athlete Details page link)
+		const athleteIdField = fields.find(
+			(f) =>
+				f.type === "HIDDEN_FIELDS" && f.label?.toLowerCase() === "athleteid",
+		);
+		const providedAthleteId =
+			athleteIdField && typeof athleteIdField.value === "string"
+				? athleteIdField.value.trim() || null
+				: null;
+
+		console.log(
+			`[Tally Webhook] Provided athleteId from hidden field: ${providedAthleteId || "none"}`,
+		);
+
+		// Check if this is an update (submission_id hidden field present) - legacy support
 		const existingSubmissionId = findStringValue(
 			fields,
 			TALLY_FIELD_MAPPINGS.submissionId,
@@ -914,7 +928,31 @@ export async function POST(request: NextRequest) {
 
 		// Check if athlete already exists (for updates)
 		let existingAthlete: { id: string } | null = null;
-		if (existingSubmissionId) {
+
+		// Priority 1: Check by providedAthleteId (from copy link on Athlete Details page)
+		if (providedAthleteId) {
+			const { data } = await supabase
+				.from("athletes")
+				.select("id")
+				.eq("id", providedAthleteId)
+				.single();
+			if (data) {
+				existingAthlete = data;
+				console.log(
+					`[Tally Webhook] Found existing athlete by providedAthleteId: ${data.id}`,
+				);
+			} else {
+				console.error(
+					`[Tally Webhook] Athlete not found with provided ID: ${providedAthleteId}`,
+				);
+				return NextResponse.json(
+					{ error: "Athlete not found with provided ID" },
+					{ status: 404 },
+				);
+			}
+		}
+		// Priority 2: Check by existingSubmissionId (legacy behavior)
+		else if (existingSubmissionId) {
 			const { data } = await supabase
 				.from("athletes")
 				.select("id")
@@ -1040,6 +1078,30 @@ export async function POST(request: NextRequest) {
 
 			athleteId = newAthlete.id;
 			console.log(`[Tally Webhook] Created new athlete ${athleteId}`);
+
+			// Trigger Make.com webhook for NEW athletes only (not when updating existing)
+			try {
+				const makeWebhookUrl =
+					"https://hook.us2.make.com/u8c7htqdc2blninor6bsb6uld1tmc3jt";
+				const makeResponse = await fetch(makeWebhookUrl, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						athlete_id: athleteId,
+						discord_channel_id: null,
+						discord_username: null,
+						discord_channel_url: null,
+						full_name: fullName,
+						contact_email: email,
+					}),
+				});
+				console.log(
+					`[Tally Webhook] Make.com webhook triggered: ${makeResponse.ok ? "success" : "failed"} (status: ${makeResponse.status})`,
+				);
+			} catch (makeError) {
+				console.error("[Tally Webhook] Make.com webhook error:", makeError);
+				// Don't fail the whole request for webhook errors
+			}
 		}
 
 		// Handle poster image uploads

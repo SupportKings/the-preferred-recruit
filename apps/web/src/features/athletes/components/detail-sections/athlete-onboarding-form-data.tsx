@@ -3,13 +3,23 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ExpandableContent } from "@/components/ui/expandable-content";
 
-import { FileText } from "lucide-react";
+import { Copy, FileText } from "lucide-react";
+import { toast } from "sonner";
 
 interface AthleteOnboardingFormDataProps {
 	athlete: {
+		id: string;
 		tally_submission_id?: string | null;
 		onboarding_form_data?: Record<string, unknown> | null;
 	};
+}
+
+/**
+ * Copies text to clipboard and shows toast
+ */
+function copyToClipboard(text: string) {
+	navigator.clipboard.writeText(text);
+	toast.success("URL copied to clipboard");
 }
 
 /**
@@ -105,10 +115,32 @@ export function AthleteOnboardingFormData({
 			</CardHeader>
 
 			{!hasSubmission ? (
-				<CardContent>
+				<CardContent className="space-y-3">
 					<p className="text-muted-foreground text-sm">
-						No form submission found
+						No kickoff form submission yet
 					</p>
+					<div className="rounded-md border bg-muted/50 p-3">
+						<p className="mb-2 text-sm">
+							Copy this link and send to Athlete to fill out Kickoff form:
+						</p>
+						<div className="flex items-center gap-2">
+							<span className="flex-1 break-all text-muted-foreground text-xs">
+								{`https://tally.so/r/dWba7z?athleteId=${athlete.id}`}
+							</span>
+							<button
+								type="button"
+								onClick={() =>
+									copyToClipboard(
+										`https://tally.so/r/dWba7z?athleteId=${athlete.id}`,
+									)
+								}
+								className="shrink-0 rounded-md border bg-background p-2 transition-colors hover:bg-muted"
+								title="Copy URL"
+							>
+								<Copy className="h-4 w-4" />
+							</button>
+						</div>
+					</div>
 				</CardContent>
 			) : (
 				<CardContent className="pt-0">
