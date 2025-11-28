@@ -784,6 +784,8 @@ export const TALLY_FIELD_MAPPINGS = {
 
 	// Poster need check (for conditional redirect) - DROPDOWN with Yes/No options
 	needsPoster: [
+		"Do you need a poster?",
+		"Do you need a poster",
 		"Do you need poster?",
 		"Do you need poster",
 		"Need poster",

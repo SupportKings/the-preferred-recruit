@@ -339,7 +339,8 @@ function extractOnboardingFormData(
 	// ========================================================================
 
 	// Store needs_poster for redirect logic (DROPDOWN with Yes/No options)
-	const needsPoster = getBooleanField(fields, "Do you need poster?");
+	// Using question ID (question_gGBg64) for stability - won't break if label changes
+	const needsPoster = getBooleanField(fields, "question_gGBg64");
 	if (needsPoster !== null) data.needs_poster = needsPoster;
 
 	// ========================================================================
@@ -1275,7 +1276,8 @@ export async function POST(request: NextRequest) {
 		}
 
 		// Determine redirect URL based on poster need (DROPDOWN with Yes/No options)
-		const needsPoster = getBooleanField(fields, "Do you need poster?");
+		// Using question ID (question_gGBg64) for stability - won't break if label changes
+		const needsPoster = getBooleanField(fields, "question_gGBg64");
 		let redirectUrl: string;
 
 		if (needsPoster) {
