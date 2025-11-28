@@ -30,7 +30,7 @@ import {
 import { athleteQueries } from "@/features/athletes/queries/useAthletes";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { formatLocalDate as format } from "@/lib/date-utils";
 import { Plus, Target } from "lucide-react";
 import { toast } from "sonner";
 import { LeadListLookup } from "../lookups/lead-list-lookup";

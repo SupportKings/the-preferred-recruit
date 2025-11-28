@@ -31,7 +31,7 @@ import {
 import { contactQueries } from "@/features/contacts/queries/useContacts";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { formatLocalDate as format } from "@/lib/date-utils";
 import { Edit, Plus, Users } from "lucide-react";
 import { toast } from "sonner";
 

@@ -1,12 +1,12 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { format } from "date-fns";
+import { formatLocalDate as format } from "@/lib/date-utils";
 import { Clock } from "lucide-react";
 
 const formatDate = (dateString: string | null) => {
 	if (!dateString) return "Not set";
 	try {
-		return format(new Date(dateString), "MMM dd, yyyy 'at' h:mm a");
+		return format(dateString, "MMM dd, yyyy 'at' h:mm a");
 	} catch {
 		return "Invalid date";
 	}

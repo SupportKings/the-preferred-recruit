@@ -32,7 +32,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { useCoaches } from "@/features/coaches/queries/useCoaches";
 
-import { format } from "date-fns";
+import { formatLocalDate as format } from "@/lib/date-utils";
 import { CalendarIcon, Plus } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 import { toast } from "sonner";

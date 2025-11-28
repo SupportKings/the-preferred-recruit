@@ -79,9 +79,7 @@ export function ManageBallKnowledgeModal({
 			setFormData({
 				note: ballKnowledge.note || "",
 				source_type: ballKnowledge.source_type || "",
-				review_after: ballKnowledge.review_after
-					? new Date(ballKnowledge.review_after).toISOString().split("T")[0]
-					: "",
+				review_after: ballKnowledge.review_after || "",
 				internal_notes: ballKnowledge.internal_notes || "",
 				about_coach_id: ballKnowledge.about_coach_id || null,
 				about_university_id: ballKnowledge.about_university_id || null,

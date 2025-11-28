@@ -24,7 +24,7 @@ import {
 import { athleteQueries } from "@/features/athletes/queries/useAthletes";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { formatLocalDate as format, getTodayDateString } from "@/lib/date-utils";
 import { Plus, Trophy } from "lucide-react";
 import { toast } from "sonner";
 import { EventLookup } from "../lookups/event-lookup";
@@ -57,7 +57,7 @@ export function ManageResultModal({
 	const [formData, setFormData] = useState({
 		event_id: "",
 		performance_mark: "",
-		date_recorded: format(new Date(), "yyyy-MM-dd"),
+		date_recorded: getTodayDateString(),
 		location: "",
 		wind: "",
 		altitude: false,
@@ -71,8 +71,8 @@ export function ManageResultModal({
 				event_id: result.event_id || "",
 				performance_mark: result.performance_mark || "",
 				date_recorded: result.date_recorded
-					? format(new Date(result.date_recorded), "yyyy-MM-dd")
-					: format(new Date(), "yyyy-MM-dd"),
+					? format(result.date_recorded, "yyyy-MM-dd")
+					: getTodayDateString(),
 				location: result.location || "",
 				wind: result.wind || "",
 				altitude: result.altitude || false,
@@ -83,7 +83,7 @@ export function ManageResultModal({
 			setFormData({
 				event_id: "",
 				performance_mark: "",
-				date_recorded: format(new Date(), "yyyy-MM-dd"),
+				date_recorded: getTodayDateString(),
 				location: "",
 				wind: "",
 				altitude: false,

@@ -11,14 +11,15 @@ import {
 
 import type { ColumnDef } from "@tanstack/react-table";
 import { createColumnHelper } from "@tanstack/react-table";
-import { format, formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, parseISO } from "date-fns";
 import { Edit, ExternalLink, Eye, Trash2 } from "lucide-react";
+import { formatLocalDate as format } from "@/lib/date-utils";
 import type { BallKnowledgeWithRelations } from "../../types/ball-knowledge";
 
 const formatDate = (dateString: string | null) => {
 	if (!dateString) return "Not set";
 	try {
-		return format(new Date(dateString), "MMM dd, yyyy");
+		return format(dateString, "MMM dd, yyyy");
 	} catch {
 		return "Invalid date";
 	}
@@ -27,7 +28,7 @@ const formatDate = (dateString: string | null) => {
 const formatRelativeTime = (dateString: string | null) => {
 	if (!dateString) return "Unknown";
 	try {
-		return formatDistanceToNow(new Date(dateString), { addSuffix: true });
+		return formatDistanceToNow(parseISO(dateString), { addSuffix: true });
 	} catch {
 		return "Unknown";
 	}
