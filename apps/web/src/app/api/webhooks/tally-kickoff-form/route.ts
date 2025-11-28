@@ -1242,8 +1242,11 @@ export async function POST(request: NextRequest) {
 		// Set Onboarding Call Status
 		// ========================================================================
 
-		// Set onboarding call status to "requested" (only for new athletes)
-		if (!existingAthlete) {
+		// Set onboarding call status to "requested" for:
+		// 1. New athletes (no existingAthlete)
+		// 2. Existing athletes filling form via copy link (providedAthleteId is set)
+		// The inner check for existingStatus prevents duplicates
+		if (!existingAthlete || providedAthleteId) {
 			// Check if status already exists
 			const { data: existingStatus } = await supabase
 				.from("entity_status_values")
