@@ -1,10 +1,10 @@
 export type Json =
-	| string
-	| number
-	| boolean
-	| null
-	| { [key: string]: Json | undefined }
-	| Json[];
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
 
 export type Database = {
   // Allows to automatically instantiate createClient with right options
@@ -292,11 +292,13 @@ export type Database = {
           instagram_handle: string | null
           internal_notes: string | null
           is_deleted: boolean | null
+          joined_discord_at: string | null
           last_sales_call_at: string | null
           lead_source: string | null
           milesplit_url: string | null
           onboarding_form_data: Json | null
           phone: string | null
+          poster_form_data: Json | null
           poster_image_2_url: string | null
           poster_image_3_url: string | null
           poster_primary_url: string | null
@@ -346,11 +348,13 @@ export type Database = {
           instagram_handle?: string | null
           internal_notes?: string | null
           is_deleted?: boolean | null
+          joined_discord_at?: string | null
           last_sales_call_at?: string | null
           lead_source?: string | null
           milesplit_url?: string | null
           onboarding_form_data?: Json | null
           phone?: string | null
+          poster_form_data?: Json | null
           poster_image_2_url?: string | null
           poster_image_3_url?: string | null
           poster_primary_url?: string | null
@@ -400,11 +404,13 @@ export type Database = {
           instagram_handle?: string | null
           internal_notes?: string | null
           is_deleted?: boolean | null
+          joined_discord_at?: string | null
           last_sales_call_at?: string | null
           lead_source?: string | null
           milesplit_url?: string | null
           onboarding_form_data?: Json | null
           phone?: string | null
+          poster_form_data?: Json | null
           poster_image_2_url?: string | null
           poster_image_3_url?: string | null
           poster_primary_url?: string | null
@@ -3011,168 +3017,165 @@ export type Database = {
   }
 }
 
-type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">;
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
 
-type DefaultSchema = DatabaseWithoutInternals[Extract<
-	keyof Database,
-	"public"
->];
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
 
 export type Tables<
-	DefaultSchemaTableNameOrOptions extends
-		| keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
-		| { schema: keyof DatabaseWithoutInternals },
-	TableName extends DefaultSchemaTableNameOrOptions extends {
-		schema: keyof DatabaseWithoutInternals;
-	}
-		? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-				DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-		: never = never,
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-	schema: keyof DatabaseWithoutInternals;
+  schema: keyof DatabaseWithoutInternals
 }
-	? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
-			DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
-			Row: infer R;
-		}
-		? R
-		: never
-	: DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
-				DefaultSchema["Views"])
-		? (DefaultSchema["Tables"] &
-				DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
-				Row: infer R;
-			}
-			? R
-			: never
-		: never;
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
 
 export type TablesInsert<
-	DefaultSchemaTableNameOrOptions extends
-		| keyof DefaultSchema["Tables"]
-		| { schema: keyof DatabaseWithoutInternals },
-	TableName extends DefaultSchemaTableNameOrOptions extends {
-		schema: keyof DatabaseWithoutInternals;
-	}
-		? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-		: never = never,
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-	schema: keyof DatabaseWithoutInternals;
+  schema: keyof DatabaseWithoutInternals
 }
-	? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-			Insert: infer I;
-		}
-		? I
-		: never
-	: DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-		? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-				Insert: infer I;
-			}
-			? I
-			: never
-		: never;
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
 
 export type TablesUpdate<
-	DefaultSchemaTableNameOrOptions extends
-		| keyof DefaultSchema["Tables"]
-		| { schema: keyof DatabaseWithoutInternals },
-	TableName extends DefaultSchemaTableNameOrOptions extends {
-		schema: keyof DatabaseWithoutInternals;
-	}
-		? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-		: never = never,
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
 > = DefaultSchemaTableNameOrOptions extends {
-	schema: keyof DatabaseWithoutInternals;
+  schema: keyof DatabaseWithoutInternals
 }
-	? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
-			Update: infer U;
-		}
-		? U
-		: never
-	: DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
-		? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
-				Update: infer U;
-			}
-			? U
-			: never
-		: never;
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
 
 export type Enums<
-	DefaultSchemaEnumNameOrOptions extends
-		| keyof DefaultSchema["Enums"]
-		| { schema: keyof DatabaseWithoutInternals },
-	EnumName extends DefaultSchemaEnumNameOrOptions extends {
-		schema: keyof DatabaseWithoutInternals;
-	}
-		? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-		: never = never,
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
 > = DefaultSchemaEnumNameOrOptions extends {
-	schema: keyof DatabaseWithoutInternals;
+  schema: keyof DatabaseWithoutInternals
 }
-	? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
-	: DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
-		? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
-		: never;
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
 
 export type CompositeTypes<
-	PublicCompositeTypeNameOrOptions extends
-		| keyof DefaultSchema["CompositeTypes"]
-		| { schema: keyof DatabaseWithoutInternals },
-	CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
-		schema: keyof DatabaseWithoutInternals;
-	}
-		? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-		: never = never,
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
 > = PublicCompositeTypeNameOrOptions extends {
-	schema: keyof DatabaseWithoutInternals;
+  schema: keyof DatabaseWithoutInternals
 }
-	? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
-	: PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
-		? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
-		: never;
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
 
 export const Constants = {
-	public: {
-		Enums: {
-			application_stage_enum: [
-				"intro",
-				"ongoing",
-				"visit",
-				"offer",
-				"committed",
-				"dropped",
-			],
-			athlete_gender_enum: ["male", "female"],
-			campaign_lead_status_enum: ["pending", "replied", "suppressed"],
-			campaign_status_enum: [
-				"draft",
-				"active",
-				"paused",
-				"completed",
-				"exhausted",
-			],
-			campaign_type_enum: ["top", "second_pass", "third_pass", "personal_best"],
-			event_group_enum: [
-				"sprints",
-				"hurdles",
-				"distance",
-				"jumps",
-				"throws",
-				"relays",
-				"combined",
-			],
-			event_unit_enum: ["seconds", "meters", "points"],
-			payment_type_enum: ["paid_in_full", "installments", "deposit", "other"],
-			program_gender_enum: ["men", "women"],
-			program_scope_enum: ["men", "women", "both", "n/a"],
-			reply_type_enum: ["call", "text", "email", "instagram"],
-			student_type_enum: [
-				"high_school",
-				"transfer",
-				"international",
-				"gap_year",
-				"other",
-			],
-		},
-	},
-} as const;
+  public: {
+    Enums: {
+      application_stage_enum: [
+        "intro",
+        "ongoing",
+        "visit",
+        "offer",
+        "committed",
+        "dropped",
+      ],
+      athlete_gender_enum: ["male", "female"],
+      campaign_lead_status_enum: ["pending", "replied", "suppressed"],
+      campaign_status_enum: [
+        "draft",
+        "active",
+        "paused",
+        "completed",
+        "exhausted",
+      ],
+      campaign_type_enum: ["top", "second_pass", "third_pass", "personal_best"],
+      event_group_enum: [
+        "sprints",
+        "hurdles",
+        "distance",
+        "jumps",
+        "throws",
+        "relays",
+        "combined",
+      ],
+      event_unit_enum: ["seconds", "meters", "points"],
+      payment_type_enum: ["paid_in_full", "installments", "deposit", "other"],
+      program_gender_enum: ["men", "women"],
+      program_scope_enum: ["men", "women", "both", "n/a"],
+      reply_type_enum: ["call", "text", "email", "instagram"],
+      student_type_enum: [
+        "high_school",
+        "transfer",
+        "international",
+        "gap_year",
+        "other",
+      ],
+    },
+  },
+} as const

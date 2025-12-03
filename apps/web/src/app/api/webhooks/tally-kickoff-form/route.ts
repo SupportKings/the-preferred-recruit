@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 import {
+	extractAchievementsByKey,
+	extractPRsByKey,
 	findDropdownValue,
 	findFileValue,
 	findIntegerValue,
@@ -8,6 +10,7 @@ import {
 	findNumberValue,
 	findStringValue,
 	getBooleanField,
+	getKnownFieldKeys,
 	TALLY_FIELD_MAPPINGS,
 	type TallyFileUpload,
 	type TallyWebhookPayload,
@@ -107,18 +110,6 @@ async function uploadToSupabase(
 }
 
 /**
- * Converts a label to a snake_case key for JSONB storage
- */
-function labelToSnakeCase(label: string): string {
-	return label
-		.toLowerCase()
-		.replace(/[^a-z0-9\s]/g, "") // Remove special characters
-		.replace(/\s+/g, "_") // Replace spaces with underscores
-		.replace(/_+/g, "_") // Remove duplicate underscores
-		.replace(/^_|_$/g, ""); // Remove leading/trailing underscores
-}
-
-/**
  * Gets all known field labels from TALLY_FIELD_MAPPINGS
  */
 function getKnownFieldLabels(): Set<string> {
@@ -155,6 +146,21 @@ function extractOnboardingFormData(
 	// Intended Major
 	const major = findStringValue(fields, TALLY_FIELD_MAPPINGS.intendedMajor);
 	if (major) data.intended_major = major;
+
+	// Personal Records - extracted by field key (dynamic labels)
+	// PRs are stored as array since each PR is a separate field with the value as the label
+	const prs = extractPRsByKey(fields);
+	if (prs.length > 0) {
+		data.personal_records = prs;
+		// Also store as raw text for backward compatibility with PR parsing
+		data.personal_records_raw = prs.join("; ");
+	}
+
+	// Achievements - extracted by field key (dynamic labels)
+	const achievements = extractAchievementsByKey(fields);
+	if (achievements.length > 0) {
+		data.achievements = achievements;
+	}
 
 	// ========================================================================
 	// SECTION: Current Recruiting Status
@@ -259,6 +265,13 @@ function extractOnboardingFormData(
 	);
 	if (workEthic) data.work_ethic_blurb = workEthic;
 
+	// Most impressive career achievement
+	const careerAchievement = findStringValue(
+		fields,
+		TALLY_FIELD_MAPPINGS.careerAchievement,
+	);
+	if (careerAchievement) data.career_achievement = careerAchievement;
+
 	// ========================================================================
 	// SECTION: Personal Story / Differentiator
 	// ========================================================================
@@ -326,19 +339,27 @@ function extractOnboardingFormData(
 	// ========================================================================
 
 	// Store needs_poster for redirect logic (DROPDOWN with Yes/No options)
-	const needsPoster = getBooleanField(fields, "Do you need poster?");
+	// Using question ID (question_gGBg64) for stability - won't break if label changes
+	const needsPoster = getBooleanField(fields, "question_gGBg64");
 	if (needsPoster !== null) data.needs_poster = needsPoster;
 
 	// ========================================================================
 	// CATCH-ALL: Store any unmapped fields
 	// This ensures new fields added to the Tally form are automatically captured
+	// Uses original label as key to avoid remapping later
 	// ========================================================================
 
 	const unmappedFields: Record<string, unknown> = {};
+	const knownKeys = getKnownFieldKeys();
 
 	for (const field of fields) {
 		const labelLower = field.label.toLowerCase();
 		const keyLower = field.key.toLowerCase();
+
+		// Skip if this field is already mapped by key (most reliable)
+		if (knownKeys.has(field.key)) {
+			continue;
+		}
 
 		// Skip if this field is already mapped (known label or key)
 		if (knownLabels.has(labelLower) || knownLabels.has(keyLower)) {
@@ -365,20 +386,16 @@ function extractOnboardingFormData(
 			continue;
 		}
 
-		// Convert label to snake_case key
-		const snakeKey = labelToSnakeCase(field.label);
-		if (!snakeKey) continue;
+		// Skip fields with no label
+		if (!field.label) continue;
 
-		// Store the unmapped field
-		unmappedFields[snakeKey] = {
-			label: field.label,
-			value: field.value,
+		// Store the unmapped field using original label as key
+		unmappedFields[field.label] = {
 			type: field.type,
+			value: field.value,
 		};
 
-		console.log(
-			`[Tally Webhook] Captured unmapped field "${field.label}" → ${snakeKey}`,
-		);
+		console.log(`[Tally Webhook] Captured unmapped field: "${field.label}"`);
 	}
 
 	// Add unmapped fields to the data object under a special key
@@ -871,17 +888,15 @@ export async function POST(request: NextRequest) {
 			`[Tally Webhook] Received submission ${payload.data.submissionId} for form "${payload.data.formName}"`,
 		);
 
-		// Log full payload for debugging (remove in production)
+		// Always log full payload for debugging
 		console.log(
 			"[Tally Webhook] Full payload:",
 			JSON.stringify(payload, null, 2),
 		);
-
-		// Log all fields with their labels and values
 		console.log("[Tally Webhook] Fields received:");
 		for (const field of payload.data.fields) {
 			console.log(
-				`  - "${field.label}" (${field.type}): ${JSON.stringify(field.value)}`,
+				`  - "${field.label}" (${field.type}) [key: ${field.key}]: ${JSON.stringify(field.value)}`,
 			);
 		}
 
@@ -889,7 +904,21 @@ export async function POST(request: NextRequest) {
 		const { fields } = payload.data;
 		const tallySubmissionId = payload.data.submissionId;
 
-		// Check if this is an update (submission_id hidden field present)
+		// Check for athleteId hidden field (for updating existing athlete from Athlete Details page link)
+		const athleteIdField = fields.find(
+			(f) =>
+				f.type === "HIDDEN_FIELDS" && f.label?.toLowerCase() === "athleteid",
+		);
+		const providedAthleteId =
+			athleteIdField && typeof athleteIdField.value === "string"
+				? athleteIdField.value.trim() || null
+				: null;
+
+		console.log(
+			`[Tally Webhook] Provided athleteId from hidden field: ${providedAthleteId || "none"}`,
+		);
+
+		// Check if this is an update (submission_id hidden field present) - legacy support
 		const existingSubmissionId = findStringValue(
 			fields,
 			TALLY_FIELD_MAPPINGS.submissionId,
@@ -900,7 +929,31 @@ export async function POST(request: NextRequest) {
 
 		// Check if athlete already exists (for updates)
 		let existingAthlete: { id: string } | null = null;
-		if (existingSubmissionId) {
+
+		// Priority 1: Check by providedAthleteId (from copy link on Athlete Details page)
+		if (providedAthleteId) {
+			const { data } = await supabase
+				.from("athletes")
+				.select("id")
+				.eq("id", providedAthleteId)
+				.single();
+			if (data) {
+				existingAthlete = data;
+				console.log(
+					`[Tally Webhook] Found existing athlete by providedAthleteId: ${data.id}`,
+				);
+			} else {
+				console.error(
+					`[Tally Webhook] Athlete not found with provided ID: ${providedAthleteId}`,
+				);
+				return NextResponse.json(
+					{ error: "Athlete not found with provided ID" },
+					{ status: 404 },
+				);
+			}
+		}
+		// Priority 2: Check by existingSubmissionId (legacy behavior)
+		else if (existingSubmissionId) {
 			const { data } = await supabase
 				.from("athletes")
 				.select("id")
@@ -980,6 +1033,8 @@ export async function POST(request: NextRequest) {
 
 		// Extract onboarding form data (JSONB)
 		const onboardingFormData = extractOnboardingFormData(fields);
+		// Add submission timestamp from Tally payload
+		onboardingFormData.submitted_at = payload.data.createdAt;
 		if (Object.keys(onboardingFormData).length > 0) {
 			athleteData.onboarding_form_data = onboardingFormData;
 		}
@@ -1024,6 +1079,30 @@ export async function POST(request: NextRequest) {
 
 			athleteId = newAthlete.id;
 			console.log(`[Tally Webhook] Created new athlete ${athleteId}`);
+
+			// Trigger Make.com webhook for NEW athletes only (not when updating existing)
+			try {
+				const makeWebhookUrl =
+					"https://hook.us2.make.com/u8c7htqdc2blninor6bsb6uld1tmc3jt";
+				const makeResponse = await fetch(makeWebhookUrl, {
+					method: "POST",
+					headers: { "Content-Type": "application/json" },
+					body: JSON.stringify({
+						athlete_id: athleteId,
+						discord_channel_id: null,
+						discord_username: null,
+						discord_channel_url: null,
+						full_name: fullName,
+						contact_email: email,
+					}),
+				});
+				console.log(
+					`[Tally Webhook] Make.com webhook triggered: ${makeResponse.ok ? "success" : "failed"} (status: ${makeResponse.status})`,
+				);
+			} catch (makeError) {
+				console.error("[Tally Webhook] Make.com webhook error:", makeError);
+				// Don't fail the whole request for webhook errors
+			}
 		}
 
 		// Handle poster image uploads
@@ -1163,8 +1242,11 @@ export async function POST(request: NextRequest) {
 		// Set Onboarding Call Status
 		// ========================================================================
 
-		// Set onboarding call status to "requested" (only for new athletes)
-		if (!existingAthlete) {
+		// Set onboarding call status to "requested" for:
+		// 1. New athletes (no existingAthlete)
+		// 2. Existing athletes filling form via copy link (providedAthleteId is set)
+		// The inner check for existingStatus prevents duplicates
+		if (!existingAthlete || providedAthleteId) {
 			// Check if status already exists
 			const { data: existingStatus } = await supabase
 				.from("entity_status_values")
@@ -1197,7 +1279,8 @@ export async function POST(request: NextRequest) {
 		}
 
 		// Determine redirect URL based on poster need (DROPDOWN with Yes/No options)
-		const needsPoster = getBooleanField(fields, "Do you need poster?");
+		// Using question ID (question_gGBg64) for stability - won't break if label changes
+		const needsPoster = getBooleanField(fields, "question_gGBg64");
 		let redirectUrl: string;
 
 		if (needsPoster) {

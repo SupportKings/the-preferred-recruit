@@ -296,6 +296,172 @@ export function getBooleanField(
 }
 
 // ============================================================================
+// Field Key Mappings (Tally question IDs - stable identifiers)
+// ============================================================================
+
+/**
+ * Mapping of Tally field keys (question IDs) to internal field names
+ * Keys are stable identifiers that don't change when labels are modified
+ * Format: "question_XXXX" -> internal field name
+ *
+ * To find field keys: Enable debug logging in webhook, submit form, check logs
+ */
+export const TALLY_FIELD_KEYS: Record<string, string> = {
+	// ========================================================================
+	// Athlete Information & Branding
+	// ========================================================================
+	question_xYGRk9: "fullName",
+	question_Zax14v: "email",
+	question_NozbKb: "phone",
+	question_8x7gVr: "instagramHandle",
+	question_QVGzgk: "highlightVideoUrl",
+	question_9QeRL4: "highSchoolName",
+	question_eRb01o: "highSchoolCity",
+	question_Wz4KGQ: "highSchoolState",
+	question_adWAby: "gpa",
+	question_6NqWb5: "graduationYear",
+	question_7xQaBz: "actScore",
+	question_bdaYBE: "satScore",
+	question_8x92RY: "ncaaEligibilityUrl",
+	question_0O4GD0: "intendedMajor",
+
+	// ========================================================================
+	// PR fields (dynamic labels - the PR value IS the label)
+	// ========================================================================
+	question_Avk4oN: "pr_1",
+	question_B7vjOY: "pr_2",
+	question_zYVg18: "pr_3",
+
+	// ========================================================================
+	// Achievement fields (dynamic labels - the achievement IS the label)
+	// ========================================================================
+	question_5xNrpP: "achievement_1",
+	question_dd7gky: "achievement_2",
+
+	// ========================================================================
+	// Current Recruiting Status
+	// ========================================================================
+	question_Ya2ex6: "divisionsWilling",
+	question_DzLbZj: "topSchools",
+	question_lrpgMp: "schoolsInContact",
+	question_RPO2Vp: "schoolsWithOffers",
+	question_oGJgkX: "schoolsAppliedTo",
+	question_GlMkQ2: "mostImportantQualities",
+	question_OGRrop: "statesNotWanted",
+	question_VJrqDE: "collegesNotWanted",
+	question_POo4kd: "usNewsPreference",
+	question_EWpAMq: "religiousAffiliation",
+	question_rPXgv5: "hbcuInterest",
+	question_4rZEzB: "schoolSizePreference",
+	question_jPKgv6: "militaryAcademy",
+	question_2P2V7A: "tuitionBudget",
+
+	// ========================================================================
+	// Work Ethic & Personal Story
+	// ========================================================================
+	question_xYGgvJ: "workEthicBlurb",
+	question_RPO2kP: "challengesOvercome",
+	question_oGJgvM: "personalStory",
+	question_GlMk5z: "ultimateGoal",
+	question_OGRrkA: "teamEnvironment",
+	question_VJrqDl: "coachingStylePreference",
+	question_POo4k0: "additionalInfo",
+
+	// ========================================================================
+	// System Fields (Kickoff Form)
+	// ========================================================================
+	question_gGBg64: "needsPoster",
+
+	// ========================================================================
+	// Poster Form Fields
+	// ========================================================================
+	question_RPOvQJ: "poster_eventsAndTimes",
+	question_POovNb: "poster_standoutInfo",
+	question_OGRdZ8: "poster_primaryImage",
+	question_rPXGQv: "poster_image2",
+	question_4rZAYO: "poster_image3",
+	question_VJrvav: "poster_video1",
+	question_jPK5rE: "poster_video2",
+};
+
+/**
+ * Finds a field by its Tally key (question ID)
+ * This is the most reliable way to match fields with dynamic labels
+ */
+export function findFieldByKey(
+	fields: TallyField[],
+	key: string,
+): TallyField | undefined {
+	return fields.find((f) => f.key === key);
+}
+
+/**
+ * Extracts all PR fields by their known keys
+ * Returns an array of PR values (the value IS the PR, e.g., "9.58 100m")
+ */
+export function extractPRsByKey(fields: TallyField[]): string[] {
+	const prKeys = ["question_Avk4oN", "question_B7vjOY", "question_zYVg18"];
+	const prs: string[] = [];
+
+	for (const key of prKeys) {
+		const field = findFieldByKey(fields, key);
+		if (field && typeof field.value === "string" && field.value.trim()) {
+			prs.push(field.value.trim());
+		}
+	}
+
+	return prs;
+}
+
+/**
+ * Extracts all achievement fields by their known keys
+ * Returns an array of achievement values
+ */
+export function extractAchievementsByKey(fields: TallyField[]): string[] {
+	const achievementKeys = ["question_5xNrpP", "question_dd7gky"];
+	const achievements: string[] = [];
+
+	for (const key of achievementKeys) {
+		const field = findFieldByKey(fields, key);
+		if (field && typeof field.value === "string" && field.value.trim()) {
+			achievements.push(field.value.trim());
+		}
+	}
+
+	return achievements;
+}
+
+/**
+ * Gets all known field keys from TALLY_FIELD_KEYS
+ */
+export function getKnownFieldKeys(): Set<string> {
+	return new Set(Object.keys(TALLY_FIELD_KEYS));
+}
+
+/**
+ * Gets the internal field name from TALLY_FIELD_MAPPINGS by checking which mapping
+ * contains the given labels. This allows us to find the key in TALLY_FIELD_KEYS.
+ */
+export function getInternalNameFromLabels(
+	possibleLabels: readonly string[],
+): string | null {
+	// Find which mapping key corresponds to these labels
+	for (const [mappingKey, labels] of Object.entries(TALLY_FIELD_MAPPINGS)) {
+		// Check if any of the possibleLabels match any of the mapping labels
+		for (const label of possibleLabels) {
+			if (
+				labels.some(
+					(mappingLabel) => mappingLabel.toLowerCase() === label.toLowerCase(),
+				)
+			) {
+				return mappingKey;
+			}
+		}
+	}
+	return null;
+}
+
+// ============================================================================
 // Field Mapping Constants
 // ============================================================================
 
@@ -359,6 +525,14 @@ export const TALLY_FIELD_MAPPINGS = {
 
 	// Intended Major → onboarding_form_data.intended_major
 	intendedMajor: ["Intended Major", "Major"],
+
+	// Personal Records (PRs) → onboarding_form_data.personal_records_raw + athlete_results
+	personalRecords: [
+		"Personal Records (PRs) in Your Main Events:",
+		"Personal Records (PRs) in Your Main Events",
+		"Personal Records",
+		"PRs",
+	],
 
 	// ========================================================================
 	// SECTION: Current Recruiting Status
@@ -492,6 +666,13 @@ export const TALLY_FIELD_MAPPINGS = {
 		"Character blurb",
 	],
 
+	// Most Impressive Career Achievement → onboarding_form_data.career_achievement
+	careerAchievement: [
+		"Most Impressive Career Achievement:",
+		"Most Impressive Career Achievement",
+		"Career achievement",
+	],
+
 	// ========================================================================
 	// SECTION: Personal Story / Differentiator
 	// ========================================================================
@@ -603,6 +784,8 @@ export const TALLY_FIELD_MAPPINGS = {
 
 	// Poster need check (for conditional redirect) - DROPDOWN with Yes/No options
 	needsPoster: [
+		"Do you need a poster?",
+		"Do you need a poster",
 		"Do you need poster?",
 		"Do you need poster",
 		"Need poster",
@@ -612,7 +795,44 @@ export const TALLY_FIELD_MAPPINGS = {
 } as const;
 
 /**
+ * Finds a field by its internal name using key-based lookup first, then label fallback
+ * @param fields - The array of Tally fields
+ * @param internalName - The internal field name (e.g., "fullName", "email")
+ * @param possibleLabels - Fallback labels to try if key not found
+ */
+export function findFieldByInternalName(
+	fields: TallyField[],
+	internalName: string,
+	possibleLabels: readonly string[],
+): TallyField | undefined {
+	// First: Try to find by field key (most reliable)
+	for (const [key, name] of Object.entries(TALLY_FIELD_KEYS)) {
+		if (name === internalName) {
+			const field = fields.find((f) => f.key === key);
+			if (field) {
+				return field;
+			}
+		}
+	}
+
+	// Second: Fall back to label matching
+	for (const label of possibleLabels) {
+		const field = fields.find(
+			(f) =>
+				f.key.toLowerCase() === label.toLowerCase() ||
+				f.label.toLowerCase() === label.toLowerCase(),
+		);
+		if (field) {
+			return field;
+		}
+	}
+
+	return undefined;
+}
+
+/**
  * Finds the first matching field using multiple possible labels
+ * @deprecated Use findFieldByInternalName for key-based matching
  */
 export function findField(
 	fields: TallyField[],
@@ -632,13 +852,19 @@ export function findField(
 }
 
 /**
- * Gets a string value using multiple possible labels
+ * Gets a string value using key-based lookup first, then label fallback
+ * @param fields - The array of Tally fields
+ * @param possibleLabels - Labels to try (first one is used as internal name for key lookup)
  */
 export function findStringValue(
 	fields: TallyField[],
 	possibleLabels: readonly string[],
 ): string | null {
-	const field = findField(fields, possibleLabels);
+	// Get internal name from TALLY_FIELD_MAPPINGS key
+	const internalName = getInternalNameFromLabels(possibleLabels);
+	const field = internalName
+		? findFieldByInternalName(fields, internalName, possibleLabels)
+		: findField(fields, possibleLabels);
 	if (!field) return null;
 
 	if (typeof field.value === "string") {
@@ -651,13 +877,16 @@ export function findStringValue(
 }
 
 /**
- * Gets a number value using multiple possible labels
+ * Gets a number value using key-based lookup first, then label fallback
  */
 export function findNumberValue(
 	fields: TallyField[],
 	possibleLabels: readonly string[],
 ): number | null {
-	const field = findField(fields, possibleLabels);
+	const internalName = getInternalNameFromLabels(possibleLabels);
+	const field = internalName
+		? findFieldByInternalName(fields, internalName, possibleLabels)
+		: findField(fields, possibleLabels);
 	if (!field) return null;
 
 	if (typeof field.value === "number") {
@@ -671,7 +900,7 @@ export function findNumberValue(
 }
 
 /**
- * Gets an integer value using multiple possible labels
+ * Gets an integer value using key-based lookup first, then label fallback
  */
 export function findIntegerValue(
 	fields: TallyField[],
@@ -682,13 +911,16 @@ export function findIntegerValue(
 }
 
 /**
- * Gets file uploads using multiple possible labels
+ * Gets file uploads using key-based lookup first, then label fallback
  */
 export function findFileValue(
 	fields: TallyField[],
 	possibleLabels: readonly string[],
 ): TallyFileUpload[] {
-	const field = findField(fields, possibleLabels);
+	const internalName = getInternalNameFromLabels(possibleLabels);
+	const field = internalName
+		? findFieldByInternalName(fields, internalName, possibleLabels)
+		: findField(fields, possibleLabels);
 	if (!field) return [];
 
 	if (Array.isArray(field.value)) {
@@ -701,13 +933,16 @@ export function findFileValue(
 }
 
 /**
- * Gets a DROPDOWN value (resolves option ID to text) using multiple possible labels
+ * Gets a DROPDOWN value (resolves option ID to text) using key-based lookup first
  */
 export function findDropdownValue(
 	fields: TallyField[],
 	possibleLabels: readonly string[],
 ): string | null {
-	const field = findField(fields, possibleLabels);
+	const internalName = getInternalNameFromLabels(possibleLabels);
+	const field = internalName
+		? findFieldByInternalName(fields, internalName, possibleLabels)
+		: findField(fields, possibleLabels);
 	if (!field) return null;
 
 	// If field has options, resolve the value
@@ -724,13 +959,16 @@ export function findDropdownValue(
 }
 
 /**
- * Gets MULTI_SELECT values (resolves option IDs to text) using multiple possible labels
+ * Gets MULTI_SELECT values (resolves option IDs to text) using key-based lookup first
  */
 export function findMultiSelectValues(
 	fields: TallyField[],
 	possibleLabels: readonly string[],
 ): string[] {
-	const field = findField(fields, possibleLabels);
+	const internalName = getInternalNameFromLabels(possibleLabels);
+	const field = internalName
+		? findFieldByInternalName(fields, internalName, possibleLabels)
+		: findField(fields, possibleLabels);
 	if (!field) return [];
 
 	// If field has options, resolve the values

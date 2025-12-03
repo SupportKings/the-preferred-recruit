@@ -160,40 +160,45 @@ export function CoachListExportsTab({
 								</Button>
 							</div>
 
-							<ScrollArea className="max-h-[300px] rounded-md border p-3">
-								<div className="grid grid-cols-1 gap-2 md:grid-cols-2 lg:grid-cols-3">
-									{selectedCoaches.map((coach) => (
-										<div
-											key={coach.coachId}
-											className="group flex items-center justify-between rounded-md border bg-card px-3 py-2 transition-colors hover:bg-muted/50"
-										>
-											<div className="min-w-0 flex-1">
-												<div className="flex items-center gap-1.5">
-													<p className="truncate font-medium text-sm">
-														{coach.coachName}
-													</p>
-													{coach.division && (
-														<Badge variant="outline" className="shrink-0 text-[10px] px-1 py-0">
-															{coach.division.replace("Division ", "D")}
-														</Badge>
-													)}
-												</div>
-												<p className="truncate text-muted-foreground text-xs">
-													{coach.universityName}
-												</p>
-											</div>
-											<Button
-												size="sm"
-												variant="ghost"
-												onClick={() => handleRemoveCoach(coach.coachId)}
-												className="ml-1 h-6 w-6 shrink-0 p-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100 hover:text-destructive"
+							<div className="h-[300px] overflow-hidden rounded-md border">
+								<ScrollArea className="h-full">
+									<div className="grid grid-cols-1 gap-2 p-3 md:grid-cols-2 lg:grid-cols-3">
+										{selectedCoaches.map((coach) => (
+											<div
+												key={coach.coachId}
+												className="group flex items-center justify-between rounded-md border bg-card px-3 py-2 transition-colors hover:bg-muted/50"
 											>
-												<XIcon className="h-3 w-3" />
-											</Button>
-										</div>
-									))}
-								</div>
-							</ScrollArea>
+												<div className="min-w-0 flex-1">
+													<div className="flex items-center gap-1.5">
+														<p className="truncate font-medium text-sm">
+															{coach.coachName}
+														</p>
+														{coach.division && (
+															<Badge
+																variant="outline"
+																className="shrink-0 px-1 py-0 text-[10px]"
+															>
+																{coach.division.replace("Division ", "D")}
+															</Badge>
+														)}
+													</div>
+													<p className="truncate text-muted-foreground text-xs">
+														{coach.universityName}
+													</p>
+												</div>
+												<Button
+													size="sm"
+													variant="ghost"
+													onClick={() => handleRemoveCoach(coach.coachId)}
+													className="ml-1 h-6 w-6 shrink-0 p-0 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+												>
+													<XIcon className="h-3 w-3" />
+												</Button>
+											</div>
+										))}
+									</div>
+								</ScrollArea>
+							</div>
 						</div>
 
 						<Separator />

@@ -27,6 +27,8 @@ import { AthleteContractBilling } from "./detail-sections/athlete-contract-billi
 import { AthleteIdentityContact } from "./detail-sections/athlete-identity-contact";
 import { AthleteLeadListsSection } from "./detail-sections/athlete-lead-lists-section";
 import { AthleteLocationEducation } from "./detail-sections/athlete-location-education";
+import { AthleteOnboardingFormData } from "./detail-sections/athlete-onboarding-form-data";
+import { AthletePosterFormData } from "./detail-sections/athlete-poster-form-data";
 import { AthleteProfileResources } from "./detail-sections/athlete-profile-resources";
 import { AthleteResultsSection } from "./detail-sections/athlete-results-section";
 import { AthleteSalesEngagement } from "./detail-sections/athlete-sales-engagement";
@@ -244,7 +246,7 @@ export default function AthleteDetailView({
 				</div>
 			</div>
 
-			{/* Basic Information Grid - 7 subsections in grid */}
+			{/* Basic Information Grid - 9 subsections in grid */}
 			<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
 				<AthleteIdentityContact
 					athlete={athlete}
@@ -300,6 +302,8 @@ export default function AthleteDetailView({
 					onSave={handleSave}
 					onCancel={handleCancel}
 				/>
+				<AthleteOnboardingFormData athlete={athlete} />
+				<AthletePosterFormData athlete={athlete} />
 			</div>
 
 			{/* Relationship Tabs */}

@@ -31,9 +31,9 @@ const statusConfig: Record<
 	},
 	processing: {
 		label: "Processing",
-		variant: "default",
+		variant: "outline",
 		icon: Loader2,
-		className: "text-blue-600 dark:text-blue-400",
+		className: "text-blue-600 border-blue-600 dark:text-blue-400 dark:border-blue-400",
 	},
 	completed: {
 		label: "Completed",
