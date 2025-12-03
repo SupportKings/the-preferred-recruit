@@ -292,6 +292,7 @@ export type Database = {
           instagram_handle: string | null
           internal_notes: string | null
           is_deleted: boolean | null
+          joined_discord_at: string | null
           last_sales_call_at: string | null
           lead_source: string | null
           milesplit_url: string | null
@@ -347,6 +348,7 @@ export type Database = {
           instagram_handle?: string | null
           internal_notes?: string | null
           is_deleted?: boolean | null
+          joined_discord_at?: string | null
           last_sales_call_at?: string | null
           lead_source?: string | null
           milesplit_url?: string | null
@@ -402,6 +404,7 @@ export type Database = {
           instagram_handle?: string | null
           internal_notes?: string | null
           is_deleted?: boolean | null
+          joined_discord_at?: string | null
           last_sales_call_at?: string | null
           lead_source?: string | null
           milesplit_url?: string | null

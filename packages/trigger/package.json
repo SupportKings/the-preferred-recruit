@@ -1,0 +1,24 @@
+{
+  "name": "@workspace/trigger",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "dotenv -e .env -- trigger.dev dev",
+    "deploy": "trigger.dev deploy"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.39.0",
+    "@trigger.dev/sdk": "4.1.2",
+    "drizzle-orm": "^0.30.0",
+    "import-in-the-middle": "^2.0.0",
+    "postgres": "^3.4.3",
+    "xlsx": "^0.18.5",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "dotenv-cli": "^11.0.0",
+    "typescript": "^5.9.2"
+  }
+}
