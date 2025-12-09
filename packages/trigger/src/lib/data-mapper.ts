@@ -16,9 +16,21 @@ import {
 type Tables = Database["public"]["Tables"];
 
 /**
+ * Get value for a field that may have newlines in its column name
+ * Searches for keys that start with the given prefix
+ */
+function getFieldByPrefix(row: CoachRow, prefix: string): string | null {
+	const key = Object.keys(row).find((k) => k.startsWith(prefix));
+	return key ? row[key] : null;
+}
+
+/**
  * Convert database errors to user-friendly messages
  */
-function formatDatabaseError(error: { message: string; code?: string }, context: string): string {
+function formatDatabaseError(
+	error: { message: string; code?: string },
+	context: string,
+): string {
 	const message = error.message;
 
 	// Handle duplicate key violations
@@ -108,10 +120,7 @@ async function upsertUniversity(
 	const state = row.State?.trim() || null;
 
 	// Check if university exists
-	let query = supabase
-		.from("universities")
-		.select("*")
-		.eq("name", schoolName);
+	let query = supabase.from("universities").select("*").eq("name", schoolName);
 
 	// Handle null state properly
 	if (state) {
@@ -153,7 +162,7 @@ async function upsertUniversity(
 			act_composite_75th: actComposite.max,
 			acceptance_rate_pct: parsePercentage(row["Acceptance rate"]),
 			total_yearly_cost: parseInteger(
-				row["Total yearly cost (in-state/out-of-state)"],
+				getFieldByPrefix(row, "Total yearly cost"),
 			),
 			majors_offered_url: nullifyEmptyString(row["Majors offered"]),
 			undergraduate_enrollment: parseInteger(row["No. of undergrads"]),
@@ -209,7 +218,7 @@ async function upsertUniversity(
 			act_composite_75th: actComposite.max,
 			acceptance_rate_pct: parsePercentage(row["Acceptance rate"]),
 			total_yearly_cost: parseInteger(
-				row["Total yearly cost (in-state/out-of-state)"],
+				getFieldByPrefix(row, "Total yearly cost"),
 			),
 			majors_offered_url: nullifyEmptyString(row["Majors offered"]),
 			undergraduate_enrollment: parseInteger(row["No. of undergrads"]),
@@ -283,7 +292,9 @@ async function linkConference(
 	if (!conference) {
 		// Conference doesn't exist - log and skip
 		// Creating conferences requires governing_body_id which we don't have from CSV
-		console.warn(`Conference "${cleanName}" not found in database, skipping link`);
+		console.warn(
+			`Conference "${cleanName}" not found in database, skipping link`,
+		);
 		return;
 	}
 
@@ -401,7 +412,8 @@ async function upsertCoach(
 				.select()
 				.single();
 
-			if (error) throw new Error(formatDatabaseError(error, "Failed to update coach"));
+			if (error)
+				throw new Error(formatDatabaseError(error, "Failed to update coach"));
 			return updated!;
 		}
 	}
@@ -433,7 +445,8 @@ async function upsertCoach(
 				.select()
 				.single();
 
-			if (error) throw new Error(formatDatabaseError(error, "Failed to update coach"));
+			if (error)
+				throw new Error(formatDatabaseError(error, "Failed to update coach"));
 			return updated!;
 		}
 	}
@@ -447,7 +460,10 @@ async function upsertCoach(
 		.is("end_date", null)
 		.maybeSingle();
 
-	if (existingJobByName?.coach_id && existingJobByName.coaches?.full_name === fullName) {
+	if (
+		existingJobByName?.coach_id &&
+		existingJobByName.coaches?.full_name === fullName
+	) {
 		// Update existing coach
 		const updates = removeNullValues({
 			email,
@@ -465,7 +481,8 @@ async function upsertCoach(
 			.select()
 			.single();
 
-		if (error) throw new Error(formatDatabaseError(error, "Failed to update coach"));
+		if (error)
+			throw new Error(formatDatabaseError(error, "Failed to update coach"));
 		return updated!;
 	}
 
@@ -483,7 +500,8 @@ async function upsertCoach(
 		.select()
 		.single();
 
-	if (error) throw new Error(formatDatabaseError(error, "Failed to create coach"));
+	if (error)
+		throw new Error(formatDatabaseError(error, "Failed to create coach"));
 	return created!;
 }
 
@@ -530,7 +548,10 @@ async function upsertUniversityJob(
 	let programScope: "men" | "women" | "both" | "n/a" = "men";
 
 	// Check if director role (typically covers both)
-	if (position.includes("director") || position.includes("head coach") && !sportCode) {
+	if (
+		position.includes("director") ||
+		(position.includes("head coach") && !sportCode)
+	) {
 		programScope = "both";
 	} else if (sportCode.includes("women") || sportCode.includes("woman")) {
 		programScope = "women";
@@ -644,13 +665,27 @@ async function upsertResponsibilities(
 				// Simple mapping of event names to groups
 				const eventNameLower = eventName.toLowerCase();
 				if (
-					(eventGroup === "sprints" && (eventNameLower.includes("100m") || eventNameLower.includes("200m") || eventNameLower.includes("400m"))) ||
-					(eventGroup === "distance" && (eventNameLower.includes("800") || eventNameLower.includes("1500") || eventNameLower.includes("3000") || eventNameLower.includes("5000") || eventNameLower.includes("10000"))) ||
+					(eventGroup === "sprints" &&
+						(eventNameLower.includes("100m") ||
+							eventNameLower.includes("200m") ||
+							eventNameLower.includes("400m"))) ||
+					(eventGroup === "distance" &&
+						(eventNameLower.includes("800") ||
+							eventNameLower.includes("1500") ||
+							eventNameLower.includes("3000") ||
+							eventNameLower.includes("5000") ||
+							eventNameLower.includes("10000"))) ||
 					(eventGroup === "hurdles" && eventNameLower.includes("hurdle")) ||
-					(eventGroup === "jumps" && (eventNameLower.includes("jump") || eventNameLower.includes("vault"))) ||
-					(eventGroup === "throws" && (eventNameLower.includes("shot") || eventNameLower.includes("discus") || eventNameLower.includes("javelin") || eventNameLower.includes("hammer"))) ||
+					(eventGroup === "jumps" &&
+						(eventNameLower.includes("jump") ||
+							eventNameLower.includes("vault"))) ||
+					(eventGroup === "throws" &&
+						(eventNameLower.includes("shot") ||
+							eventNameLower.includes("discus") ||
+							eventNameLower.includes("javelin") ||
+							eventNameLower.includes("hammer"))) ||
 					(eventGroup === "relays" && eventNameLower.includes("relay")) ||
-					(eventGroup === "combined" && (eventNameLower.includes("athlon")))
+					(eventGroup === "combined" && eventNameLower.includes("athlon"))
 				) {
 					eventId = eventIdMap[eventName];
 					break;
