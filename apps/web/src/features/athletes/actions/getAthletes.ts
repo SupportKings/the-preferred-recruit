@@ -124,17 +124,99 @@ export async function getAthlete(id: string) {
 			)
 			.eq("id", id)
 			.eq("is_deleted", false)
-			.single();
+			.maybeSingle();
 
 		if (error) {
 			console.error("Error fetching athlete:", error);
 			return null;
 		}
 
-		return athlete;
+		// Athlete not found or was deleted
+		if (!athlete) {
+			return null;
+		}
+
+		// Fetch status data separately (entity_status_values uses entity_id as string)
+		const statusData = await getAthleteStatusData(id);
+
+		return {
+			...athlete,
+			status_categories: statusData.categories,
+			status_options: statusData.options,
+			status_values: statusData.statusValues,
+		};
 	} catch (error) {
 		console.error("Unexpected error in getAthlete:", error);
 		return null;
+	}
+}
+
+// Helper function to get status data for an athlete
+async function getAthleteStatusData(athleteId: string) {
+	try {
+		const supabase = await createClient();
+
+		// Get the athlete entity type
+		const { data: entityType } = await (supabase as any)
+			.from("entity_types")
+			.select("id")
+			.eq("name", "athlete")
+			.single();
+
+		if (!entityType) {
+			return { categories: [], options: [], statusValues: [] };
+		}
+
+		// Get all status categories for athletes
+		const { data: categories, error: categoriesError } = await (supabase as any)
+			.from("status_categories")
+			.select("*")
+			.eq("entity_type_id", entityType.id)
+			.order("sort_order");
+
+		if (categoriesError || !categories || categories.length === 0) {
+			return { categories: [], options: [], statusValues: [] };
+		}
+
+		// Get all status options for these categories
+		const categoryIds = categories.map((c: any) => c.id);
+		const { data: options, error: optionsError } = await (supabase as any)
+			.from("status_options")
+			.select("*")
+			.in("status_category_id", categoryIds)
+			.eq("is_active", true)
+			.order("sort_order");
+
+		if (optionsError) {
+			return { categories, options: [], statusValues: [] };
+		}
+
+		// Get current status values for this athlete
+		const { data: statusValues, error: valuesError } = await (supabase as any)
+			.from("entity_status_values")
+			.select(
+				`
+				id,
+				entity_type,
+				entity_id,
+				status_category_id,
+				status_option_id,
+				set_at,
+				set_by
+			`,
+			)
+			.eq("entity_type", "athlete")
+			.eq("entity_id", athleteId)
+			.in("status_category_id", categoryIds);
+
+		if (valuesError) {
+			return { categories, options, statusValues: [] };
+		}
+
+		return { categories, options, statusValues: statusValues || [] };
+	} catch (error) {
+		console.error("Error fetching athlete status data:", error);
+		return { categories: [], options: [], statusValues: [] };
 	}
 }
 

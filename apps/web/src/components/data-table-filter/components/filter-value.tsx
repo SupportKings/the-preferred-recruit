@@ -179,15 +179,18 @@ export function FilterValueOptionDisplay<TData>({
 	// 1) up to 3 icons of the selected options
 	// 2) the number of selected options
 	if (selected.length === 1) {
-		const { label, icon: Icon } = selected[0];
-		const hasIcon = !!Icon;
+		const { label, icon } = selected[0];
+		const hasIcon = !!icon;
 		return (
 			<span className="inline-flex items-center gap-1">
 				{hasIcon &&
-					(isValidElement(Icon) ? (
-						Icon
+					(isValidElement(icon) ? (
+						icon
 					) : (
-						<Icon className="size-4 text-primary" />
+						(() => {
+							const Icon = icon as React.ElementType;
+							return <Icon className="size-4 text-primary" />;
+						})()
 					))}
 				<span>{label}</span>
 			</span>
@@ -203,12 +206,11 @@ export function FilterValueOptionDisplay<TData>({
 		<div className="inline-flex items-center gap-0.5">
 			{hasOptionIcons &&
 				take(selected, 3).map(({ value, icon }) => {
-					const Icon = icon!;
-					return isValidElement(Icon) ? (
-						Icon
-					) : (
-						<Icon key={value} className="size-4" />
-					);
+					if (isValidElement(icon)) {
+						return icon;
+					}
+					const Icon = icon as React.ElementType;
+					return <Icon key={value} className="size-4" />;
 				})}
 			<span className={cn(hasOptionIcons && "ml-1.5")}>
 				{selected.length} {pluralName}
@@ -227,15 +229,18 @@ export function FilterValueMultiOptionDisplay<TData>({
 	const selected = options.filter((o) => filter.values.includes(o.value));
 
 	if (selected.length === 1) {
-		const { label, icon: Icon } = selected[0];
-		const hasIcon = !!Icon;
+		const { label, icon } = selected[0];
+		const hasIcon = !!icon;
 		return (
 			<span className="inline-flex items-center gap-1.5">
 				{hasIcon &&
-					(isValidElement(Icon) ? (
-						Icon
+					(isValidElement(icon) ? (
+						icon
 					) : (
-						<Icon className="size-4 text-primary" />
+						(() => {
+							const Icon = icon as React.ElementType;
+							return <Icon className="size-4 text-primary" />;
+						})()
 					))}
 
 				<span>{label}</span>
@@ -252,12 +257,11 @@ export function FilterValueMultiOptionDisplay<TData>({
 			{hasOptionIcons && (
 				<div key="icons" className="inline-flex items-center gap-0.5">
 					{take(selected, 3).map(({ value, icon }) => {
-						const Icon = icon!;
-						return isValidElement(Icon) ? (
-							cloneElement(Icon, { key: value })
-						) : (
-							<Icon key={value} className="size-4" />
-						);
+						if (isValidElement(icon)) {
+							return cloneElement(icon, { key: value });
+						}
+						const Icon = icon as React.ElementType;
+						return <Icon key={value} className="size-4" />;
 					})}
 				</div>
 			)}
@@ -438,7 +442,7 @@ const OptionItem = memo(function OptionItem({
 	option,
 	onToggle,
 }: OptionItemProps) {
-	const { value, label, icon: Icon, selected, count } = option;
+	const { value, label, icon, selected, count } = option;
 	const handleSelect = useCallback(() => {
 		onToggle(value, !selected);
 	}, [onToggle, value, selected]);
@@ -454,11 +458,14 @@ const OptionItem = memo(function OptionItem({
 					checked={selected}
 					className="peer flex size-4 shrink-0 items-center justify-center rounded-sm bg-muted transition-colors duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
 				/>
-				{Icon &&
-					(isValidElement(Icon) ? (
-						Icon
+				{icon &&
+					(isValidElement(icon) ? (
+						icon
 					) : (
-						<Icon className="size-4 text-primary" />
+						(() => {
+							const Icon = icon as React.ElementType;
+							return <Icon className="size-4 text-primary" />;
+						})()
 					))}
 				<span>
 					{label}

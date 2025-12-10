@@ -158,6 +158,20 @@ export function AthleteCommsDiscord({
 						</p>
 					)}
 				</div>
+				<div>
+					<label className="font-medium text-muted-foreground text-sm">
+						Discord User ID
+					</label>
+					<p className="text-sm">{athlete.discord_user_id || "Not linked"}</p>
+				</div>
+				<div>
+					<label className="font-medium text-muted-foreground text-sm">
+						Discord Invite Code
+					</label>
+					<p className="text-sm">
+						{athlete.discord_invite_code || "Not set"}
+					</p>
+				</div>
 			</CardContent>
 		</Card>
 	);

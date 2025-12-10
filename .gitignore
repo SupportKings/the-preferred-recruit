@@ -15,6 +15,7 @@ apps/server/server.exe
 *.swp
 *.swo
 *~
+*.bak
 
 # IDE
 .vscode/*
@@ -23,3 +24,8 @@ apps/server/server.exe
 !.vscode/launch.json
 !.vscode/extensions.json
 .idea
+
+# Cursor/Claude MCP Config (contains sensitive tokens)
+.cursor/mcp.json
+mcp.json
+.mcp.json

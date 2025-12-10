@@ -27,9 +27,12 @@ import { AthleteContractBilling } from "./detail-sections/athlete-contract-billi
 import { AthleteIdentityContact } from "./detail-sections/athlete-identity-contact";
 import { AthleteLeadListsSection } from "./detail-sections/athlete-lead-lists-section";
 import { AthleteLocationEducation } from "./detail-sections/athlete-location-education";
+import { AthleteOnboardingFormData } from "./detail-sections/athlete-onboarding-form-data";
+import { AthletePosterFormData } from "./detail-sections/athlete-poster-form-data";
 import { AthleteProfileResources } from "./detail-sections/athlete-profile-resources";
 import { AthleteResultsSection } from "./detail-sections/athlete-results-section";
 import { AthleteSalesEngagement } from "./detail-sections/athlete-sales-engagement";
+import { AthleteStatusTracking } from "./detail-sections/athlete-status-tracking";
 import { AthleteSystemInfo } from "./detail-sections/athlete-system-info";
 import { DeleteConfirmModal } from "./shared/delete-confirm-modal";
 
@@ -57,6 +60,7 @@ export default function AthleteDetailView({
 		section:
 			| "identity"
 			| "location"
+			| "status"
 			| "profile"
 			| "comms"
 			| "sales"
@@ -68,6 +72,7 @@ export default function AthleteDetailView({
 		section:
 			| "identity"
 			| "location"
+			| "status"
 			| "profile"
 			| "comms"
 			| "sales"
@@ -241,7 +246,7 @@ export default function AthleteDetailView({
 				</div>
 			</div>
 
-			{/* Basic Information Grid - 6 subsections in 2x3 grid */}
+			{/* Basic Information Grid - 9 subsections in grid */}
 			<div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
 				<AthleteIdentityContact
 					athlete={athlete}
@@ -256,6 +261,18 @@ export default function AthleteDetailView({
 					onEditToggle={() => handleEditToggle("location")}
 					onSave={handleSave}
 					onCancel={handleCancel}
+				/>
+				<AthleteStatusTracking
+					athlete={athlete}
+					isEditing={editState.isEditing && editState.section === "status"}
+					onEditToggle={() => handleEditToggle("status")}
+					onSave={handleSave}
+					onCancel={handleCancel}
+					onAthleteUpdate={() =>
+						queryClient.invalidateQueries({
+							queryKey: athleteQueries.detail(athleteId),
+						})
+					}
 				/>
 				<AthleteProfileResources
 					athlete={athlete}
@@ -285,6 +302,8 @@ export default function AthleteDetailView({
 					onSave={handleSave}
 					onCancel={handleCancel}
 				/>
+				<AthleteOnboardingFormData athlete={athlete} />
+				<AthletePosterFormData athlete={athlete} />
 			</div>
 
 			{/* Relationship Tabs */}
@@ -326,8 +345,9 @@ export default function AthleteDetailView({
 					<AthleteLeadListsSection
 						athleteId={athleteId}
 						leadLists={
-							athlete.school_lead_lists?.filter((list: any) => !list.is_deleted) ||
-							[]
+							athlete.school_lead_lists?.filter(
+								(list: any) => !list.is_deleted,
+							) || []
 						}
 						setDeleteModal={setDeleteModal}
 					/>
@@ -337,8 +357,9 @@ export default function AthleteDetailView({
 					<AthleteCampaignsSection
 						athleteId={athleteId}
 						campaigns={
-							athlete.campaigns?.filter((campaign: any) => !campaign.is_deleted) ||
-							[]
+							athlete.campaigns?.filter(
+								(campaign: any) => !campaign.is_deleted,
+							) || []
 						}
 						setDeleteModal={setDeleteModal}
 					/>
@@ -348,8 +369,9 @@ export default function AthleteDetailView({
 					<AthleteApplicationsSection
 						athleteId={athleteId}
 						applications={
-							athlete.athlete_applications?.filter((app: any) => !app.is_deleted) ||
-							[]
+							athlete.athlete_applications?.filter(
+								(app: any) => !app.is_deleted,
+							) || []
 						}
 						setDeleteModal={setDeleteModal}
 					/>

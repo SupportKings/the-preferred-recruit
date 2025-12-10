@@ -9,7 +9,7 @@ import {
 
 import type { UserWithRole } from "@/features/team/queries/getUsers";
 
-import { format } from "date-fns";
+import { formatLocalDate } from "@/lib/date-utils";
 import { Mail, MoreHorizontal, User, XIcon } from "lucide-react";
 
 interface UserRowProps {
@@ -60,7 +60,7 @@ export function UserRow({ user, onRemoveUser, currentUserId }: UserRowProps) {
 
 					<div className="flex items-center space-x-1">
 						<User className="h-3 w-3" />
-						<span>Joined {format(user.createdAt, "MMM d, yyyy")}</span>
+						<span>Joined {formatLocalDate(user.createdAt, "MMM d, yyyy", "date unknown")}</span>
 					</div>
 				</div>
 			</div>

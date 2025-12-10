@@ -1,0 +1,452 @@
+import { type NextRequest, NextResponse } from "next/server";
+
+import {
+	findFieldByKey,
+	type TallyFileUpload,
+	type TallyWebhookPayload,
+	verifyTallySignature,
+} from "@/lib/tally-webhook";
+
+import { createClient } from "@/utils/supabase/serviceRole";
+
+// ============================================================================
+// Constants
+// ============================================================================
+
+const CALENDLY_URL =
+	"https://calendly.com/coachmalik-thepreferredrecruit/onboarding";
+
+// Field key mappings for poster form (question IDs from Tally)
+// Keys are stable identifiers that don't change when labels are modified
+const POSTER_FIELD_KEYS = {
+	athleteId: "question_rPvbx6", // Hidden field
+	eventsAndTimes: "question_RPOvQJ",
+	standoutInfo: "question_POovNb",
+	posterPrimary: "question_OGRdZ8",
+	posterImage2: "question_rPXGQv",
+	posterImage3: "question_4rZAYO",
+	video1: "question_VJrvav",
+	video2: "question_jPK5rE",
+} as const;
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+/**
+ * Downloads a file from URL and returns it as a Buffer
+ */
+async function downloadFile(
+	url: string,
+): Promise<{ buffer: Buffer; contentType: string } | null> {
+	try {
+		const response = await fetch(url);
+		if (!response.ok) {
+			console.error(`Failed to download file from ${url}: ${response.status}`);
+			return null;
+		}
+
+		const arrayBuffer = await response.arrayBuffer();
+		const contentType =
+			response.headers.get("content-type") || "application/octet-stream";
+
+		return {
+			buffer: Buffer.from(arrayBuffer),
+			contentType,
+		};
+	} catch (error) {
+		console.error(`Error downloading file from ${url}:`, error);
+		return null;
+	}
+}
+
+/**
+ * Uploads a file to Supabase Storage and returns the public URL
+ */
+async function uploadToSupabase(
+	supabase: Awaited<ReturnType<typeof createClient>>,
+	bucket: string,
+	athleteId: string,
+	file: TallyFileUpload,
+	prefix: string,
+): Promise<string | null> {
+	try {
+		// Download the file from Tally CDN
+		const downloaded = await downloadFile(file.url);
+		if (!downloaded) {
+			return null;
+		}
+
+		// Generate unique filename with subfolder
+		const extension = file.name.split(".").pop() || "bin";
+		const fileName = `${athleteId}/${prefix}-${Date.now()}.${extension}`;
+
+		// Upload to Supabase Storage
+		const { error: uploadError } = await supabase.storage
+			.from(bucket)
+			.upload(fileName, downloaded.buffer, {
+				contentType: file.mimeType || downloaded.contentType,
+				cacheControl: "3600",
+				upsert: true,
+			});
+
+		if (uploadError) {
+			console.error(`Supabase upload error to ${bucket}:`, uploadError);
+			return null;
+		}
+
+		// Get public URL
+		const {
+			data: { publicUrl },
+		} = supabase.storage.from(bucket).getPublicUrl(fileName);
+
+		return publicUrl;
+	} catch (error) {
+		console.error("Error uploading to Supabase:", error);
+		return null;
+	}
+}
+
+/**
+ * Gets a string value from a field by its key
+ */
+function getStringValueByKey(
+	fields: TallyWebhookPayload["data"]["fields"],
+	key: string,
+): string | null {
+	const field = findFieldByKey(fields, key);
+	if (field && typeof field.value === "string") {
+		return field.value.trim() || null;
+	}
+	return null;
+}
+
+/**
+ * Gets file uploads from a field by its key
+ */
+function getFileValueByKey(
+	fields: TallyWebhookPayload["data"]["fields"],
+	key: string,
+): TallyFileUpload[] {
+	const field = findFieldByKey(fields, key);
+	if (field && Array.isArray(field.value)) {
+		return field.value.filter(
+			(v): v is TallyFileUpload =>
+				typeof v === "object" && v !== null && "url" in v && "mimeType" in v,
+		);
+	}
+	return [];
+}
+
+// ============================================================================
+// Webhook Handler
+// ============================================================================
+
+export async function POST(request: NextRequest) {
+	const startTime = Date.now();
+
+	try {
+		// Get the raw body for signature verification
+		const rawBody = await request.text();
+
+		// Verify webhook signature
+		const signature = request.headers.get("Tally-Signature");
+		const signingSecret = process.env.TALLY_POSTER_WEBHOOK_SIGNING_SECRET;
+
+		if (!signingSecret) {
+			console.error(
+				"[Tally Poster Form] Missing TALLY_POSTER_WEBHOOK_SIGNING_SECRET environment variable",
+			);
+			return NextResponse.json(
+				{ error: "Webhook not configured" },
+				{ status: 500 },
+			);
+		}
+
+		if (!signature) {
+			console.error("[Tally Poster Form] Missing Tally-Signature header");
+			return NextResponse.json({ error: "Missing signature" }, { status: 401 });
+		}
+
+		if (!verifyTallySignature(rawBody, signature, signingSecret)) {
+			console.error("[Tally Poster Form] Invalid Tally signature");
+			return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+		}
+
+		// Parse the payload
+		const payload: TallyWebhookPayload = JSON.parse(rawBody);
+		const { fields } = payload.data;
+
+		console.log("=".repeat(80));
+		console.log("[Tally Poster Form] WEBHOOK RECEIVED");
+		console.log("=".repeat(80));
+		console.log(
+			`[Tally Poster Form] Form: "${payload.data.formName}" (ID: ${payload.data.formId})`,
+		);
+		console.log(
+			`[Tally Poster Form] Submission ID: ${payload.data.submissionId}`,
+		);
+		console.log("-".repeat(80));
+
+		// Always log full payload for debugging FIRST (before any validation)
+		console.log("[Tally Poster Form] ========== FULL PAYLOAD ==========");
+		console.log(JSON.stringify(payload, null, 2));
+		console.log("[Tally Poster Form] ========== END PAYLOAD ==========");
+		console.log("[Tally Poster Form] All fields:");
+		for (const field of fields) {
+			console.log(
+				`  - "${field.label}" (${field.type}) [key: ${field.key}]: ${JSON.stringify(field.value)}`,
+			);
+		}
+
+		// Extract athleteId from hidden field (by label - key is dynamic for hidden fields)
+		const athleteIdField = fields.find(
+			(f) =>
+				f.type === "HIDDEN_FIELDS" && f.label?.toLowerCase() === "athleteid",
+		);
+		const athleteId =
+			athleteIdField && typeof athleteIdField.value === "string"
+				? athleteIdField.value.trim() || null
+				: null;
+
+		if (!athleteId) {
+			console.error("[Tally Poster Form] Missing required field: athleteId");
+			console.error(
+				"[Tally Poster Form] Available hidden fields:",
+				fields
+					.filter((f) => f.type === "HIDDEN_FIELDS")
+					.map((f) => `${f.label}: ${f.value}`),
+			);
+			return NextResponse.json(
+				{ error: "Missing required field: athleteId" },
+				{ status: 400 },
+			);
+		}
+
+		console.log(`[Tally Poster Form] Athlete ID: ${athleteId}`);
+
+		// Initialize Supabase client
+		const supabase = await createClient();
+
+		// Verify athlete exists
+		const { data: athlete, error: athleteError } = await supabase
+			.from("athletes")
+			.select("id, full_name")
+			.eq("id", athleteId)
+			.single();
+
+		if (athleteError || !athlete) {
+			console.error(`[Tally Poster Form] Athlete not found: ${athleteId}`);
+			return NextResponse.json({ error: "Athlete not found" }, { status: 404 });
+		}
+
+		console.log(
+			`[Tally Poster Form] Processing for athlete: ${athlete.full_name}`,
+		);
+
+		// Extract text fields (by key)
+		const eventsAndTimes = getStringValueByKey(
+			fields,
+			POSTER_FIELD_KEYS.eventsAndTimes,
+		);
+		const standoutInfo = getStringValueByKey(
+			fields,
+			POSTER_FIELD_KEYS.standoutInfo,
+		);
+
+		console.log(
+			`[Tally Poster Form] Events & Times: ${eventsAndTimes || "N/A"}`,
+		);
+		console.log(`[Tally Poster Form] Standout Info: ${standoutInfo || "N/A"}`);
+
+		// ========================================================================
+		// Upload Images to athlete-assets bucket
+		// ========================================================================
+		const posterUrls: {
+			poster_primary_url?: string;
+			poster_image_2_url?: string;
+			poster_image_3_url?: string;
+		} = {};
+
+		// Primary image (by key)
+		const primaryImages = getFileValueByKey(
+			fields,
+			POSTER_FIELD_KEYS.posterPrimary,
+		);
+		if (primaryImages.length > 0) {
+			console.log("[Tally Poster Form] Uploading primary image...");
+			const url = await uploadToSupabase(
+				supabase,
+				"athlete-assets",
+				athleteId,
+				primaryImages[0],
+				"images/poster-primary",
+			);
+			if (url) posterUrls.poster_primary_url = url;
+		}
+
+		// 2nd image (by key)
+		const secondaryImages = getFileValueByKey(
+			fields,
+			POSTER_FIELD_KEYS.posterImage2,
+		);
+		if (secondaryImages.length > 0) {
+			console.log("[Tally Poster Form] Uploading 2nd image...");
+			const url = await uploadToSupabase(
+				supabase,
+				"athlete-assets",
+				athleteId,
+				secondaryImages[0],
+				"images/poster-2",
+			);
+			if (url) posterUrls.poster_image_2_url = url;
+		}
+
+		// 3rd image (by key)
+		const tertiaryImages = getFileValueByKey(
+			fields,
+			POSTER_FIELD_KEYS.posterImage3,
+		);
+		if (tertiaryImages.length > 0) {
+			console.log("[Tally Poster Form] Uploading 3rd image...");
+			const url = await uploadToSupabase(
+				supabase,
+				"athlete-assets",
+				athleteId,
+				tertiaryImages[0],
+				"images/poster-3",
+			);
+			if (url) posterUrls.poster_image_3_url = url;
+		}
+
+		console.log(
+			`[Tally Poster Form] Uploaded ${Object.keys(posterUrls).length} image(s)`,
+		);
+
+		// ========================================================================
+		// Upload Videos to athlete-assets/videos subfolder
+		// ========================================================================
+		const videoUrls: string[] = [];
+
+		// Video 1 (by key)
+		const video1Files = getFileValueByKey(fields, POSTER_FIELD_KEYS.video1);
+		if (video1Files.length > 0) {
+			console.log("[Tally Poster Form] Uploading video 1...");
+			const url = await uploadToSupabase(
+				supabase,
+				"athlete-assets",
+				athleteId,
+				video1Files[0],
+				"videos/poster-video-1",
+			);
+			if (url) videoUrls.push(url);
+		}
+
+		// Video 2 (by key)
+		const video2Files = getFileValueByKey(fields, POSTER_FIELD_KEYS.video2);
+		if (video2Files.length > 0) {
+			console.log("[Tally Poster Form] Uploading video 2...");
+			const url = await uploadToSupabase(
+				supabase,
+				"athlete-assets",
+				athleteId,
+				video2Files[0],
+				"videos/poster-video-2",
+			);
+			if (url) videoUrls.push(url);
+		}
+
+		console.log(`[Tally Poster Form] Uploaded ${videoUrls.length} video(s)`);
+
+		// ========================================================================
+		// Build poster_form_data JSONB
+		// ========================================================================
+		const posterFormData = {
+			submission_id: payload.data.submissionId,
+			submitted_at: payload.data.createdAt,
+			events_and_times: eventsAndTimes,
+			standout_info: standoutInfo,
+			video_urls: videoUrls.length > 0 ? videoUrls : null,
+		};
+
+		// ========================================================================
+		// Update athlete record
+		// ========================================================================
+		const updateData: Record<string, unknown> = {
+			...posterUrls,
+			poster_form_data: posterFormData,
+			updated_at: new Date().toISOString(),
+		};
+
+		const { error: updateError } = await supabase
+			.from("athletes")
+			.update(updateData)
+			.eq("id", athleteId);
+
+		if (updateError) {
+			console.error("[Tally Poster Form] Error updating athlete:", updateError);
+			return NextResponse.json(
+				{ error: "Failed to update athlete record" },
+				{ status: 500 },
+			);
+		}
+
+		const duration = Date.now() - startTime;
+		console.log("=".repeat(80));
+		console.log(
+			`[Tally Poster Form] SUCCESS - Processed in ${duration}ms for ${athlete.full_name}`,
+		);
+		console.log(
+			`[Tally Poster Form] Images uploaded: ${Object.keys(posterUrls).length}`,
+		);
+		console.log(`[Tally Poster Form] Videos uploaded: ${videoUrls.length}`);
+		console.log("=".repeat(80));
+
+		return NextResponse.json({
+			success: true,
+			athleteId,
+			athleteName: athlete.full_name,
+			imagesUploaded: Object.keys(posterUrls).length,
+			videosUploaded: videoUrls.length,
+			duration: `${duration}ms`,
+			redirectUrl: CALENDLY_URL,
+		});
+	} catch (error) {
+		console.error("[Tally Poster Form] Error:", error);
+		return NextResponse.json(
+			{
+				error: "Internal server error",
+				details: error instanceof Error ? error.message : String(error),
+			},
+			{ status: 500 },
+		);
+	}
+}
+
+/**
+ * GET handler - returns webhook info
+ */
+export async function GET() {
+	return NextResponse.json({
+		name: "Tally Poster Form Webhook",
+		description:
+			"Receives poster form submissions from Tally and uploads images/videos to Supabase Storage",
+		method: "POST",
+		fields: {
+			athleteId: "Hidden field with athlete UUID",
+			eventsAndTimes: "Events & times to include on poster",
+			standoutInfo: "Additional standout information",
+			posterPrimary: "Primary poster image (required)",
+			posterImage2: "2nd poster image (optional)",
+			posterImage3: "3rd poster image (optional)",
+			video1: "Additional video 1 (optional)",
+			video2: "Additional video 2 (optional)",
+		},
+		storage: {
+			bucket: "athlete-assets",
+			images: "{athleteId}/images/poster-*.ext",
+			videos: "{athleteId}/videos/poster-video-*.ext",
+		},
+		redirectUrl: CALENDLY_URL,
+	});
+}

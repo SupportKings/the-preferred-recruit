@@ -1,16 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { formatLocalDate as format } from "@/lib/date-utils";
+import { formatTimestamp } from "@/lib/date-utils";
 import { Clock } from "lucide-react";
-
-const formatDate = (dateString: string | null) => {
-	if (!dateString) return "Not set";
-	try {
-		return format(dateString, "MMM dd, yyyy hh:mm a");
-	} catch {
-		return "Invalid date";
-	}
-};
 
 interface ApplicationSystemInfoProps {
 	application: {
@@ -35,13 +26,13 @@ export function ApplicationSystemInfo({
 					<label className="font-medium text-muted-foreground text-sm">
 						Created At
 					</label>
-					<p className="text-sm">{formatDate(application.created_at)}</p>
+					<p className="text-sm">{formatTimestamp(application.created_at, "MMM dd, yyyy hh:mm a")}</p>
 				</div>
 				<div>
 					<label className="font-medium text-muted-foreground text-sm">
 						Last Updated
 					</label>
-					<p className="text-sm">{formatDate(application.updated_at)}</p>
+					<p className="text-sm">{formatTimestamp(application.updated_at, "MMM dd, yyyy hh:mm a")}</p>
 				</div>
 			</CardContent>
 		</Card>

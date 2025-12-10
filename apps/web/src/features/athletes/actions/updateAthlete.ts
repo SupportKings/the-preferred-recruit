@@ -8,9 +8,10 @@ import { createClient } from "@/utils/supabase/server";
 
 import { returnValidationErrors } from "next-safe-action";
 import { athleteUpdateSchema } from "../types/athlete";
+import { triggerKickoffWebhook } from "./triggerKickoffWebhook";
 
 export const updateAthleteAction = actionClient
-	.inputSchema(athleteUpdateSchema)
+	.schema(athleteUpdateSchema)
 	.action(async ({ parsedInput }) => {
 		const { id, ...updateData } = parsedInput;
 
@@ -22,7 +23,7 @@ export const updateAthleteAction = actionClient
 				supabase as any
 			)
 				.from("athletes")
-				.select("id, contact_email")
+				.select("id, contact_email, run_kickoff_automations")
 				.eq("id", id)
 				.eq("is_deleted", false)
 				.single();
@@ -130,16 +131,16 @@ export const updateAthleteAction = actionClient
 				cleanUpdateData.discord_username = updateData.discord_username;
 			if (updateData.internal_notes !== undefined)
 				cleanUpdateData.internal_notes = updateData.internal_notes;
+			if (updateData.run_kickoff_automations !== undefined)
+				cleanUpdateData.run_kickoff_automations =
+					updateData.run_kickoff_automations;
 
 			// 4. Update the athlete record
-			const { data: updatedAthlete, error: updateError } = await (
-				supabase as any
-			)
+			const { error: updateError } = await (supabase as any)
 				.from("athletes")
 				.update(cleanUpdateData)
 				.eq("id", id)
-				.select()
-				.single();
+				.eq("is_deleted", false);
 
 			if (updateError) {
 				console.error("Error updating athlete:", updateError);
@@ -148,13 +149,40 @@ export const updateAthleteAction = actionClient
 				});
 			}
 
-			if (!updatedAthlete) {
+			// 4b. Fetch the updated athlete (separate query to avoid .select() issues with type coercion)
+			const { data: updatedAthlete, error: refetchError } = await (
+				supabase as any
+			)
+				.from("athletes")
+				.select("*")
+				.eq("id", id)
+				.eq("is_deleted", false)
+				.single();
+
+			if (refetchError || !updatedAthlete) {
+				console.error("Error fetching updated athlete:", refetchError);
 				return returnValidationErrors(athleteUpdateSchema, {
-					_errors: ["Athlete update failed. Please try again."],
+					_errors: ["Athlete not found or already deleted."],
 				});
 			}
 
-			// 5. Revalidate relevant paths
+			// 5. Trigger kickoff webhook if run_kickoff_automations changed from false to true
+			const kickoffWasTriggered =
+				!existingAthlete.run_kickoff_automations &&
+				updatedAthlete.run_kickoff_automations;
+
+			if (kickoffWasTriggered) {
+				await triggerKickoffWebhook({
+					athlete_id: updatedAthlete.id,
+					discord_channel_id: updatedAthlete.discord_channel_id,
+					discord_username: updatedAthlete.discord_username,
+					discord_channel_url: updatedAthlete.discord_channel_url,
+					full_name: updatedAthlete.full_name,
+					contact_email: updatedAthlete.contact_email,
+				});
+			}
+
+			// 6. Revalidate relevant paths
 			revalidatePath("/dashboard/athletes");
 			revalidatePath(`/dashboard/athletes/${id}`);
 			revalidatePath("/dashboard");
