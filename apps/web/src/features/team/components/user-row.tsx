@@ -60,7 +60,7 @@ export function UserRow({ user, onRemoveUser, currentUserId }: UserRowProps) {
 
 					<div className="flex items-center space-x-1">
 						<User className="h-3 w-3" />
-						<span>Joined {formatLocalDate(user.createdAt, "MMM d, yyyy", "date unknown")}</span>
+						<span>Joined {formatLocalDate(user.createdAt?.toISOString(), "MMM d, yyyy", "date unknown")}</span>
 					</div>
 				</div>
 			</div>
