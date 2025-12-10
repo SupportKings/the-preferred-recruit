@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.39.0",
-    "@trigger.dev/sdk": "4.1.2",
+    "@trigger.dev/sdk": "4.2.0",
     "drizzle-orm": "^0.30.0",
     "import-in-the-middle": "^2.0.0",
     "postgres": "^3.4.3",
