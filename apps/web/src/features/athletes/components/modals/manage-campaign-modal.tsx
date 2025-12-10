@@ -30,7 +30,7 @@ import {
 import { athleteQueries } from "@/features/athletes/queries/useAthletes";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { formatLocalDate as format, getTodayDateString } from "@/lib/date-utils";
 import { Plus, Target } from "lucide-react";
 import { toast } from "sonner";
 import { LeadListLookup } from "../lookups/lead-list-lookup";
@@ -66,7 +66,7 @@ export function ManageCampaignModal({
 		status: "draft",
 		primary_lead_list_id: "",
 		daily_send_cap: "",
-		start_date: format(new Date(), "yyyy-MM-dd"),
+		start_date: getTodayDateString(),
 		internal_notes: "",
 	});
 
@@ -79,8 +79,8 @@ export function ManageCampaignModal({
 				primary_lead_list_id: campaign.primary_lead_list_id || "",
 				daily_send_cap: campaign.daily_send_cap?.toString() || "",
 				start_date: campaign.start_date
-					? format(new Date(campaign.start_date), "yyyy-MM-dd")
-					: format(new Date(), "yyyy-MM-dd"),
+					? format(campaign.start_date, "yyyy-MM-dd")
+					: getTodayDateString(),
 				internal_notes: campaign.internal_notes || "",
 			});
 		} else if (!isEdit) {
@@ -90,7 +90,7 @@ export function ManageCampaignModal({
 				status: "draft",
 				primary_lead_list_id: "",
 				daily_send_cap: "",
-				start_date: format(new Date(), "yyyy-MM-dd"),
+				start_date: getTodayDateString(),
 				internal_notes: "",
 			});
 		}

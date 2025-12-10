@@ -15,6 +15,7 @@ apps/server/server.exe
 *.swp
 *.swo
 *~
+*.bak
 
 # IDE
 .vscode/*

@@ -20,7 +20,7 @@ import {
 
 import { updateAthleteApplication } from "@/features/athlete-applications/actions/updateAthleteApplication";
 
-import { format } from "date-fns";
+import { formatLocalDate as format } from "@/lib/date-utils";
 import { Edit2, ExternalLink, Eye, FileText, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { ManageApplicationModal } from "../shared/manage-application-modal";
@@ -210,17 +210,17 @@ export function AthleteApplicationsTab({
 										</TableCell>
 										<TableCell>
 											{app.start_date
-												? format(new Date(app.start_date), "MMM dd, yyyy")
+												? format(app.start_date, "MMM dd, yyyy")
 												: "-"}
 										</TableCell>
 										<TableCell>
 											{app.offer_date
-												? format(new Date(app.offer_date), "MMM dd, yyyy")
+												? format(app.offer_date, "MMM dd, yyyy")
 												: "-"}
 										</TableCell>
 										<TableCell>
 											{app.commitment_date
-												? format(new Date(app.commitment_date), "MMM dd, yyyy")
+												? format(app.commitment_date, "MMM dd, yyyy")
 												: "-"}
 										</TableCell>
 										<TableCell>

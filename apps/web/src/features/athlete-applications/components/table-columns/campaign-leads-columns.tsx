@@ -24,14 +24,14 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { updateCampaignLead } from "@/features/athlete-applications/actions/relations/campaign-leads";
 
 import { createColumnHelper } from "@tanstack/react-table";
-import { format } from "date-fns";
+import { formatLocalDate as format } from "@/lib/date-utils";
 import { Edit, Eye, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 const formatDate = (dateString: string | null) => {
 	if (!dateString) return "Not set";
 	try {
-		return format(new Date(dateString), "MMM dd, yyyy");
+		return format(dateString, "MMM dd, yyyy");
 	} catch {
 		return "Invalid date";
 	}

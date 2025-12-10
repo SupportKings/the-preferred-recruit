@@ -12,6 +12,7 @@ import {
 	SelectValue,
 } from "@/components/ui/select";
 
+import { formatLocalDate } from "@/lib/date-utils";
 import { Edit3, Mail, Phone, Save, User, X } from "lucide-react";
 
 interface AthleteIdentityContactProps {
@@ -231,7 +232,7 @@ export function AthleteIdentityContact({
 					) : (
 						<p className="text-sm">
 							{athlete.date_of_birth
-								? new Date(athlete.date_of_birth).toLocaleDateString()
+								? formatLocalDate(athlete.date_of_birth)
 								: "Not provided"}
 						</p>
 					)}

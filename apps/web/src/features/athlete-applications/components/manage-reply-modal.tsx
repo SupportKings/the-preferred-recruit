@@ -30,7 +30,7 @@ import { applicationQueries } from "@/features/athlete-applications/queries/useA
 import { UniversityJobLookup } from "@/features/athletes/components/lookups/university-job-lookup";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { formatLocalDate as format, getTodayDateString } from "@/lib/date-utils";
 import { Edit, MessageSquare, Plus } from "lucide-react";
 import { toast } from "sonner";
 
@@ -79,7 +79,7 @@ export function ManageReplyModal({
 			setFormData({
 				type: reply.type || "email",
 				occurred_at: reply.occurred_at
-					? format(new Date(reply.occurred_at), "yyyy-MM-dd")
+					? format(reply.occurred_at, "yyyy-MM-dd")
 					: "",
 				summary: reply.summary || "",
 				campaign_id: reply.campaign_id || null,
@@ -90,7 +90,7 @@ export function ManageReplyModal({
 			// Reset form for add mode
 			setFormData({
 				type: "email",
-				occurred_at: format(new Date(), "yyyy-MM-dd"),
+				occurred_at: getTodayDateString(),
 				summary: "",
 				campaign_id: null,
 				university_job_id: null,

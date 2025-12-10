@@ -26,7 +26,7 @@ import { createReply, updateReply } from "@/features/athletes/actions/replies";
 import { athleteQueries } from "@/features/athletes/queries/useAthletes";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { formatLocalDate as format, getTodayDateString } from "@/lib/date-utils";
 import { MessageCircle, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { ApplicationLookup } from "../lookups/application-lookup";
@@ -64,7 +64,7 @@ export function ManageReplyModal({
 
 	const [formData, setFormData] = useState({
 		type: "email",
-		occurred_at: format(new Date(), "yyyy-MM-dd"),
+		occurred_at: getTodayDateString(),
 		summary: "",
 		internal_notes: "",
 		application_id: "",
@@ -77,8 +77,8 @@ export function ManageReplyModal({
 			setFormData({
 				type: reply.type || "email",
 				occurred_at: reply.occurred_at
-					? format(new Date(reply.occurred_at), "yyyy-MM-dd")
-					: format(new Date(), "yyyy-MM-dd"),
+					? format(reply.occurred_at, "yyyy-MM-dd")
+					: getTodayDateString(),
 				summary: reply.summary || "",
 				internal_notes: reply.internal_notes || "",
 				application_id: reply.application_id || "",
@@ -88,7 +88,7 @@ export function ManageReplyModal({
 		} else if (!isEdit) {
 			setFormData({
 				type: "email",
-				occurred_at: format(new Date(), "yyyy-MM-dd"),
+				occurred_at: getTodayDateString(),
 				summary: "",
 				internal_notes: "",
 				application_id: "",

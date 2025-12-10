@@ -31,7 +31,7 @@ import {
 } from "@/features/contacts/actions/relations/contactAthletes";
 
 import { useQueryClient } from "@tanstack/react-query";
-import { format } from "date-fns";
+import { formatLocalDate as format } from "@/lib/date-utils";
 import { Edit, Plus, Users } from "lucide-react";
 import { toast } from "sonner";
 

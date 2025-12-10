@@ -15,6 +15,7 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { PAYMENT_TYPES } from "@/features/athletes/types/athlete";
 
+import { formatLocalDate } from "@/lib/date-utils";
 import { DollarSign, Edit3, Save, X } from "lucide-react";
 
 interface AthleteContractBillingProps {
@@ -137,7 +138,7 @@ export function AthleteContractBilling({
 					) : (
 						<p className="text-sm">
 							{athlete.contract_date
-								? new Date(athlete.contract_date).toLocaleDateString()
+								? formatLocalDate(athlete.contract_date)
 								: "Not signed"}
 						</p>
 					)}
@@ -158,7 +159,7 @@ export function AthleteContractBilling({
 					) : (
 						<p className="text-sm">
 							{athlete.go_live_date
-								? new Date(athlete.go_live_date).toLocaleDateString()
+								? formatLocalDate(athlete.go_live_date)
 								: "Not set"}
 						</p>
 					)}

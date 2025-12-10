@@ -8,7 +8,7 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { UrlActions } from "@/components/url-actions";
 
-import { format } from "date-fns";
+import { formatLocalDate as format } from "@/lib/date-utils";
 import { Calendar, Edit3, Save, X } from "lucide-react";
 
 type Campaign = Database["public"]["Tables"]["campaigns"]["Row"];
@@ -16,7 +16,7 @@ type Campaign = Database["public"]["Tables"]["campaigns"]["Row"];
 const formatDate = (dateString: string | null) => {
 	if (!dateString) return "Not set";
 	try {
-		return format(new Date(dateString), "MMM dd, yyyy");
+		return format(dateString, "MMM dd, yyyy");
 	} catch {
 		return "Invalid date";
 	}
@@ -104,11 +104,7 @@ export function CampaignScheduleSending({
 					</label>
 					{isEditing ? (
 						<DatePicker
-							value={
-								formData.start_date
-									? format(new Date(formData.start_date), "yyyy-MM-dd")
-									: ""
-							}
+							value={formData.start_date || ""}
 							onChange={(value) =>
 								setFormData((prev) => ({ ...prev, start_date: value }))
 							}
@@ -125,11 +121,7 @@ export function CampaignScheduleSending({
 					</label>
 					{isEditing ? (
 						<DatePicker
-							value={
-								formData.end_date
-									? format(new Date(formData.end_date), "yyyy-MM-dd")
-									: ""
-							}
+							value={formData.end_date || ""}
 							onChange={(value) =>
 								setFormData((prev) => ({ ...prev, end_date: value }))
 							}
