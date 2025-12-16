@@ -165,18 +165,17 @@ export function ManageChecklistModal({
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
-			{externalOpen === undefined && (
-				<DialogTrigger
-					render={
-						children || (
-							<Button variant="outline" size="sm" className="gap-2">
-								<Plus className="h-4 w-4" />
-								Add Checklist Item
-							</Button>
-						)
-					}
-				/>
-			)}
+			{externalOpen === undefined &&
+				(children ? (
+					<DialogTrigger asChild>{children}</DialogTrigger>
+				) : (
+					<DialogTrigger asChild>
+						<Button variant="outline" size="sm" className="gap-2">
+							<Plus className="h-4 w-4" />
+							Add Checklist Item
+						</Button>
+					</DialogTrigger>
+				))}
 			<DialogContent className="sm:max-w-[500px]">
 				<DialogHeader>
 					<DialogTitle className="flex items-center gap-2">

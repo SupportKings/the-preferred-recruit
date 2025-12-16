@@ -73,11 +73,31 @@ export function parsePercentage(value: string | null): number | null {
 
 /**
  * Parse integer from string, return null if invalid
+ * Handles various currency formats:
+ * - US format: $32,564 or 32,564
+ * - European format: US$71.282 or 71.282 (period as thousands separator)
  */
 export function parseInteger(value: string | null): number | null {
 	if (!value || value === "-") return null;
 
-	const cleaned = value.replace(/,/g, "").trim();
+	// Remove currency symbols and prefixes (US$, $, €, £, etc.)
+	let cleaned = value.replace(/^(US\$|\$|€|£)/i, "").trim();
+
+	// Handle European format where period is thousands separator
+	// e.g., "71.282" = 71,282 (not 71.282 decimal)
+	if (cleaned.includes(".") && !cleaned.includes(",")) {
+		const parts = cleaned.split(".");
+		const lastPart = parts[parts.length - 1];
+
+		// If last segment after period is 3 digits, treat as thousands separator
+		if (lastPart.length === 3 && parts.length <= 3) {
+			cleaned = cleaned.replace(/\./g, "");
+		}
+	}
+
+	// Remove commas (thousands separators in US format)
+	cleaned = cleaned.replace(/,/g, "");
+
 	const num = Number.parseInt(cleaned, 10);
 
 	return Number.isNaN(num) ? null : num;
