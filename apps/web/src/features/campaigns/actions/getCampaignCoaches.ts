@@ -6,14 +6,21 @@ import { getUser } from "@/queries/getUser";
 
 import type {
 	CampaignCoachData,
-	CoachExportFilters,
+	CoachExportServerFilters,
 } from "../types/coach-export-types";
 
 export interface GetCoachesOptions {
 	page?: number;
 	pageSize?: number;
-	filters?: CoachExportFilters;
+	filters?: CoachExportServerFilters;
 	coachIds?: string[];
+}
+
+// Helper to check if operator is negated (exclusion)
+function isNegatedOperator(
+	operator: string,
+): operator is "is not" | "is none of" {
+	return operator === "is not" || operator === "is none of";
 }
 
 export async function getCampaignCoachesAction(
@@ -32,47 +39,236 @@ export async function getCampaignCoachesAction(
 
 		const supabase = await createClient();
 
-		// For tuition filtering, we need to use a different approach
+		// For tuition and division filtering, we need to use a different approach
 		// since Supabase doesn't support filtering on joined table columns directly
 		const hasTuitionFilter =
-			filters?.minTuition !== undefined || filters?.maxTuition !== undefined;
+			filters?.tuition && filters.tuition.values.length > 0;
+		const hasDivisionFilter =
+			filters?.divisions && filters.divisions.values.length > 0;
+
+		// If we have division filters, get matching university IDs first
+		let divisionFilteredUniversityIds: string[] | null = null;
+		if (hasDivisionFilter && filters?.divisions) {
+			const divisionFilter = filters.divisions;
+
+			// First get division IDs that match the filter
+			const divisionQuery = supabase
+				.from("divisions")
+				.select("id")
+				.in("name", divisionFilter.values);
+
+			const { data: matchingDivisions, error: divError } = await divisionQuery;
+			if (divError) {
+				console.error("Error fetching divisions:", divError);
+				return {
+					success: false,
+					error: divError.message,
+				};
+			}
+
+			const divisionIds = matchingDivisions?.map((d) => d.id) || [];
+
+			if (
+				divisionIds.length === 0 &&
+				!isNegatedOperator(divisionFilter.operator)
+			) {
+				// No matching divisions found and we want to include them
+				return {
+					success: true,
+					data: [],
+					pagination: {
+						page,
+						pageSize,
+						totalCount: 0,
+						totalPages: 0,
+					},
+				};
+			}
+
+			// Now get university IDs that have these divisions
+			let uniDivQuery = supabase
+				.from("university_divisions")
+				.select("university_id");
+
+			if (isNegatedOperator(divisionFilter.operator)) {
+				// Exclude universities that have these divisions
+				if (divisionIds.length > 0) {
+					uniDivQuery = uniDivQuery.in("division_id", divisionIds);
+				}
+			} else {
+				// Include only universities that have these divisions
+				uniDivQuery = uniDivQuery.in("division_id", divisionIds);
+			}
+
+			const { data: uniDivs, error: uniDivError } = await uniDivQuery;
+			if (uniDivError) {
+				console.error("Error fetching university divisions:", uniDivError);
+				return {
+					success: false,
+					error: uniDivError.message,
+				};
+			}
+
+			const matchedUniIds = [
+				...new Set(uniDivs?.map((ud) => ud.university_id) || []),
+			];
+
+			if (isNegatedOperator(divisionFilter.operator)) {
+				// For negated operators, we need to exclude these universities
+				// We'll handle this by getting all universities and excluding the matched ones
+				divisionFilteredUniversityIds = matchedUniIds; // These are to be excluded
+			} else {
+				divisionFilteredUniversityIds = matchedUniIds; // These are to be included
+
+				if (divisionFilteredUniversityIds.length === 0) {
+					return {
+						success: true,
+						data: [],
+						pagination: {
+							page,
+							pageSize,
+							totalCount: 0,
+							totalPages: 0,
+						},
+					};
+				}
+			}
+		}
 
 		// If we have tuition filters, get matching university IDs first
 		let tuitionFilteredUniversityIds: string[] | null = null;
-		if (hasTuitionFilter) {
+		if (hasTuitionFilter && filters?.tuition) {
+			const tuitionFilter = filters.tuition;
 			let universityQuery = supabase
 				.from("universities")
 				.select("id")
 				.not("total_yearly_cost", "is", null);
 
-			if (filters?.minTuition !== undefined) {
-				universityQuery = universityQuery.gte(
-					"total_yearly_cost",
-					filters.minTuition,
-				);
-			}
-			if (filters?.maxTuition !== undefined) {
-				universityQuery = universityQuery.lte(
-					"total_yearly_cost",
-					filters.maxTuition,
-				);
+			// Handle different number operators
+			switch (tuitionFilter.operator) {
+				case "is":
+					universityQuery = universityQuery.eq(
+						"total_yearly_cost",
+						tuitionFilter.values[0],
+					);
+					break;
+				case "is not":
+					universityQuery = universityQuery.neq(
+						"total_yearly_cost",
+						tuitionFilter.values[0],
+					);
+					break;
+				case "is between":
+					if (tuitionFilter.values.length >= 2) {
+						universityQuery = universityQuery
+							.gte("total_yearly_cost", tuitionFilter.values[0])
+							.lte("total_yearly_cost", tuitionFilter.values[1]);
+					}
+					break;
+				case "is not between": {
+					// Return universities outside the range (< min OR > max)
+					// Use two separate queries and combine results
+					if (tuitionFilter.values.length >= 2) {
+						const min = tuitionFilter.values[0];
+						const max = tuitionFilter.values[1];
+
+						// Query for universities with tuition < min
+						const { data: belowMin } = await supabase
+							.from("universities")
+							.select("id")
+							.not("total_yearly_cost", "is", null)
+							.lt("total_yearly_cost", min);
+
+						// Query for universities with tuition > max
+						const { data: aboveMax } = await supabase
+							.from("universities")
+							.select("id")
+							.not("total_yearly_cost", "is", null)
+							.gt("total_yearly_cost", max);
+
+						// Combine and dedupe results
+						const combinedIds = new Set([
+							...(belowMin?.map((u) => u.id) || []),
+							...(aboveMax?.map((u) => u.id) || []),
+						]);
+
+						tuitionFilteredUniversityIds = [...combinedIds];
+
+						// Skip the normal query execution below
+						if (tuitionFilteredUniversityIds.length === 0) {
+							return {
+								success: true,
+								data: [],
+								pagination: {
+									page,
+									pageSize,
+									totalCount: 0,
+									totalPages: 0,
+								},
+							};
+						}
+					}
+					break;
+				}
+				case "is less than":
+					universityQuery = universityQuery.lt(
+						"total_yearly_cost",
+						tuitionFilter.values[0],
+					);
+					break;
+				case "is less than or equal to":
+					universityQuery = universityQuery.lte(
+						"total_yearly_cost",
+						tuitionFilter.values[0],
+					);
+					break;
+				case "is greater than":
+					universityQuery = universityQuery.gt(
+						"total_yearly_cost",
+						tuitionFilter.values[0],
+					);
+					break;
+				case "is greater than or equal to":
+					universityQuery = universityQuery.gte(
+						"total_yearly_cost",
+						tuitionFilter.values[0],
+					);
+					break;
 			}
 
-			// If user also selected specific universities, filter within those
-			if (filters?.universities && filters.universities.length > 0) {
-				universityQuery = universityQuery.in("id", filters.universities);
-			}
+			// Skip query execution if "is not between" already set tuitionFilteredUniversityIds
+			if (tuitionFilteredUniversityIds === null) {
+				// If user also selected specific universities, filter within those
+				// Handle negated university operators
+				if (filters?.universities && filters.universities.values.length > 0) {
+					if (isNegatedOperator(filters.universities.operator)) {
+						// Exclude these universities
+						for (const uniId of filters.universities.values) {
+							universityQuery = universityQuery.neq("id", uniId);
+						}
+					} else {
+						// Include only these universities
+						universityQuery = universityQuery.in(
+							"id",
+							filters.universities.values,
+						);
+					}
+				}
 
-			const { data: universities, error: uniError } = await universityQuery;
-			if (uniError) {
-				console.error("Error fetching universities for tuition filter:", uniError);
-				return {
-					success: false,
-					error: uniError.message,
-				};
-			}
+				const { data: universities, error: uniError } = await universityQuery;
+				if (uniError) {
+					console.error(
+						"Error fetching universities for tuition filter:",
+						uniError,
+					);
+					return {
+						success: false,
+						error: uniError.message,
+					};
+				}
 
-			tuitionFilteredUniversityIds = universities?.map((u) => u.id) || [];
+				tuitionFilteredUniversityIds = universities?.map((u) => u.id) || [];
+			}
 
 			// If no universities match the tuition filter, return empty results
 			if (tuitionFilteredUniversityIds.length === 0) {
@@ -89,6 +285,75 @@ export async function getCampaignCoachesAction(
 			}
 		}
 
+		// Combine all university filters into a single set
+		// Priority: tuition > division > university selection
+		let finalUniversityIds: string[] | null = null;
+		let excludeUniversityIds: string[] | null = null;
+
+		// Start with division filter if active (non-negated includes, negated excludes)
+		if (divisionFilteredUniversityIds) {
+			if (
+				hasDivisionFilter &&
+				filters?.divisions &&
+				isNegatedOperator(filters.divisions.operator)
+			) {
+				excludeUniversityIds = divisionFilteredUniversityIds;
+			} else {
+				finalUniversityIds = divisionFilteredUniversityIds;
+			}
+		}
+
+		// Apply tuition filter (intersect with existing)
+		if (tuitionFilteredUniversityIds) {
+			if (finalUniversityIds) {
+				// Intersect tuition with division
+				finalUniversityIds = finalUniversityIds.filter((id) =>
+					tuitionFilteredUniversityIds.includes(id),
+				);
+			} else {
+				finalUniversityIds = tuitionFilteredUniversityIds;
+			}
+		}
+
+		// Apply university selection filter
+		if (filters?.universities && filters.universities.values.length > 0) {
+			const universityFilter = filters.universities;
+			if (isNegatedOperator(universityFilter.operator)) {
+				// Exclude these universities
+				if (excludeUniversityIds) {
+					excludeUniversityIds = [
+						...excludeUniversityIds,
+						...universityFilter.values,
+					];
+				} else {
+					excludeUniversityIds = universityFilter.values;
+				}
+			} else {
+				// Include only these universities (intersect with existing)
+				if (finalUniversityIds) {
+					finalUniversityIds = finalUniversityIds.filter((id) =>
+						universityFilter.values.includes(id),
+					);
+				} else {
+					finalUniversityIds = universityFilter.values;
+				}
+			}
+		}
+
+		// If finalUniversityIds is empty after all filtering, return empty results
+		if (finalUniversityIds && finalUniversityIds.length === 0) {
+			return {
+				success: true,
+				data: [],
+				pagination: {
+					page,
+					pageSize,
+					totalCount: 0,
+					totalPages: 0,
+				},
+			};
+		}
+
 		// Build count query
 		let countQuery = supabase
 			.from("university_jobs")
@@ -96,15 +361,25 @@ export async function getCampaignCoachesAction(
 			.is("is_deleted", false)
 			.not("coach_id", "is", null);
 
-		// Apply filters to count query
-		// If tuition filter is active, use the pre-filtered university IDs (which already includes university filter)
-		if (tuitionFilteredUniversityIds) {
-			countQuery = countQuery.in("university_id", tuitionFilteredUniversityIds);
-		} else if (filters?.universities && filters.universities.length > 0) {
-			countQuery = countQuery.in("university_id", filters.universities);
+		// Apply combined university filter to count query
+		if (finalUniversityIds) {
+			countQuery = countQuery.in("university_id", finalUniversityIds);
 		}
-		if (filters?.programs && filters.programs.length > 0) {
-			countQuery = countQuery.in("program_id", filters.programs);
+		if (excludeUniversityIds) {
+			for (const uniId of excludeUniversityIds) {
+				countQuery = countQuery.neq("university_id", uniId);
+			}
+		}
+		if (filters?.programs && filters.programs.values.length > 0) {
+			if (isNegatedOperator(filters.programs.operator)) {
+				// Exclude these programs
+				for (const progId of filters.programs.values) {
+					countQuery = countQuery.neq("program_id", progId);
+				}
+			} else {
+				// Include only these programs
+				countQuery = countQuery.in("program_id", filters.programs.values);
+			}
 		}
 
 		const { count: totalCount, error: countError } = await countQuery;
@@ -184,16 +459,26 @@ export async function getCampaignCoachesAction(
 			.order("id", { ascending: true })
 			.range((page - 1) * pageSize, page * pageSize - 1);
 
-		// Apply filters
-		// If tuition filter is active, use the pre-filtered university IDs (which already includes university filter)
-		if (tuitionFilteredUniversityIds) {
-			query = query.in("university_id", tuitionFilteredUniversityIds);
-		} else if (filters?.universities && filters.universities.length > 0) {
-			query = query.in("university_id", filters.universities);
+		// Apply combined university filter to main query
+		if (finalUniversityIds) {
+			query = query.in("university_id", finalUniversityIds);
+		}
+		if (excludeUniversityIds) {
+			for (const uniId of excludeUniversityIds) {
+				query = query.neq("university_id", uniId);
+			}
 		}
 
-		if (filters?.programs && filters.programs.length > 0) {
-			query = query.in("program_id", filters.programs);
+		if (filters?.programs && filters.programs.values.length > 0) {
+			if (isNegatedOperator(filters.programs.operator)) {
+				// Exclude these programs
+				for (const progId of filters.programs.values) {
+					query = query.neq("program_id", progId);
+				}
+			} else {
+				// Include only these programs
+				query = query.in("program_id", filters.programs.values);
+			}
 		}
 
 		const { data: universityJobs, error } = await query;
@@ -221,13 +506,6 @@ export async function getCampaignCoachesAction(
 				// Extract division from university_divisions
 				const division =
 					job.universities?.university_divisions?.[0]?.divisions?.name || null;
-
-				// Apply division filter (client-side since it's nested)
-				if (filters?.divisions && filters.divisions.length > 0) {
-					if (!division || !filters.divisions.includes(division)) {
-						return null;
-					}
-				}
 
 				// Extract conference from university_conferences
 				const conference =
@@ -278,7 +556,8 @@ export async function getCampaignCoachesAction(
 					actComposite25th: job.universities?.act_composite_25th || null,
 					actComposite75th: job.universities?.act_composite_75th || null,
 					acceptanceRate: job.universities?.acceptance_rate_pct || null,
-					undergraduateEnrollment: job.universities?.undergraduate_enrollment || null,
+					undergraduateEnrollment:
+						job.universities?.undergraduate_enrollment || null,
 
 					// Program info
 					programId: job.programs?.id || null,

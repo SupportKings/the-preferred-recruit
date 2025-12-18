@@ -1,5 +1,34 @@
 import type { Json } from "@/utils/supabase/database.types";
 
+import type {
+	FiltersState,
+	NumberFilterOperator,
+	OptionFilterOperator,
+} from "@/components/data-table-filter/core/types";
+
+// Re-export for convenience
+export type { FiltersState };
+
+// Server-side filter format with operator support
+export interface CoachExportServerFilters {
+	divisions?: {
+		values: string[];
+		operator: OptionFilterOperator;
+	};
+	universities?: {
+		values: string[];
+		operator: OptionFilterOperator;
+	};
+	programs?: {
+		values: string[];
+		operator: OptionFilterOperator;
+	};
+	tuition?: {
+		values: number[];
+		operator: NumberFilterOperator;
+	};
+}
+
 // TODO: Regenerate database types after running migration 20251116192221_create_coach_list_exports.sql
 // Then replace these manual types with: Database["public"]["Tables"]["coach_list_exports"]["Row"]
 export interface CoachListExport {

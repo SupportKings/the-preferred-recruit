@@ -4,13 +4,22 @@ import { createClient } from "@/utils/supabase/server";
 
 import { getUser } from "@/queries/getUser";
 
+import type { CoachExportServerFilters } from "../types/coach-export-types";
+
 export interface CoachFilterOptions {
-	divisions: string[];
-	universities: Array<{ id: string; name: string }>;
-	programs: Array<{ id: string; name: string; universityId: string }>;
+	divisions: Array<{ name: string; count: number }>;
+	universities: Array<{ id: string; name: string; count: number }>;
+	programs: Array<{
+		id: string;
+		name: string;
+		universityId: string;
+		count: number;
+	}>;
 }
 
-export async function getCampaignCoachFilterOptionsAction() {
+export async function getCampaignCoachFilterOptionsAction(
+	filters?: CoachExportServerFilters,
+) {
 	try {
 		const session = await getUser();
 		if (!session?.user) {
@@ -22,92 +31,103 @@ export async function getCampaignCoachFilterOptionsAction() {
 
 		const supabase = await createClient();
 
-		// Get all divisions directly
-		const { data: allDivisions, error: divError } = await supabase
-			.from("divisions")
-			.select("name")
-			.order("name");
+		// Extract filter values for RPC calls
+		const divisionNames = filters?.divisions?.values || null;
+		const universityIds = filters?.universities?.values || null;
+		const programIds = filters?.programs?.values || null;
 
-		if (divError) {
-			console.error("Error fetching divisions:", divError);
+		// Query counts via filtered RPC functions
+		const [divisionResult, universityResult, programResult] = await Promise.all(
+			[
+				supabase.rpc("get_filtered_coach_division_counts", {
+					p_university_ids: universityIds,
+					p_program_ids: programIds,
+				}),
+				supabase.rpc("get_filtered_coach_university_counts", {
+					p_division_names: divisionNames,
+					p_program_ids: programIds,
+				}),
+				supabase.rpc("get_filtered_coach_program_counts", {
+					p_division_names: divisionNames,
+					p_university_ids: universityIds,
+				}),
+			],
+		);
+
+		// Process division counts
+		let divisionsWithCounts: Array<{ name: string; count: number }> = [];
+		if (divisionResult.error) {
+			console.error("Error fetching division counts:", divisionResult.error);
+		} else {
+			divisionsWithCounts = (
+				divisionResult.data as Array<{
+					division_name: string;
+					coach_count: number;
+				}>
+			).map((d) => ({
+				name: d.division_name,
+				count: Number(d.coach_count),
+			}));
 		}
 
-		// Get all unique universities and programs from university_jobs
-		const { data: universityJobs, error } = await supabase
-			.from("university_jobs")
-			.select(
-				`
-				program_id,
-				university_id,
-				programs:program_id (
-					id,
-					gender,
-					universities!programs_university_id_fkey (
-						id,
-						name
-					)
-				),
-				universities:university_id (
-					id,
-					name
-				)
-			`,
-			)
-			.is("is_deleted", false)
-			.not("coach_id", "is", null);
-
-		if (error) {
-			console.error("Error fetching filter options:", error);
-			return {
-				success: false,
-				error: error.message,
-			};
+		// Process university counts
+		let universitiesWithCounts: Array<{
+			id: string;
+			name: string;
+			count: number;
+		}> = [];
+		if (universityResult.error) {
+			console.error(
+				"Error fetching university counts:",
+				universityResult.error,
+			);
+		} else {
+			universitiesWithCounts = (
+				universityResult.data as Array<{
+					university_id: string;
+					university_name: string;
+					coach_count: number;
+				}>
+			).map((u) => ({
+				id: u.university_id,
+				name: u.university_name,
+				count: Number(u.coach_count),
+			}));
 		}
 
-		// Extract unique values
-		const universitiesMap = new Map<string, string>();
-		const programsMap = new Map<
-			string,
-			{ name: string; universityId: string }
-		>();
-
-		for (const job of universityJobs || []) {
-			// universities is returned as an array from the join, get the first element
-			const university = Array.isArray(job.universities)
-				? job.universities[0]
-				: job.universities;
-			if (university?.id && university?.name) {
-				universitiesMap.set(university.id, university.name);
-			}
-
-			// programs is also returned as an array from the join
-			const program = Array.isArray(job.programs)
-				? job.programs[0]
-				: job.programs;
-
-			// Program name is university name + gender
-			// programs.universities is also an array from the join
-			const programUniversity = Array.isArray(program?.universities)
-				? program?.universities[0]
-				: program?.universities;
-			if (program?.id && programUniversity?.id) {
-				const universityId = programUniversity.id;
-				const programName =
-					`${programUniversity.name} ${program.gender || ""}`.trim();
-				programsMap.set(program.id, { name: programName, universityId });
-			}
+		// Process program counts
+		let programsWithCounts: Array<{
+			id: string;
+			name: string;
+			universityId: string;
+			count: number;
+		}> = [];
+		if (programResult.error) {
+			console.error("Error fetching program counts:", programResult.error);
+		} else {
+			programsWithCounts = (
+				programResult.data as Array<{
+					program_id: string;
+					program_name: string;
+					university_id: string;
+					coach_count: number;
+				}>
+			).map((p) => ({
+				id: p.program_id,
+				name: p.program_name,
+				universityId: p.university_id,
+				count: Number(p.coach_count),
+			}));
 		}
 
 		const filterOptions: CoachFilterOptions = {
-			divisions: (allDivisions || [])
-				.map((d) => d.name)
-				.filter(Boolean) as string[],
-			universities: Array.from(universitiesMap.entries())
-				.map(([id, name]) => ({ id, name }))
-				.sort((a, b) => a.name.localeCompare(b.name)),
-			programs: Array.from(programsMap.entries())
-				.map(([id, { name, universityId }]) => ({ id, name, universityId }))
-				.sort((a, b) => a.name.localeCompare(b.name)),
+			divisions: divisionsWithCounts.sort((a, b) =>
+				a.name.localeCompare(b.name),
+			),
+			universities: universitiesWithCounts.sort((a, b) =>
+				a.name.localeCompare(b.name),
+			),
+			programs: programsWithCounts.sort((a, b) => a.name.localeCompare(b.name)),
 		};
 
 		return {

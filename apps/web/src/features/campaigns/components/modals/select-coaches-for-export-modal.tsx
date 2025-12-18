@@ -1,29 +1,32 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { cn } from "@/lib/utils";
-
-import { Badge } from "@/components/ui/badge";
+import { DataTableFilter } from "@/components/data-table-filter";
+import type {
+	ColumnConfig,
+	FiltersState,
+} from "@/components/data-table-filter/core/types";
+import { useDataTableFilters } from "@/components/data-table-filter/hooks/use-data-table-filters";
 import { Button } from "@/components/ui/button";
 import {
-	Command,
-	CommandEmpty,
-	CommandGroup,
-	CommandInput,
-	CommandItem,
-	CommandList,
-} from "@/components/ui/command";
-import { Dialog, DialogOverlay, DialogPortal } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
+	Dialog,
+	DialogContent,
+	DialogOverlay,
+	DialogPortal,
+	DialogTitle,
+} from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@/components/ui/popover";
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { UniversalDataTable } from "@/components/universal-data-table/universal-data-table";
+import { createUniversalColumnHelper } from "@/components/universal-data-table/utils/column-helpers";
 
 import {
 	getCoreRowModel,
@@ -31,7 +34,16 @@ import {
 	getSortedRowModel,
 	useReactTable,
 } from "@tanstack/react-table";
-import { CheckIcon, Loader2, PlusIcon, X, XIcon } from "lucide-react";
+import {
+	Building2Icon,
+	DollarSignIcon,
+	GraduationCapIcon,
+	Loader2,
+	PlusIcon,
+	TrophyIcon,
+	X,
+	XIcon,
+} from "lucide-react";
 import { toast } from "sonner";
 import { getCampaignCoachesAction } from "../../actions/getCampaignCoaches";
 import {
@@ -40,9 +52,75 @@ import {
 } from "../../actions/getCampaignCoachFilterOptions";
 import type {
 	CampaignCoachData,
-	CoachExportFilters,
+	CoachExportServerFilters,
 } from "../../types/coach-export-types";
 import { coachExportColumns } from "../table-columns/coach-export-columns";
+
+// Helper to convert FiltersState to server format
+function convertFiltersToServerFormat(
+	filters: FiltersState,
+): CoachExportServerFilters {
+	const serverFilters: CoachExportServerFilters = {};
+
+	for (const filter of filters) {
+		switch (filter.columnId) {
+			case "division":
+				serverFilters.divisions = {
+					values: filter.values as string[],
+					operator: filter.operator as
+						| "is"
+						| "is not"
+						| "is any of"
+						| "is none of",
+				};
+				break;
+			case "university":
+				serverFilters.universities = {
+					values: filter.values as string[],
+					operator: filter.operator as
+						| "is"
+						| "is not"
+						| "is any of"
+						| "is none of",
+				};
+				break;
+			case "program":
+				serverFilters.programs = {
+					values: filter.values as string[],
+					operator: filter.operator as
+						| "is"
+						| "is not"
+						| "is any of"
+						| "is none of",
+				};
+				break;
+			case "tuition":
+				serverFilters.tuition = {
+					values: filter.values as number[],
+					operator: filter.operator as
+						| "is"
+						| "is not"
+						| "is between"
+						| "is not between"
+						| "is less than"
+						| "is less than or equal to"
+						| "is greater than"
+						| "is greater than or equal to",
+				};
+				break;
+		}
+	}
+
+	return serverFilters;
+}
+
+// Type for coach data used by filter column helper
+interface CoachFilterData {
+	division: string | null;
+	university: string | null;
+	program: string | null;
+	tuition: number | null;
+}
 
 interface SelectCoachesForExportModalProps {
 	campaignId: string;
@@ -52,6 +130,9 @@ interface SelectCoachesForExportModalProps {
 	initialSelectedCoaches?: CampaignCoachData[];
 	children?: React.ReactNode;
 }
+
+// Column helper for filter configuration
+const universalColumnHelper = createUniversalColumnHelper<CoachFilterData>();
 
 export function SelectCoachesForExportModal({
 	campaignId,
@@ -63,7 +144,11 @@ export function SelectCoachesForExportModal({
 	const [internalOpen, setInternalOpen] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 	const [coaches, setCoaches] = useState<CampaignCoachData[]>([]);
-	const [rowSelection, setRowSelection] = useState({});
+	const [rowSelection, setRowSelection] = useState<Record<string, boolean>>({});
+	// Cache of all selected coaches across pages (keyed by coachId)
+	const [selectedCoachesCache, setSelectedCoachesCache] = useState<
+		Map<string, CampaignCoachData>
+	>(new Map());
 	const [filterOptions, setFilterOptions] = useState<CoachFilterOptions>({
 		divisions: [],
 		universities: [],
@@ -80,37 +165,139 @@ export function SelectCoachesForExportModal({
 	const open = externalOpen !== undefined ? externalOpen : internalOpen;
 	const setOpen = externalOnOpenChange || setInternalOpen;
 
-	// Filters state
-	const [filters, setFilters] = useState<CoachExportFilters>({
-		divisions: [],
-		universities: [],
-		programs: [],
-		minTuition: undefined,
-		maxTuition: undefined,
-	});
+	// Filters state using FiltersState format
+	const [filters, setFilters] = useState<FiltersState>([]);
 
 	// Track if we've done the initial load for this modal session
 	const hasInitiallyLoaded = useRef(false);
 
-	const loadFilterOptions = useCallback(async () => {
-		try {
-			const result = await getCampaignCoachFilterOptionsAction();
-			if (result.success && result.data) {
-				setFilterOptions(result.data);
-			}
-		} catch (error) {
-			console.error("Error loading filter options:", error);
+	// Get selected university IDs from current filters for conditional program filter
+	const selectedUniversityIds = useMemo(() => {
+		const universityFilter = filters.find((f) => f.columnId === "university");
+		if (!universityFilter || universityFilter.values.length === 0) {
+			return [];
 		}
-	}, []);
+		return universityFilter.values as string[];
+	}, [filters]);
+
+	// Build filter column configuration dynamically
+	const filterColumnsConfig = useMemo(() => {
+		// Build facetedOptions maps for counts
+		const divisionFacetedOptions = new Map<string, number>();
+		for (const div of filterOptions.divisions) {
+			divisionFacetedOptions.set(div.name, div.count);
+		}
+
+		const universityFacetedOptions = new Map<string, number>();
+		for (const uni of filterOptions.universities) {
+			universityFacetedOptions.set(uni.id, uni.count);
+		}
+
+		const baseConfig: ColumnConfig<CoachFilterData>[] = [
+			{
+				...universalColumnHelper
+					.option("division")
+					.displayName("Division")
+					.icon(TrophyIcon)
+					.build(),
+				options: filterOptions.divisions.map((div) => ({
+					value: div.name,
+					label: div.name,
+				})),
+				facetedOptions: divisionFacetedOptions,
+			},
+			{
+				...universalColumnHelper
+					.option("university")
+					.displayName("Universities")
+					.icon(Building2Icon)
+					.build(),
+				options: filterOptions.universities.map((uni) => ({
+					value: uni.id,
+					label: uni.name,
+				})),
+				facetedOptions: universityFacetedOptions,
+			},
+		];
+
+		// Only add programs filter if universities are selected
+		if (selectedUniversityIds.length > 0) {
+			const filteredPrograms = filterOptions.programs.filter((prog) =>
+				selectedUniversityIds.includes(prog.universityId),
+			);
+
+			const programFacetedOptions = new Map<string, number>();
+			for (const prog of filteredPrograms) {
+				programFacetedOptions.set(prog.id, prog.count);
+			}
+
+			baseConfig.push({
+				...universalColumnHelper
+					.option("program")
+					.displayName("Programs")
+					.icon(GraduationCapIcon)
+					.build(),
+				options: filteredPrograms.map((prog) => ({
+					value: prog.id,
+					label: prog.name,
+				})),
+				facetedOptions: programFacetedOptions,
+			});
+		}
+
+		// Add tuition budget filter
+		baseConfig.push(
+			universalColumnHelper
+				.number("tuition")
+				.displayName("Tuition Budget")
+				.icon(DollarSignIcon)
+				.build(),
+		);
+
+		return baseConfig;
+	}, [filterOptions, selectedUniversityIds]);
+
+	// Use the data table filters hook
+	const {
+		columns: filterColumns,
+		filters: filterState,
+		actions: filterActions,
+		strategy,
+	} = useDataTableFilters({
+		strategy: "server" as const,
+		data: [] as CoachFilterData[],
+		columnsConfig: filterColumnsConfig,
+		filters,
+		onFiltersChange: setFilters,
+	});
+
+	const loadFilterOptions = useCallback(
+		async (currentFilters?: FiltersState) => {
+			try {
+				const serverFilters = currentFilters
+					? convertFiltersToServerFormat(currentFilters)
+					: undefined;
+				const result = await getCampaignCoachFilterOptionsAction(serverFilters);
+				if (result.success && result.data) {
+					setFilterOptions(result.data);
+				}
+			} catch (error) {
+				console.error("Error loading filter options:", error);
+			}
+		},
+		[],
+	);
 
 	const loadCoaches = useCallback(
-		async (page = 1, currentFilters: CoachExportFilters) => {
+		async (currentFilters: FiltersState, page = 1, newPageSize?: number) => {
+			const effectivePageSize = newPageSize ?? pagination.pageSize;
 			try {
 				setIsLoading(true);
+				const serverFilters = convertFiltersToServerFormat(currentFilters);
 				const result = await getCampaignCoachesAction(campaignId, {
 					page,
-					pageSize: pagination.pageSize,
-					filters: currentFilters,
+					pageSize: effectivePageSize,
+					filters: serverFilters,
 				});
 
 				if (result.success && result.data) {
@@ -131,13 +318,19 @@ export function SelectCoachesForExportModal({
 		[campaignId, pagination.pageSize],
 	);
 
+	const handlePageSizeChange = (newSize: string) => {
+		const size = Number.parseInt(newSize, 10);
+		setPagination((prev) => ({ ...prev, pageSize: size, page: 1 }));
+		loadCoaches(filters, 1, size);
+	};
+
 	// Load filter options and initial data when modal opens
 	useEffect(() => {
 		if (open && !hasInitiallyLoaded.current) {
 			hasInitiallyLoaded.current = true;
 			setIsLoading(true);
 			loadFilterOptions();
-			loadCoaches(1, filters);
+			loadCoaches(filters, 1);
 		}
 		// Reset when modal closes
 		if (!open) {
@@ -147,30 +340,63 @@ export function SelectCoachesForExportModal({
 
 	// Set initial selection based on initialSelectedCoaches
 	useEffect(() => {
-		if (open && coaches.length > 0 && initialSelectedCoaches.length > 0) {
-			const initialSelectedIds = new Set(
-				initialSelectedCoaches.map((c) => c.coachId),
-			);
+		if (open && initialSelectedCoaches.length > 0) {
 			const newSelection: Record<string, boolean> = {};
-			coaches.forEach((coach, index) => {
-				if (initialSelectedIds.has(coach.coachId)) {
-					newSelection[index.toString()] = true;
-				}
-			});
+			const newCache = new Map<string, CampaignCoachData>();
+			for (const coach of initialSelectedCoaches) {
+				newSelection[coach.coachId] = true;
+				newCache.set(coach.coachId, coach);
+			}
 			setRowSelection(newSelection);
+			setSelectedCoachesCache(newCache);
 		}
-	}, [open, coaches, initialSelectedCoaches]);
+	}, [open, initialSelectedCoaches]);
 
-	// Update filters and auto-apply
-	const updateFilters = (newFilters: CoachExportFilters) => {
-		setFilters(newFilters);
-		loadCoaches(1, newFilters); // Reset to first page when filters change
-	};
+	// Sync selected coaches cache with row selection changes
+	useEffect(() => {
+		setSelectedCoachesCache((prevCache) => {
+			const newCache = new Map(prevCache);
+
+			// Add newly selected coaches from current page
+			for (const coach of coaches) {
+				if (rowSelection[coach.coachId]) {
+					newCache.set(coach.coachId, coach);
+				} else {
+					newCache.delete(coach.coachId);
+				}
+			}
+
+			// Remove any cached coaches that are no longer in rowSelection
+			for (const coachId of newCache.keys()) {
+				if (!rowSelection[coachId]) {
+					newCache.delete(coachId);
+				}
+			}
+
+			return newCache;
+		});
+	}, [rowSelection, coaches]);
+
+	// Track filter changes and reload data + filter options
+	const previousFiltersRef = useRef<string>("");
+	useEffect(() => {
+		const filtersJson = JSON.stringify(filters);
+		if (
+			previousFiltersRef.current &&
+			previousFiltersRef.current !== filtersJson
+		) {
+			loadCoaches(filters, 1);
+			// Also refresh filter options to update counts based on current filters
+			loadFilterOptions(filters);
+		}
+		previousFiltersRef.current = filtersJson;
+	}, [filters, loadCoaches, loadFilterOptions]);
 
 	// Table instance with server-side pagination
 	const table = useReactTable({
 		data: coaches,
 		columns: coachExportColumns,
+		getRowId: (row) => row.coachId,
 		state: {
 			rowSelection,
 			pagination: {
@@ -190,15 +416,29 @@ export function SelectCoachesForExportModal({
 							pageSize: pagination.pageSize,
 						})
 					: updater;
-			loadCoaches(newState.pageIndex + 1, filters);
+
+			// Check if page size changed
+			if (newState.pageSize !== pagination.pageSize) {
+				setPagination((prev) => ({
+					...prev,
+					pageSize: newState.pageSize,
+					page: 1,
+				}));
+				loadCoaches(filters, 1, newState.pageSize);
+			} else {
+				loadCoaches(filters, newState.pageIndex + 1);
+			}
 		},
 		getCoreRowModel: getCoreRowModel(),
 		getFilteredRowModel: getFilteredRowModel(),
 		getSortedRowModel: getSortedRowModel(),
 	});
 
-	const selectedRows = table.getSelectedRowModel().rows;
-	const selectedCoaches = selectedRows.map((row) => row.original);
+	// Get all selected coaches from cache (works across pages)
+	const selectedCoaches = useMemo(
+		() => Array.from(selectedCoachesCache.values()),
+		[selectedCoachesCache],
+	);
 
 	const handleConfirm = () => {
 		if (selectedCoaches.length === 0) {
@@ -208,20 +448,24 @@ export function SelectCoachesForExportModal({
 
 		onConfirm(selectedCoaches);
 		setOpen(false);
-		setRowSelection({}); // Reset selection
+		setRowSelection({});
+		setSelectedCoachesCache(new Map());
 	};
 
 	const handleClearSelection = () => {
-		table.toggleAllRowsSelected(false);
+		setRowSelection({});
+		setSelectedCoachesCache(new Map());
 	};
 
-	const handleClearFilters = () => {
-		updateFilters({
-			divisions: [],
-			universities: [],
-			programs: [],
-			minTuition: undefined,
-			maxTuition: undefined,
+	const handleRowClick = (coach: CampaignCoachData) => {
+		setRowSelection((prev) => {
+			const isSelected = prev[coach.coachId];
+			if (isSelected) {
+				const next = { ...prev };
+				delete next[coach.coachId];
+				return next;
+			}
+			return { ...prev, [coach.coachId]: true };
 		});
 	};
 
@@ -230,444 +474,217 @@ export function SelectCoachesForExportModal({
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogPortal>
-				<DialogOverlay className="fixed inset-0 z-50 bg-black/80" />
-				<div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-					<div className="relative flex h-[90vh] w-[95vw] flex-col gap-4 rounded-lg border bg-background p-6 shadow-lg">
-						{/* Header */}
-						<div className="flex items-start justify-between">
-							<div>
-								<h2 className="font-semibold text-lg">
-									Select Coaches for Export
-								</h2>
-								<p className="mt-1 text-muted-foreground text-sm">
-									Filter and select coaches to include in your CSV export
-								</p>
-							</div>
-							<Button
-								variant="ghost"
-								size="sm"
-								className="h-8 w-8 p-0"
-								onClick={() => setOpen(false)}
-							>
-								<X className="h-4 w-4" />
-							</Button>
+				<DialogOverlay className="bg-black/80" />
+				<DialogContent
+					nested
+					className="!z-50 flex h-[90vh] w-[95vw] max-w-[95vw] flex-col gap-4 overflow-hidden p-6 sm:max-w-[95vw]"
+					showCloseButton={false}
+				>
+					<DialogTitle className="sr-only">
+						Select Coaches for Export
+					</DialogTitle>
+					{/* Header */}
+					<div className="flex items-start justify-between">
+						<div>
+							<h2 className="font-semibold text-lg">
+								Select Coaches for Export
+							</h2>
+							<p className="mt-1 text-muted-foreground text-sm">
+								Filter and select coaches to include in your CSV export
+							</p>
 						</div>
+						<Button
+							variant="ghost"
+							size="sm"
+							className="h-8 w-8 p-0"
+							onClick={() => setOpen(false)}
+						>
+							<X className="h-4 w-4" />
+						</Button>
+					</div>
+
+					<Separator />
+
+					{/* Content */}
+					<div className="flex min-h-0 flex-1 flex-col gap-4">
+						{/* Filters Section */}
+						<DataTableFilter
+							columns={filterColumns}
+							filters={filterState}
+							actions={filterActions}
+							strategy={strategy}
+						/>
 
 						<Separator />
 
-						{/* Content */}
-						<div className="flex flex-1 flex-col gap-4 overflow-hidden">
-							{/* Filters Section */}
-							<div className="flex flex-wrap items-center gap-2">
-								{/* Division Filter */}
-								<FacetedFilter
-									title="Division"
-									options={filterOptions.divisions.map((div) => ({
-										value: div,
-										label: div,
-									}))}
-									selectedValues={filters.divisions || []}
-									onSelect={(values) =>
-										updateFilters({ ...filters, divisions: values })
-									}
-								/>
-
-								{/* Universities Filter */}
-								<FacetedFilter
-									title="Universities"
-									options={filterOptions.universities.map((uni) => ({
-										value: uni.id,
-										label: uni.name,
-									}))}
-									selectedValues={filters.universities || []}
-									onSelect={(values) =>
-										updateFilters({ ...filters, universities: values })
-									}
-								/>
-
-								{/* Programs Filter - only shows when universities are selected */}
-								{filters.universities && filters.universities.length > 0 && (
-									<FacetedFilter
-										title="Programs"
-										options={filterOptions.programs
-											.filter((prog) =>
-												filters.universities?.includes(prog.universityId),
-											)
-											.map((prog) => ({
-												value: prog.id,
-												label: prog.name,
-											}))}
-										selectedValues={filters.programs || []}
-										onSelect={(values) =>
-											updateFilters({ ...filters, programs: values })
-										}
-									/>
-								)}
-
-								{/* Tuition Budget Filter */}
-								<NumberRangeFilter
-									title="Tuition Budget"
-									minValue={filters.minTuition}
-									maxValue={filters.maxTuition}
-									onMinChange={(value) =>
-										updateFilters({ ...filters, minTuition: value })
-									}
-									onMaxChange={(value) =>
-										updateFilters({ ...filters, maxTuition: value })
-									}
-									placeholder={{ min: "Min ($)", max: "Max ($)" }}
-								/>
-
-								{(filters.divisions?.length ||
-									filters.universities?.length ||
-									filters.programs?.length ||
-									filters.minTuition !== undefined ||
-									filters.maxTuition !== undefined) && (
-									<Button
-										variant="ghost"
-										size="sm"
-										className="ml-auto"
-										onClick={handleClearFilters}
-									>
-										Clear Filters
-									</Button>
-								)}
-							</div>
-
-							<Separator />
-
-							{/* Table Section */}
-							<div className="flex flex-1 flex-col gap-2 overflow-hidden">
-								<div className="flex items-center justify-between">
-									<Label className="text-sm">
-										Available Coaches ({pagination.totalCount})
-									</Label>
+						{/* Table Section */}
+						<div className="flex min-h-0 flex-1 flex-col gap-2">
+							<div className="flex items-center justify-between">
+								<Label className="text-sm">
+									Available Coaches ({pagination.totalCount})
+								</Label>
+								<div className="flex items-center gap-4">
+									<div className="flex items-center gap-2">
+										<span className="text-muted-foreground text-xs">Show</span>
+										<Select
+											value={pagination.pageSize.toString()}
+											onValueChange={handlePageSizeChange}
+										>
+											<SelectTrigger className="!h-6 min-h-0 w-[60px] px-2 py-0">
+												<SelectValue />
+											</SelectTrigger>
+											<SelectContent>
+												<SelectItem value="10">10</SelectItem>
+												<SelectItem value="25">25</SelectItem>
+												<SelectItem value="50">50</SelectItem>
+												<SelectItem value="100">100</SelectItem>
+											</SelectContent>
+										</Select>
+										<span className="text-muted-foreground text-xs">
+											per page
+										</span>
+									</div>
 									<div className="text-muted-foreground text-xs">
 										{selectedCoaches.length} selected
 									</div>
 								</div>
+							</div>
 
-								<div className="flex-1 overflow-auto rounded-md border-b">
-									{isLoading ? (
-										<div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-2">
-											<Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-											<p className="text-muted-foreground text-sm">
-												Loading coaches...
-											</p>
-										</div>
-									) : (
-										<UniversalDataTable
-											table={table}
-											emptyStateMessage="No coaches found"
-											totalCount={pagination.totalCount}
-										/>
-									)}
+							{/* Pagination - Fixed above scrollable table */}
+							<div className="flex items-center justify-between px-1 py-2 text-muted-foreground text-xs tabular-nums">
+								<span>
+									Page {pagination.page} of {pagination.totalPages} • Total:{" "}
+									{pagination.totalCount}
+								</span>
+								<div className="flex items-center gap-1">
+									<Button
+										variant="outline"
+										size="sm"
+										className="h-6 px-2 text-xs"
+										onClick={() => table.setPageIndex(0)}
+										disabled={!table.getCanPreviousPage()}
+									>
+										First
+									</Button>
+									<Button
+										variant="outline"
+										size="sm"
+										className="h-6 px-2 text-xs"
+										onClick={() => table.previousPage()}
+										disabled={!table.getCanPreviousPage()}
+									>
+										Previous
+									</Button>
+									<Button
+										variant="outline"
+										size="sm"
+										className="h-6 px-2 text-xs"
+										onClick={() => table.nextPage()}
+										disabled={!table.getCanNextPage()}
+									>
+										Next
+									</Button>
+									<Button
+										variant="outline"
+										size="sm"
+										className="h-6 px-2 text-xs"
+										onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+										disabled={!table.getCanNextPage()}
+									>
+										Last
+									</Button>
 								</div>
 							</div>
 
-							{/* Selected Coaches Preview - Compact */}
-							{selectedCoaches.length > 0 && (
-								<div className="flex flex-wrap items-center gap-1.5 rounded-md border bg-muted/50 p-2">
-									<span className="font-medium text-muted-foreground text-xs">
-										Selected ({selectedCoaches.length}):
-									</span>
-									{selectedCoaches.slice(0, 5).map((coach) => (
-										<div
-											key={coach.coachId}
-											className="flex items-center gap-0.5 rounded border bg-background px-1.5 py-0.5 text-xs"
-										>
-											<span className="max-w-[100px] truncate">
-												{coach.coachName}
-											</span>
-											<button
-												type="button"
-												onClick={() => {
-													const rowIndex = coaches.findIndex(
-														(c) => c.coachId === coach.coachId,
-													);
-													if (rowIndex !== -1) {
-														table
-															.getRow(rowIndex.toString())
-															.toggleSelected(false);
-													}
-												}}
-												className="rounded-sm opacity-70 hover:opacity-100"
-											>
-												<XIcon className="h-3 w-3" />
-											</button>
-										</div>
-									))}
-									{selectedCoaches.length > 5 && (
-										<span className="text-muted-foreground text-xs">
-											+{selectedCoaches.length - 5} more
-										</span>
-									)}
-								</div>
-							)}
-						</div>
-
-						<Separator />
-
-						{/* Footer */}
-						<div className="flex items-center justify-end gap-2">
-							<Button
-								type="button"
-								variant="outline"
-								onClick={() => setOpen(false)}
-							>
-								Cancel
-							</Button>
-							{selectedCoaches.length > 0 && (
-								<Button
-									type="button"
-									variant="ghost"
-									onClick={handleClearSelection}
-								>
-									Clear Selection
-								</Button>
-							)}
-							<Button
-								type="button"
-								onClick={handleConfirm}
-								disabled={selectedCoaches.length === 0}
-							>
-								<PlusIcon className="mr-2 h-4 w-4" />
-								Confirm Selection ({selectedCoaches.length})
-							</Button>
-						</div>
-					</div>
-				</div>
-			</DialogPortal>
-		</Dialog>
-	);
-}
-
-// Faceted filter component matching data table filter style
-interface FacetedFilterProps {
-	title: string;
-	options: Array<{ value: string; label: string }>;
-	selectedValues: string[];
-	onSelect: (values: string[]) => void;
-	maxVisible?: number; // Maximum items to show before search
-}
-
-function FacetedFilter({
-	title,
-	options,
-	selectedValues,
-	onSelect,
-	maxVisible = 100,
-}: FacetedFilterProps) {
-	const [open, setOpen] = useState(false);
-	const [search, setSearch] = useState("");
-
-	const handleToggle = (value: string) => {
-		const newValues = selectedValues.includes(value)
-			? selectedValues.filter((v) => v !== value)
-			: [...selectedValues, value];
-		onSelect(newValues);
-	};
-
-	// Filter options based on search and limit visible items
-	const filteredOptions = options.filter((option) =>
-		option.label.toLowerCase().includes(search.toLowerCase()),
-	);
-	const visibleOptions = filteredOptions.slice(0, maxVisible);
-	const hasMore = filteredOptions.length > maxVisible;
-
-	return (
-		<Popover open={open} onOpenChange={setOpen}>
-			<PopoverTrigger asChild>
-				<Button variant="outline" size="sm" className="h-8 border-dashed">
-					<PlusIcon className="mr-2 h-4 w-4" />
-					{title}
-					{selectedValues.length > 0 && (
-						<>
-							<Separator orientation="vertical" className="mx-2 h-4" />
-							<Badge
-								variant="secondary"
-								className="rounded-sm px-1 font-normal lg:hidden"
-							>
-								{selectedValues.length}
-							</Badge>
-							<div className="hidden space-x-1 lg:flex">
-								{selectedValues.length > 2 ? (
-									<Badge
-										variant="secondary"
-										className="rounded-sm px-1 font-normal"
-									>
-										{selectedValues.length} selected
-									</Badge>
+							<div className="min-h-0 flex-1 overflow-auto">
+								{isLoading ? (
+									<div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-2">
+										<Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+										<p className="text-muted-foreground text-sm">
+											Loading coaches...
+										</p>
+									</div>
 								) : (
-									options
-										.filter((option) => selectedValues.includes(option.value))
-										.map((option) => (
-											<Badge
-												variant="secondary"
-												key={option.value}
-												className="rounded-sm px-1 font-normal"
-											>
-												{option.label}
-											</Badge>
-										))
+									<UniversalDataTable
+										table={table}
+										emptyStateMessage="No coaches found"
+										totalCount={pagination.totalCount}
+										onRowClick={handleRowClick}
+										hidePagination
+									/>
 								)}
 							</div>
-						</>
-					)}
-				</Button>
-			</PopoverTrigger>
-			<PopoverContent className="w-[250px] p-0" align="start">
-				<Command shouldFilter={false}>
-					<CommandInput
-						placeholder={`Search ${title.toLowerCase()}...`}
-						value={search}
-						onValueChange={setSearch}
-					/>
-					<CommandList>
-						<CommandEmpty>No results found.</CommandEmpty>
-						<CommandGroup>
-							{visibleOptions.map((option) => {
-								const isSelected = selectedValues.includes(option.value);
-								return (
-									<CommandItem
-										key={option.value}
-										onSelect={() => handleToggle(option.value)}
+						</div>
+
+						{/* Selected Coaches Preview - Compact */}
+						{selectedCoaches.length > 0 && (
+							<div className="flex flex-wrap items-center gap-1.5 rounded-md border bg-muted/50 p-2">
+								<span className="font-medium text-muted-foreground text-xs">
+									Selected ({selectedCoaches.length}):
+								</span>
+								{selectedCoaches.slice(0, 12).map((coach) => (
+									<div
+										key={coach.coachId}
+										className="flex items-center gap-0.5 rounded border bg-background px-1.5 py-0.5 text-xs"
 									>
-										<div
-											className={cn(
-												"mr-2 flex h-4 w-4 items-center justify-center rounded-sm border border-primary",
-												isSelected
-													? "bg-primary text-primary-foreground"
-													: "opacity-50 [&_svg]:invisible",
-											)}
+										<span className="max-w-[100px] truncate">
+											{coach.coachName}
+										</span>
+										<button
+											type="button"
+											onClick={() => {
+												setRowSelection((prev) => {
+													const next = { ...prev };
+													delete next[coach.coachId];
+													return next;
+												});
+											}}
+											className="rounded-sm opacity-70 hover:opacity-100"
 										>
-											<CheckIcon className="h-4 w-4" />
-										</div>
-										<span className="truncate">{option.label}</span>
-									</CommandItem>
-								);
-							})}
-							{hasMore && (
-								<div className="px-2 py-1.5 text-muted-foreground text-xs">
-									Type to search {filteredOptions.length - maxVisible} more...
-								</div>
-							)}
-						</CommandGroup>
-					</CommandList>
-				</Command>
-			</PopoverContent>
-		</Popover>
-	);
-}
-
-// Number range filter component for min/max inputs
-interface NumberRangeFilterProps {
-	title: string;
-	minValue: number | undefined;
-	maxValue: number | undefined;
-	onMinChange: (value: number | undefined) => void;
-	onMaxChange: (value: number | undefined) => void;
-	placeholder?: { min?: string; max?: string };
-}
-
-function NumberRangeFilter({
-	title,
-	minValue,
-	maxValue,
-	onMinChange,
-	onMaxChange,
-	placeholder = { min: "Min", max: "Max" },
-}: NumberRangeFilterProps) {
-	const [open, setOpen] = useState(false);
-	const hasValue = minValue !== undefined || maxValue !== undefined;
-
-	const formatCurrency = (value: number | undefined) => {
-		if (value === undefined) return "";
-		return `$${value.toLocaleString()}`;
-	};
-
-	const displayValue = () => {
-		if (minValue !== undefined && maxValue !== undefined) {
-			return `${formatCurrency(minValue)} - ${formatCurrency(maxValue)}`;
-		}
-		if (minValue !== undefined) {
-			return `≥ ${formatCurrency(minValue)}`;
-		}
-		if (maxValue !== undefined) {
-			return `≤ ${formatCurrency(maxValue)}`;
-		}
-		return "";
-	};
-
-	return (
-		<Popover open={open} onOpenChange={setOpen}>
-			<PopoverTrigger asChild>
-				<Button variant="outline" size="sm" className="h-8 border-dashed">
-					<PlusIcon className="mr-2 h-4 w-4" />
-					{title}
-					{hasValue && (
-						<>
-							<Separator orientation="vertical" className="mx-2 h-4" />
-							<Badge
-								variant="secondary"
-								className="rounded-sm px-1 font-normal"
-							>
-								{displayValue()}
-							</Badge>
-						</>
-					)}
-				</Button>
-			</PopoverTrigger>
-			<PopoverContent className="w-[280px] p-4" align="start">
-				<div className="flex flex-col gap-4">
-					<div className="font-medium text-sm">{title}</div>
-					<div className="grid grid-cols-2 gap-3">
-						<div className="flex flex-col gap-1.5">
-							<Label className="text-muted-foreground text-xs">
-								{placeholder.min}
-							</Label>
-							<Input
-								type="number"
-								placeholder="0"
-								value={minValue ?? ""}
-								onChange={(e) =>
-									onMinChange(
-										e.target.value ? Number(e.target.value) : undefined,
-									)
-								}
-							/>
-						</div>
-						<div className="flex flex-col gap-1.5">
-							<Label className="text-muted-foreground text-xs">
-								{placeholder.max}
-							</Label>
-							<Input
-								type="number"
-								placeholder="No limit"
-								value={maxValue ?? ""}
-								onChange={(e) =>
-									onMaxChange(
-										e.target.value ? Number(e.target.value) : undefined,
-									)
-								}
-							/>
-						</div>
+											<XIcon className="h-3 w-3" />
+										</button>
+									</div>
+								))}
+								{selectedCoaches.length > 12 && (
+									<span className="text-muted-foreground text-xs">
+										+{selectedCoaches.length - 12} more
+									</span>
+								)}
+							</div>
+						)}
 					</div>
-					{hasValue && (
+
+					<Separator />
+
+					{/* Footer */}
+					<div className="flex items-center justify-end gap-2">
 						<Button
-							variant="ghost"
-							size="sm"
-							className="w-full"
-							onClick={() => {
-								onMinChange(undefined);
-								onMaxChange(undefined);
-							}}
+							type="button"
+							variant="outline"
+							onClick={() => setOpen(false)}
 						>
-							Clear
+							Cancel
 						</Button>
-					)}
-				</div>
-			</PopoverContent>
-		</Popover>
+						{selectedCoaches.length > 0 && (
+							<Button
+								type="button"
+								variant="ghost"
+								onClick={handleClearSelection}
+							>
+								Clear Selection
+							</Button>
+						)}
+						<Button
+							type="button"
+							onClick={handleConfirm}
+							disabled={selectedCoaches.length === 0}
+						>
+							<PlusIcon className="mr-2 h-4 w-4" />
+							Confirm Selection ({selectedCoaches.length})
+						</Button>
+					</div>
+				</DialogContent>
+			</DialogPortal>
+		</Dialog>
 	);
 }

@@ -38,6 +38,8 @@ interface UniversalDataTableProps<
 	serverSide?: boolean;
 	rowActions?: RowAction<T>[];
 	inlineActions?: boolean;
+	onRowClick?: (row: T) => void;
+	hidePagination?: boolean;
 }
 
 export function UniversalDataTable<T extends UniversalTableRow>({
@@ -48,55 +50,59 @@ export function UniversalDataTable<T extends UniversalTableRow>({
 	totalCount,
 	rowActions,
 	inlineActions = false,
+	onRowClick,
+	hidePagination = false,
 }: UniversalDataTableProps<T>) {
 	return (
 		<>
 			{/* Pagination at top */}
-			<div className="flex items-center justify-between py-4">
-				<div className="flex-1 text-muted-foreground text-sm tabular-nums">
-					{table.getFilteredSelectedRowModel().rows.length} of{" "}
-					{table.getRowModel().rows.length} row(s) selected.{" "}
-					<span className="font-medium text-primary">
-						Total: {totalCount || 0} • Page{" "}
-						{table.getState().pagination.pageIndex + 1} of{" "}
-						{table.getPageCount()}
-					</span>
+			{!hidePagination && (
+				<div className="flex items-center justify-between px-1 py-4">
+					<div className="flex-1 text-muted-foreground text-sm tabular-nums">
+						{table.getFilteredSelectedRowModel().rows.length} of{" "}
+						{table.getRowModel().rows.length} row(s) selected.{" "}
+						<span className="font-medium text-primary">
+							Total: {totalCount || 0} • Page{" "}
+							{table.getState().pagination.pageIndex + 1} of{" "}
+							{table.getPageCount()}
+						</span>
+					</div>
+					<div className="flex items-center gap-2">
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={() => table.setPageIndex(0)}
+							disabled={!table.getCanPreviousPage()}
+						>
+							<ChevronsLeftIcon className="size-3" /> First
+						</Button>
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={() => table.previousPage()}
+							disabled={!table.getCanPreviousPage()}
+						>
+							<ChevronLeftIcon className="size-3" /> Previous
+						</Button>
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={() => table.nextPage()}
+							disabled={!table.getCanNextPage()}
+						>
+							Next <ChevronRightIcon className="size-3" />
+						</Button>
+						<Button
+							variant="outline"
+							size="sm"
+							onClick={() => table.setPageIndex(table.getPageCount() - 1)}
+							disabled={!table.getCanNextPage()}
+						>
+							Last <ChevronsRightIcon className="size-3" />
+						</Button>
+					</div>
 				</div>
-				<div className="flex items-center gap-2">
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={() => table.setPageIndex(0)}
-						disabled={!table.getCanPreviousPage()}
-					>
-						<ChevronsLeftIcon className="size-3" /> First
-					</Button>
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={() => table.previousPage()}
-						disabled={!table.getCanPreviousPage()}
-					>
-						<ChevronLeftIcon className="size-3" /> Previous
-					</Button>
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={() => table.nextPage()}
-						disabled={!table.getCanNextPage()}
-					>
-						Next <ChevronRightIcon className="size-3" />
-					</Button>
-					<Button
-						variant="outline"
-						size="sm"
-						onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-						disabled={!table.getCanNextPage()}
-					>
-						Last <ChevronsRightIcon className="size-3" />
-					</Button>
-				</div>
-			</div>
+			)}
 
 			{/* Table */}
 			<div className="rounded-md border bg-white dark:bg-inherit">
@@ -154,7 +160,8 @@ export function UniversalDataTable<T extends UniversalTableRow>({
 								<TableRow
 									key={row.id}
 									data-state={row.getIsSelected() && "selected"}
-									className="h-12"
+									className={cn("h-12", onRowClick && "cursor-pointer")}
+									onClick={() => onRowClick?.(row.original)}
 								>
 									{row.getVisibleCells().map((cell) => (
 										<TableCell className="h-12" key={cell.id}>

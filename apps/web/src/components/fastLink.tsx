@@ -10,8 +10,9 @@ import NextLink, { type LinkProps } from "next/link";
 import { useRouter } from "next/navigation";
 
 // Combine LinkProps with HTML anchor element props
+// Omit 'popover' due to type mismatch between React 19 types ("hint" value) and Next.js types
 type CustomLinkProps = LinkProps &
-	Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps>;
+	Omit<AnchorHTMLAttributes<HTMLAnchorElement>, keyof LinkProps | "popover">;
 
 export const Link = ({
 	children,

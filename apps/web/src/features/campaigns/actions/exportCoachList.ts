@@ -4,14 +4,15 @@ import { revalidatePath } from "next/cache";
 
 import { actionClient } from "@/lib/safe-action";
 
-import { getUser } from "@/queries/getUser";
 import { createClient } from "@/utils/supabase/server";
 import { createClient as createServiceClient } from "@/utils/supabase/serviceRole";
+
+import { getUser } from "@/queries/getUser";
 
 import { z } from "zod";
 import type {
 	CampaignCoachData,
-	CoachExportFilters,
+	CoachExportServerFilters,
 } from "../types/coach-export-types";
 import { getCampaignCoachesAction } from "./getCampaignCoaches";
 
@@ -28,6 +29,62 @@ const exportCoachListSchema = z.object({
 		})
 		.optional(),
 });
+
+// Convert simple filter format to server format with default operators
+function convertSimpleFiltersToServerFormat(
+	filters:
+		| {
+				divisions?: string[];
+				universities?: string[];
+				programs?: string[];
+				minTuition?: number;
+				maxTuition?: number;
+		  }
+		| undefined,
+): CoachExportServerFilters | undefined {
+	if (!filters) return undefined;
+
+	const serverFilters: CoachExportServerFilters = {};
+
+	if (filters.divisions && filters.divisions.length > 0) {
+		serverFilters.divisions = {
+			values: filters.divisions,
+			operator: filters.divisions.length > 1 ? "is any of" : "is",
+		};
+	}
+
+	if (filters.universities && filters.universities.length > 0) {
+		serverFilters.universities = {
+			values: filters.universities,
+			operator: filters.universities.length > 1 ? "is any of" : "is",
+		};
+	}
+
+	if (filters.programs && filters.programs.length > 0) {
+		serverFilters.programs = {
+			values: filters.programs,
+			operator: filters.programs.length > 1 ? "is any of" : "is",
+		};
+	}
+
+	if (filters.minTuition !== undefined || filters.maxTuition !== undefined) {
+		const values: number[] = [];
+		if (filters.minTuition !== undefined) values.push(filters.minTuition);
+		if (filters.maxTuition !== undefined) values.push(filters.maxTuition);
+
+		serverFilters.tuition = {
+			values,
+			operator:
+				filters.minTuition !== undefined && filters.maxTuition !== undefined
+					? "is between"
+					: filters.minTuition !== undefined
+						? "is greater than or equal to"
+						: "is less than or equal to",
+		};
+	}
+
+	return Object.keys(serverFilters).length > 0 ? serverFilters : undefined;
+}
 
 export const exportCoachListAction = actionClient
 	.schema(exportCoachListSchema)
@@ -59,7 +116,7 @@ export const exportCoachListAction = actionClient
 		const coachesResult = await getCampaignCoachesAction(campaignId, {
 			page: 1,
 			pageSize: 10000, // Large number to get all for export
-			filters: filters as CoachExportFilters,
+			filters: convertSimpleFiltersToServerFormat(filters),
 			coachIds,
 		});
 
@@ -178,12 +235,20 @@ function generateCSV(coaches: CampaignCoachData[]): string {
 		const divisionCode = mapDivisionToCode(coach.division);
 
 		// Format percentile ranges
-		const satReading = formatPercentileRange(coach.satReading25th, coach.satReading75th);
+		const satReading = formatPercentileRange(
+			coach.satReading25th,
+			coach.satReading75th,
+		);
 		const satMath = formatPercentileRange(coach.satMath25th, coach.satMath75th);
-		const actComposite = formatPercentileRange(coach.actComposite25th, coach.actComposite75th);
+		const actComposite = formatPercentileRange(
+			coach.actComposite25th,
+			coach.actComposite75th,
+		);
 
 		// Format acceptance rate as percentage
-		const acceptanceRate = coach.acceptanceRate ? `${coach.acceptanceRate}%` : "";
+		const acceptanceRate = coach.acceptanceRate
+			? `${coach.acceptanceRate}%`
+			: "";
 
 		return [
 			escapeCSV(firstName),
@@ -206,7 +271,9 @@ function generateCSV(coaches: CampaignCoachData[]): string {
 			escapeCSV(actComposite),
 			escapeCSV(acceptanceRate),
 			coach.tuition ? coach.tuition.toString() : "",
-			coach.undergraduateEnrollment ? coach.undergraduateEnrollment.toString() : "",
+			coach.undergraduateEnrollment
+				? coach.undergraduateEnrollment.toString()
+				: "",
 			escapeCSV(coach.coachTwitter || ""),
 			escapeCSV(coach.coachInstagram || ""),
 		];
@@ -234,7 +301,11 @@ function formatPercentileRange(min: number | null, max: number | null): string {
 function mapDivisionToCode(division: string | null): string {
 	if (!division) return "";
 	const lower = division.toLowerCase();
-	if (lower.includes("division i") && !lower.includes("ii") && !lower.includes("iii")) {
+	if (
+		lower.includes("division i") &&
+		!lower.includes("ii") &&
+		!lower.includes("iii")
+	) {
 		return "DI";
 	}
 	if (lower.includes("division ii") && !lower.includes("iii")) {

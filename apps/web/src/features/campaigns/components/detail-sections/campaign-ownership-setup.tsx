@@ -113,11 +113,11 @@ export function CampaignOwnershipSetup({
 					<label className="font-medium text-muted-foreground text-sm">
 						Athlete
 					</label>
-					<p className="text-sm">
+					<div className="text-sm">
 						{campaign.athlete?.full_name || "No athlete assigned"}
 						{campaign.athlete?.graduation_year &&
 							` (Class of ${campaign.athlete.graduation_year})`}
-					</p>
+					</div>
 				</div>
 				<div>
 					<label className="font-medium text-muted-foreground text-sm">
@@ -132,7 +132,7 @@ export function CampaignOwnershipSetup({
 							className="mt-1"
 						/>
 					) : (
-						<p className="text-sm">{campaign.name || "Not set"}</p>
+						<div className="text-sm">{campaign.name || "Not set"}</div>
 					)}
 				</div>
 				<div>
@@ -157,7 +157,7 @@ export function CampaignOwnershipSetup({
 							</SelectContent>
 						</Select>
 					) : (
-						<p className="text-sm">{formatCampaignType(campaign.type)}</p>
+						<div className="text-sm">{formatCampaignType(campaign.type)}</div>
 					)}
 				</div>
 				<div>
@@ -183,30 +183,30 @@ export function CampaignOwnershipSetup({
 							</SelectContent>
 						</Select>
 					) : (
-						<p className="text-sm">
+						<div className="text-sm">
 							<StatusBadge>{campaign.status}</StatusBadge>
-						</p>
+						</div>
 					)}
 				</div>
 				<div>
 					<label className="font-medium text-muted-foreground text-sm">
 						Primary Lead List
 					</label>
-					<p className="text-sm">
+					<div className="text-sm">
 						{campaign.primary_lead_list?.name || "No lead list"}
 						{campaign.primary_lead_list?.priority &&
 							` (Priority: ${campaign.primary_lead_list.priority})`}
-					</p>
+					</div>
 				</div>
 				<div>
 					<label className="font-medium text-muted-foreground text-sm">
 						Seed Campaign
 					</label>
-					<p className="text-sm">
+					<div className="text-sm">
 						{campaign.seed_campaign?.name || "None"}
 						{campaign.seed_campaign?.type &&
 							` (${formatCampaignType(campaign.seed_campaign.type)})`}
-					</p>
+					</div>
 				</div>
 			</CardContent>
 		</Card>

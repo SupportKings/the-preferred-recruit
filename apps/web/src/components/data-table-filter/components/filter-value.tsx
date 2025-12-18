@@ -8,6 +8,7 @@ import {
 	useState,
 } from "react";
 
+import { parseLocalDate } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
 
 import { Button } from "@/components/ui/button";
@@ -31,7 +32,6 @@ import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import { format, isEqual } from "date-fns";
-import { parseLocalDate } from "@/lib/date-utils";
 import { Ellipsis } from "lucide-react";
 import type { DateRange } from "react-day-picker";
 import { numberFilterOperators } from "../core/operators";
@@ -184,14 +184,12 @@ export function FilterValueOptionDisplay<TData>({
 		return (
 			<span className="inline-flex items-center gap-1">
 				{hasIcon &&
-					(isValidElement(icon) ? (
-						icon
-					) : (
-						(() => {
-							const Icon = icon as React.ElementType;
-							return <Icon className="size-4 text-primary" />;
-						})()
-					))}
+					(isValidElement(icon)
+						? icon
+						: (() => {
+								const Icon = icon as React.ElementType;
+								return <Icon className="size-4 text-primary" />;
+							})())}
 				<span>{label}</span>
 			</span>
 		);
@@ -234,14 +232,12 @@ export function FilterValueMultiOptionDisplay<TData>({
 		return (
 			<span className="inline-flex items-center gap-1.5">
 				{hasIcon &&
-					(isValidElement(icon) ? (
-						icon
-					) : (
-						(() => {
-							const Icon = icon as React.ElementType;
-							return <Icon className="size-4 text-primary" />;
-						})()
-					))}
+					(isValidElement(icon)
+						? icon
+						: (() => {
+								const Icon = icon as React.ElementType;
+								return <Icon className="size-4 text-primary" />;
+							})())}
 
 				<span>{label}</span>
 			</span>
@@ -459,14 +455,12 @@ const OptionItem = memo(function OptionItem({
 					className="peer flex size-4 shrink-0 items-center justify-center rounded-sm bg-muted transition-colors duration-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
 				/>
 				{icon &&
-					(isValidElement(icon) ? (
-						icon
-					) : (
-						(() => {
-							const Icon = icon as React.ElementType;
-							return <Icon className="size-4 text-primary" />;
-						})()
-					))}
+					(isValidElement(icon)
+						? icon
+						: (() => {
+								const Icon = icon as React.ElementType;
+								return <Icon className="size-4 text-primary" />;
+							})())}
 				<span>
 					{label}
 					<sup
@@ -476,7 +470,7 @@ const OptionItem = memo(function OptionItem({
 							count === 0 && "slashed-zero",
 						)}
 					>
-						{typeof count === "number" ? (count < 100 ? count : "100+") : ""}
+						{typeof count === "number" ? count : ""}
 					</sup>
 				</span>
 			</div>
@@ -729,14 +723,15 @@ export function FilterValueNumberController<TData>({
 
 	// Sync with parent filter changes
 	useEffect(() => {
-		if (
-			filter?.values &&
-			filter.values.length === values.length &&
-			filter.values.every((v, i) => v === values[i])
-		) {
-			setValues(filter.values);
+		if (filter?.values) {
+			const isDifferent =
+				filter.values.length !== values.length ||
+				!filter.values.every((v, i) => v === values[i]);
+			if (isDifferent) {
+				setValues(filter.values);
+			}
 		}
-	}, [filter?.values, values]);
+	}, [filter?.values]);
 
 	const isNumberRange =
 		// filter && values.length === 2

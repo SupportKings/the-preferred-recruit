@@ -133,6 +133,7 @@ function __FilterSelector<TData>({
 
 	return (
 		<Popover
+			modal={false}
 			open={open}
 			onOpenChange={async (value) => {
 				setOpen(value);
@@ -288,14 +289,12 @@ function __QuickSearchFilters<TData>({
 										/>
 										<div className="flex w-4 items-center justify-center">
 											{v.icon &&
-												(isValidElement(v.icon) ? (
-													v.icon
-												) : (
-													(() => {
-														const Icon = v.icon as React.ElementType;
-														return <Icon className="size-4 text-primary" />;
-													})()
-												))}
+												(isValidElement(v.icon)
+													? v.icon
+													: (() => {
+															const Icon = v.icon as React.ElementType;
+															return <Icon className="size-4 text-primary" />;
+														})())}
 										</div>
 										<div className="flex items-center gap-0.5">
 											<span className="text-muted-foreground">
@@ -311,7 +310,7 @@ function __QuickSearchFilters<TData>({
 														count === 0 && "slashed-zero",
 													)}
 												>
-													{count < 100 ? count : "100+"}
+													{count}
 												</sup>
 											</span>
 										</div>
