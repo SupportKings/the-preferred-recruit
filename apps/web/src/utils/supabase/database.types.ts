@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "13.0.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       account: {
@@ -2202,6 +2227,13 @@ export type Database = {
             referencedRelation: "team_members"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "sending_tool_lead_lists_generated_by_fkey"
+            columns: ["generated_by"]
+            isOneToOne: false
+            referencedRelation: "team_members"
+            referencedColumns: ["id"]
+          },
         ]
       }
       session: {
@@ -2973,6 +3005,54 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_coach_division_counts: {
+        Args: never
+        Returns: {
+          coach_count: number
+          division_name: string
+        }[]
+      }
+      get_coach_program_counts: {
+        Args: never
+        Returns: {
+          coach_count: number
+          program_id: string
+          program_name: string
+          university_id: string
+        }[]
+      }
+      get_coach_university_counts: {
+        Args: never
+        Returns: {
+          coach_count: number
+          university_id: string
+          university_name: string
+        }[]
+      }
+      get_filtered_coach_division_counts: {
+        Args: { p_program_ids?: string[]; p_university_ids?: string[] }
+        Returns: {
+          coach_count: number
+          division_name: string
+        }[]
+      }
+      get_filtered_coach_program_counts: {
+        Args: { p_division_names?: string[]; p_university_ids?: string[] }
+        Returns: {
+          coach_count: number
+          program_id: string
+          program_name: string
+          university_id: string
+        }[]
+      }
+      get_filtered_coach_university_counts: {
+        Args: { p_division_names?: string[]; p_program_ids?: string[] }
+        Returns: {
+          coach_count: number
+          university_id: string
+          university_name: string
+        }[]
+      }
     }
     Enums: {
       application_stage_enum:
@@ -3135,6 +3215,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       application_stage_enum: [

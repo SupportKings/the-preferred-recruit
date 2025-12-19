@@ -20,7 +20,11 @@ import {
 import { toast } from "sonner";
 import { exportCoachListAction } from "../../actions/exportCoachList";
 import { campaignQueries } from "../../queries/useCampaigns";
-import type { CampaignCoachData } from "../../types/coach-export-types";
+import type {
+	CampaignCoachData,
+	CoachExportServerFilters,
+	CoachSelectionResult,
+} from "../../types/coach-export-types";
 import { SelectCoachesForExportModal } from "../modals/select-coaches-for-export-modal";
 
 interface CoachListExportsTabProps {
@@ -38,9 +42,31 @@ export function CoachListExportsTab({
 	const [isExporting, setIsExporting] = useState(false);
 	const [modalOpen, setModalOpen] = useState(false);
 
-	const handleConfirmSelection = (coaches: CampaignCoachData[]) => {
-		setSelectedCoaches(coaches);
-		toast.success(`Added ${coaches.length} coaches to selection`);
+	// State for "select all" mode
+	const [selectAllFilters, setSelectAllFilters] =
+		useState<CoachExportServerFilters | null>(null);
+	const [selectAllCount, setSelectAllCount] = useState<number>(0);
+
+	// Calculate effective counts
+	const isSelectAllMode = selectAllFilters !== null;
+	const displayCount = isSelectAllMode
+		? selectAllCount
+		: selectedCoaches.length;
+
+	const handleConfirmSelection = (result: CoachSelectionResult) => {
+		if (result.selectAll) {
+			setSelectAllFilters(result.filters);
+			setSelectAllCount(result.count);
+			setSelectedCoaches([]);
+			toast.success(
+				`All ${result.count.toLocaleString()} matching coaches selected`,
+			);
+		} else {
+			setSelectAllFilters(null);
+			setSelectAllCount(0);
+			setSelectedCoaches(result.coaches);
+			toast.success(`Added ${result.coaches.length} coaches to selection`);
+		}
 	};
 
 	const handleRemoveCoach = (coachId: string) => {
@@ -49,11 +75,13 @@ export function CoachListExportsTab({
 
 	const handleClearAll = () => {
 		setSelectedCoaches([]);
+		setSelectAllFilters(null);
+		setSelectAllCount(0);
 		toast.success("Selection cleared");
 	};
 
 	const handleExport = async () => {
-		if (selectedCoaches.length === 0) {
+		if (!isSelectAllMode && selectedCoaches.length === 0) {
 			toast.error("Please select at least one coach to export");
 			return;
 		}
@@ -61,14 +89,18 @@ export function CoachListExportsTab({
 		try {
 			setIsExporting(true);
 
-			// Extract coach IDs from selected coaches
-			const coachIds = selectedCoaches.map((coach) => coach.coachId);
-
-			// Call the export action with coach IDs
-			const result = await exportCoachListAction({
-				campaignId,
-				coachIds,
-			});
+			// Call the export action with either filters (selectAll) or coach IDs
+			const result = await exportCoachListAction(
+				isSelectAllMode
+					? {
+							campaignId,
+							serverFilters: selectAllFilters,
+						}
+					: {
+							campaignId,
+							coachIds: selectedCoaches.map((coach) => coach.coachId),
+						},
+			);
 
 			if (result?.validationErrors) {
 				toast.error("Validation error");
@@ -128,7 +160,7 @@ export function CoachListExportsTab({
 			</CardHeader>
 			<CardContent className="space-y-6">
 				{/* Selected Coaches Section */}
-				{selectedCoaches.length === 0 ? (
+				{displayCount === 0 ? (
 					<div className="py-12 text-center">
 						<FileSpreadsheet className="mx-auto mb-4 h-12 w-12 text-muted-foreground opacity-50" />
 						<p className="text-muted-foreground text-sm">
@@ -148,7 +180,11 @@ export function CoachListExportsTab({
 							<div className="flex items-center justify-between">
 								<div className="flex items-center gap-2">
 									<h3 className="font-medium text-sm">Selected Coaches</h3>
-									<Badge variant="secondary">{selectedCoaches.length}</Badge>
+									<Badge variant="secondary">
+										{isSelectAllMode
+											? `All ${displayCount.toLocaleString()}`
+											: displayCount}
+									</Badge>
 								</div>
 								<Button
 									size="sm"
@@ -160,45 +196,59 @@ export function CoachListExportsTab({
 								</Button>
 							</div>
 
-							<div className="h-[300px] overflow-hidden rounded-md border">
-								<ScrollArea className="h-full">
-									<div className="grid grid-cols-1 gap-2 p-3 md:grid-cols-2 lg:grid-cols-3">
-										{selectedCoaches.map((coach) => (
-											<div
-												key={coach.coachId}
-												className="group flex items-center justify-between rounded-md border bg-card px-3 py-2 transition-colors hover:bg-muted/50"
-											>
-												<div className="min-w-0 flex-1">
-													<div className="flex items-center gap-1.5">
-														<p className="truncate font-medium text-sm">
-															{coach.coachName}
-														</p>
-														{coach.division && (
-															<Badge
-																variant="outline"
-																className="shrink-0 px-1 py-0 text-[10px]"
-															>
-																{coach.division.replace("Division ", "D")}
-															</Badge>
-														)}
-													</div>
-													<p className="truncate text-muted-foreground text-xs">
-														{coach.universityName}
-													</p>
-												</div>
-												<Button
-													size="sm"
-													variant="ghost"
-													onClick={() => handleRemoveCoach(coach.coachId)}
-													className="ml-1 h-6 w-6 shrink-0 p-0 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
-												>
-													<XIcon className="h-3 w-3" />
-												</Button>
-											</div>
-										))}
+							{isSelectAllMode ? (
+								<div className="flex h-[300px] items-center justify-center rounded-md border bg-muted/30">
+									<div className="text-center">
+										<p className="font-medium text-sm">
+											All {selectAllCount.toLocaleString()} coaches matching
+											your filters are selected
+										</p>
+										<p className="mt-1 text-muted-foreground text-xs">
+											The full list will be fetched when you export
+										</p>
 									</div>
-								</ScrollArea>
-							</div>
+								</div>
+							) : (
+								<div className="h-[300px] overflow-hidden rounded-md border">
+									<ScrollArea className="h-full">
+										<div className="grid grid-cols-1 gap-2 p-3 md:grid-cols-2 lg:grid-cols-3">
+											{selectedCoaches.map((coach) => (
+												<div
+													key={coach.coachId}
+													className="group flex items-center justify-between rounded-md border bg-card px-3 py-2 transition-colors hover:bg-muted/50"
+												>
+													<div className="min-w-0 flex-1">
+														<div className="flex items-center gap-1.5">
+															<p className="truncate font-medium text-sm">
+																{coach.coachName}
+															</p>
+															{coach.division && (
+																<Badge
+																	variant="outline"
+																	className="shrink-0 px-1 py-0 text-[10px]"
+																>
+																	{coach.division.replace("Division ", "D")}
+																</Badge>
+															)}
+														</div>
+														<p className="truncate text-muted-foreground text-xs">
+															{coach.universityName}
+														</p>
+													</div>
+													<Button
+														size="sm"
+														variant="ghost"
+														onClick={() => handleRemoveCoach(coach.coachId)}
+														className="ml-1 h-6 w-6 shrink-0 p-0 text-muted-foreground opacity-0 transition-opacity hover:text-destructive group-hover:opacity-100"
+													>
+														<XIcon className="h-3 w-3" />
+													</Button>
+												</div>
+											))}
+										</div>
+									</ScrollArea>
+								</div>
+							)}
 						</div>
 
 						<Separator />
@@ -207,8 +257,9 @@ export function CoachListExportsTab({
 						<div className="flex items-center justify-between">
 							<div className="space-y-1">
 								<div className="text-muted-foreground text-sm">
-									Export {selectedCoaches.length} selected{" "}
-									{selectedCoaches.length === 1 ? "coach" : "coaches"} to CSV
+									Export {displayCount.toLocaleString()}{" "}
+									{isSelectAllMode ? "matching" : "selected"}{" "}
+									{displayCount === 1 ? "coach" : "coaches"} to CSV
 								</div>
 								<p className="text-muted-foreground text-xs">
 									File will be saved to Sending Tool Files
@@ -216,7 +267,7 @@ export function CoachListExportsTab({
 							</div>
 							<Button
 								onClick={handleExport}
-								disabled={isExporting || selectedCoaches.length === 0}
+								disabled={isExporting || displayCount === 0}
 							>
 								{isExporting ? (
 									<>

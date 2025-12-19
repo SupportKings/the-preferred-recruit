@@ -1,17 +1,9 @@
+import { formatTimestamp } from "@/lib/date-utils";
+
 import { StatusBadge } from "@/components/ui/status-badge";
 
 import { createColumnHelper } from "@tanstack/react-table";
-import { formatLocalDate as format } from "@/lib/date-utils";
 import { Edit, Trash2 } from "lucide-react";
-
-const formatDate = (dateString: string | null) => {
-	if (!dateString) return "Not set";
-	try {
-		return format(dateString, "MMM dd, yyyy HH:mm");
-	} catch {
-		return "Invalid date";
-	}
-};
 
 export const createSendingToolLeadListColumns = (options?: {
 	hideCampaign?: boolean;
@@ -64,7 +56,7 @@ export const createSendingToolLeadListColumns = (options?: {
 	columns.push(
 		listColumnHelper.accessor("generated_at", {
 			header: "Generated At",
-			cell: (info) => formatDate(info.getValue()),
+			cell: (info) => formatTimestamp(info.getValue(), "MMM d, yyyy h:mm a"),
 		}),
 	);
 

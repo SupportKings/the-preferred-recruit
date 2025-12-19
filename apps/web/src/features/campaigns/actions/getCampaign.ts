@@ -48,7 +48,8 @@ export async function getCampaign(id: string) {
 					generated_by,
 					generated_at,
 					internal_notes,
-					campaign:campaigns(id, name, type, status)
+					campaign:campaigns(id, name, type, status),
+					generated_by_user:team_members!generated_by(id, first_name, last_name, email)
 				),
 				replies(
 					id,

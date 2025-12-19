@@ -16,9 +16,49 @@ import type {
 } from "../types/coach-export-types";
 import { getCampaignCoachesAction } from "./getCampaignCoaches";
 
+// Zod schema for server filters with operators
+const serverFiltersSchema = z
+	.object({
+		divisions: z
+			.object({
+				values: z.array(z.string()),
+				operator: z.enum(["is", "is not", "is any of", "is none of"]),
+			})
+			.optional(),
+		universities: z
+			.object({
+				values: z.array(z.string()),
+				operator: z.enum(["is", "is not", "is any of", "is none of"]),
+			})
+			.optional(),
+		programs: z
+			.object({
+				values: z.array(z.string()),
+				operator: z.enum(["is", "is not", "is any of", "is none of"]),
+			})
+			.optional(),
+		tuition: z
+			.object({
+				values: z.array(z.number()),
+				operator: z.enum([
+					"is",
+					"is not",
+					"is between",
+					"is not between",
+					"is less than",
+					"is less than or equal to",
+					"is greater than",
+					"is greater than or equal to",
+				]),
+			})
+			.optional(),
+	})
+	.optional();
+
 const exportCoachListSchema = z.object({
 	campaignId: z.string().uuid(),
 	coachIds: z.array(z.string().uuid()).optional(),
+	// Legacy simple filters format
 	filters: z
 		.object({
 			divisions: z.array(z.string()).optional(),
@@ -28,6 +68,8 @@ const exportCoachListSchema = z.object({
 			maxTuition: z.number().optional(),
 		})
 		.optional(),
+	// New server filters format with operators (for selectAll mode)
+	serverFilters: serverFiltersSchema,
 });
 
 // Convert simple filter format to server format with default operators
@@ -86,10 +128,41 @@ function convertSimpleFiltersToServerFormat(
 	return Object.keys(serverFilters).length > 0 ? serverFilters : undefined;
 }
 
+// Iteratively fetch all coaches matching filters (no page size limit)
+async function fetchAllCoachesWithFilters(
+	campaignId: string,
+	filters: CoachExportServerFilters,
+): Promise<CampaignCoachData[]> {
+	const allCoaches: CampaignCoachData[] = [];
+	const pageSize = 500; // Reasonable batch size
+	let page = 1;
+	let hasMore = true;
+
+	while (hasMore) {
+		const result = await getCampaignCoachesAction(campaignId, {
+			page,
+			pageSize,
+			filters,
+		});
+
+		if (!result.success || !result.data) {
+			throw new Error(result.error || "Failed to fetch coaches");
+		}
+
+		allCoaches.push(...result.data);
+
+		// Check if there are more pages
+		hasMore = result.data.length === pageSize;
+		page++;
+	}
+
+	return allCoaches;
+}
+
 export const exportCoachListAction = actionClient
 	.schema(exportCoachListSchema)
 	.action(async ({ parsedInput }) => {
-		const { campaignId, coachIds, filters } = parsedInput;
+		const { campaignId, coachIds, filters, serverFilters } = parsedInput;
 
 		// Get current user
 		const session = await getUser();
@@ -111,20 +184,30 @@ export const exportCoachListAction = actionClient
 			throw new Error("Team member not found");
 		}
 
-		// Fetch coaches with filters and/or specific coach IDs
-		// Use a large page size to get all coaches for export
-		const coachesResult = await getCampaignCoachesAction(campaignId, {
-			page: 1,
-			pageSize: 10000, // Large number to get all for export
-			filters: convertSimpleFiltersToServerFormat(filters),
-			coachIds,
-		});
+		let coaches: CampaignCoachData[];
 
-		if (!coachesResult.success || !coachesResult.data) {
-			throw new Error(coachesResult.error || "Failed to fetch coaches");
+		// Use serverFilters (selectAll mode) or fall back to coachIds/filters
+		if (serverFilters) {
+			// SelectAll mode - use iterative fetch to get all coaches matching filters
+			coaches = await fetchAllCoachesWithFilters(
+				campaignId,
+				serverFilters as CoachExportServerFilters,
+			);
+		} else {
+			// Legacy mode - fetch with coachIds or simple filters
+			const coachesResult = await getCampaignCoachesAction(campaignId, {
+				page: 1,
+				pageSize: 10000, // Large number to get all for export
+				filters: convertSimpleFiltersToServerFormat(filters),
+				coachIds,
+			});
+
+			if (!coachesResult.success || !coachesResult.data) {
+				throw new Error(coachesResult.error || "Failed to fetch coaches");
+			}
+
+			coaches = coachesResult.data;
 		}
-
-		const coaches = coachesResult.data;
 
 		// Generate CSV content
 		const csv = generateCSV(coaches);

@@ -141,3 +141,8 @@ export interface CampaignCoachData {
 	includeReason: string | null;
 	includedAt: string | null;
 }
+
+// Result type for coach selection modal - supports both individual selection and "select all" mode
+export type CoachSelectionResult =
+	| { selectAll: false; coaches: CampaignCoachData[] }
+	| { selectAll: true; filters: CoachExportServerFilters; count: number };

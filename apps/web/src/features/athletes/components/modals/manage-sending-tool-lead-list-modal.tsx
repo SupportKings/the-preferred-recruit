@@ -141,7 +141,7 @@ export function ManageSendingToolLeadListModal({
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			{externalOpen === undefined && (
-				<DialogTrigger>
+				<DialogTrigger asChild>
 					{children || (
 						<Button variant="outline" size="sm" className="gap-2">
 							<Plus className="h-4 w-4" />

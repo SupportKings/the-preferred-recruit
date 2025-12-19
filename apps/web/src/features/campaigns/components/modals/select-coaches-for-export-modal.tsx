@@ -53,6 +53,7 @@ import {
 import type {
 	CampaignCoachData,
 	CoachExportServerFilters,
+	CoachSelectionResult,
 } from "../../types/coach-export-types";
 import { coachExportColumns } from "../table-columns/coach-export-columns";
 
@@ -126,7 +127,7 @@ interface SelectCoachesForExportModalProps {
 	campaignId: string;
 	open?: boolean;
 	onOpenChange?: (open: boolean) => void;
-	onConfirm: (coaches: CampaignCoachData[]) => void;
+	onConfirm: (result: CoachSelectionResult) => void;
 	initialSelectedCoaches?: CampaignCoachData[];
 	children?: React.ReactNode;
 }
@@ -160,6 +161,9 @@ export function SelectCoachesForExportModal({
 		totalCount: 0,
 		totalPages: 0,
 	});
+
+	// State for "select all coaches matching filters" mode
+	const [selectAllFiltered, setSelectAllFiltered] = useState(false);
 
 	// Use external state if provided, otherwise use internal
 	const open = externalOpen !== undefined ? externalOpen : internalOpen;
@@ -388,6 +392,8 @@ export function SelectCoachesForExportModal({
 			loadCoaches(filters, 1);
 			// Also refresh filter options to update counts based on current filters
 			loadFilterOptions(filters);
+			// Reset "select all" mode when filters change
+			setSelectAllFiltered(false);
 		}
 		previousFiltersRef.current = filtersJson;
 	}, [filters, loadCoaches, loadFilterOptions]);
@@ -440,21 +446,41 @@ export function SelectCoachesForExportModal({
 		[selectedCoachesCache],
 	);
 
+	// Calculate effective selected count (accounts for selectAll mode)
+	const effectiveSelectedCount = selectAllFiltered
+		? pagination.totalCount
+		: selectedCoaches.length;
+
 	const handleConfirm = () => {
-		if (selectedCoaches.length === 0) {
-			toast.error("Please select at least one coach");
-			return;
+		if (selectAllFiltered) {
+			// Select all mode - pass filters to parent
+			onConfirm({
+				selectAll: true,
+				filters: convertFiltersToServerFormat(filters),
+				count: pagination.totalCount,
+			});
+		} else {
+			// Individual selection mode
+			if (selectedCoaches.length === 0) {
+				toast.error("Please select at least one coach");
+				return;
+			}
+			onConfirm({
+				selectAll: false,
+				coaches: selectedCoaches,
+			});
 		}
 
-		onConfirm(selectedCoaches);
 		setOpen(false);
 		setRowSelection({});
 		setSelectedCoachesCache(new Map());
+		setSelectAllFiltered(false);
 	};
 
 	const handleClearSelection = () => {
 		setRowSelection({});
 		setSelectedCoachesCache(new Map());
+		setSelectAllFiltered(false);
 	};
 
 	const handleRowClick = (coach: CampaignCoachData) => {
@@ -545,7 +571,9 @@ export function SelectCoachesForExportModal({
 										</span>
 									</div>
 									<div className="text-muted-foreground text-xs">
-										{selectedCoaches.length} selected
+										{selectAllFiltered
+											? `All ${effectiveSelectedCount.toLocaleString()} selected`
+											: `${effectiveSelectedCount} selected`}
 									</div>
 								</div>
 							</div>
@@ -596,6 +624,44 @@ export function SelectCoachesForExportModal({
 								</div>
 							</div>
 
+							{/* Select All Banner - shows when all current page rows are selected */}
+							{table.getIsAllPageRowsSelected() &&
+								!selectAllFiltered &&
+								pagination.totalCount > coaches.length && (
+									<div className="flex items-center gap-1 rounded-md border border-blue-200 bg-blue-50 px-3 py-2 text-sm dark:border-blue-800 dark:bg-blue-950">
+										<span>
+											All {coaches.length} coaches on this page are selected.
+										</span>
+										<Button
+											variant="link"
+											size="sm"
+											className="h-auto p-0 text-blue-600 dark:text-blue-400"
+											onClick={() => setSelectAllFiltered(true)}
+										>
+											Select all {pagination.totalCount.toLocaleString()}{" "}
+											coaches matching your filters
+										</Button>
+									</div>
+								)}
+
+							{/* Select All Active Indicator */}
+							{selectAllFiltered && (
+								<div className="flex items-center justify-between rounded-md border border-green-200 bg-green-50 px-3 py-2 text-sm dark:border-green-800 dark:bg-green-950">
+									<span>
+										All {pagination.totalCount.toLocaleString()} coaches
+										matching your filters are selected.
+									</span>
+									<Button
+										variant="link"
+										size="sm"
+										className="h-auto p-0"
+										onClick={handleClearSelection}
+									>
+										Clear selection
+									</Button>
+								</div>
+							)}
+
 							<div className="min-h-0 flex-1 overflow-auto">
 								{isLoading ? (
 									<div className="flex h-full min-h-[200px] flex-col items-center justify-center gap-2">
@@ -617,38 +683,46 @@ export function SelectCoachesForExportModal({
 						</div>
 
 						{/* Selected Coaches Preview - Compact */}
-						{selectedCoaches.length > 0 && (
+						{(selectAllFiltered || selectedCoaches.length > 0) && (
 							<div className="flex flex-wrap items-center gap-1.5 rounded-md border bg-muted/50 p-2">
 								<span className="font-medium text-muted-foreground text-xs">
-									Selected ({selectedCoaches.length}):
+									Selected ({effectiveSelectedCount.toLocaleString()}):
 								</span>
-								{selectedCoaches.slice(0, 12).map((coach) => (
-									<div
-										key={coach.coachId}
-										className="flex items-center gap-0.5 rounded border bg-background px-1.5 py-0.5 text-xs"
-									>
-										<span className="max-w-[100px] truncate">
-											{coach.coachName}
-										</span>
-										<button
-											type="button"
-											onClick={() => {
-												setRowSelection((prev) => {
-													const next = { ...prev };
-													delete next[coach.coachId];
-													return next;
-												});
-											}}
-											className="rounded-sm opacity-70 hover:opacity-100"
-										>
-											<XIcon className="h-3 w-3" />
-										</button>
-									</div>
-								))}
-								{selectedCoaches.length > 12 && (
-									<span className="text-muted-foreground text-xs">
-										+{selectedCoaches.length - 12} more
+								{selectAllFiltered ? (
+									<span className="text-xs">
+										All coaches matching current filters
 									</span>
+								) : (
+									<>
+										{selectedCoaches.slice(0, 12).map((coach) => (
+											<div
+												key={coach.coachId}
+												className="flex items-center gap-0.5 rounded border bg-background px-1.5 py-0.5 text-xs"
+											>
+												<span className="max-w-[100px] truncate">
+													{coach.coachName}
+												</span>
+												<button
+													type="button"
+													onClick={() => {
+														setRowSelection((prev) => {
+															const next = { ...prev };
+															delete next[coach.coachId];
+															return next;
+														});
+													}}
+													className="rounded-sm opacity-70 hover:opacity-100"
+												>
+													<XIcon className="h-3 w-3" />
+												</button>
+											</div>
+										))}
+										{selectedCoaches.length > 12 && (
+											<span className="text-muted-foreground text-xs">
+												+{selectedCoaches.length - 12} more
+											</span>
+										)}
+									</>
 								)}
 							</div>
 						)}
@@ -665,7 +739,7 @@ export function SelectCoachesForExportModal({
 						>
 							Cancel
 						</Button>
-						{selectedCoaches.length > 0 && (
+						{(selectAllFiltered || selectedCoaches.length > 0) && (
 							<Button
 								type="button"
 								variant="ghost"
@@ -677,10 +751,10 @@ export function SelectCoachesForExportModal({
 						<Button
 							type="button"
 							onClick={handleConfirm}
-							disabled={selectedCoaches.length === 0}
+							disabled={effectiveSelectedCount === 0}
 						>
 							<PlusIcon className="mr-2 h-4 w-4" />
-							Confirm Selection ({selectedCoaches.length})
+							Confirm Selection ({effectiveSelectedCount.toLocaleString()})
 						</Button>
 					</div>
 				</DialogContent>
