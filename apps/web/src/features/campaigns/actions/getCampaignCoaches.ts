@@ -550,18 +550,34 @@ export async function getCampaignCoachesAction(
 			// Handle different number operators
 			switch (rankingFilter.operator) {
 				case "is": {
-					const { data, error } = await supabase
-						.from("universities")
-						.select("id")
-						.eq("us_news_ranking_national_2018", rankingFilter.values[0]);
-					if (error) {
-						console.error(
-							"Error fetching universities for US News National filter:",
-							error,
-						);
-						return { success: false, error: error.message };
+					// "is 0" means "no ranking" (null) - use inverse approach
+					if (rankingFilter.values[0] === 0) {
+						const { data, error } = await supabase
+							.from("universities")
+							.select("id")
+							.not("us_news_ranking_national_2018", "is", null);
+						if (error) {
+							console.error(
+								"Error fetching universities for US News National filter:",
+								error,
+							);
+							return { success: false, error: error.message };
+						}
+						usNewsNationalExcludeUniversityIds = data?.map((u) => u.id) || [];
+					} else {
+						const { data, error } = await supabase
+							.from("universities")
+							.select("id")
+							.eq("us_news_ranking_national_2018", rankingFilter.values[0]);
+						if (error) {
+							console.error(
+								"Error fetching universities for US News National filter:",
+								error,
+							);
+							return { success: false, error: error.message };
+						}
+						usNewsNationalFilteredUniversityIds = data?.map((u) => u.id) || [];
 					}
-					usNewsNationalFilteredUniversityIds = data?.map((u) => u.id) || [];
 					break;
 				}
 				case "is not": {
@@ -584,19 +600,39 @@ export async function getCampaignCoachesAction(
 				}
 				case "is between": {
 					if (rankingFilter.values.length >= 2) {
-						const { data, error } = await supabase
-							.from("universities")
-							.select("id")
-							.gte("us_news_ranking_national_2018", rankingFilter.values[0])
-							.lte("us_news_ranking_national_2018", rankingFilter.values[1]);
-						if (error) {
-							console.error(
-								"Error fetching universities for US News National filter:",
-								error,
-							);
-							return { success: false, error: error.message };
+						const minVal = rankingFilter.values[0];
+						const maxVal = rankingFilter.values[1];
+
+						// "is between 0 and 0" means "no ranking" (null) - use inverse approach
+						if (minVal === 0 && maxVal === 0) {
+							const { data, error } = await supabase
+								.from("universities")
+								.select("id")
+								.not("us_news_ranking_national_2018", "is", null);
+							if (error) {
+								console.error(
+									"Error fetching universities for US News National filter:",
+									error,
+								);
+								return { success: false, error: error.message };
+							}
+							usNewsNationalExcludeUniversityIds = data?.map((u) => u.id) || [];
+						} else {
+							const { data, error } = await supabase
+								.from("universities")
+								.select("id")
+								.gte("us_news_ranking_national_2018", minVal)
+								.lte("us_news_ranking_national_2018", maxVal);
+							if (error) {
+								console.error(
+									"Error fetching universities for US News National filter:",
+									error,
+								);
+								return { success: false, error: error.message };
+							}
+							usNewsNationalFilteredUniversityIds =
+								data?.map((u) => u.id) || [];
 						}
-						usNewsNationalFilteredUniversityIds = data?.map((u) => u.id) || [];
 					}
 					break;
 				}
@@ -731,18 +767,36 @@ export async function getCampaignCoachesAction(
 			// Handle different number operators
 			switch (rankingFilter.operator) {
 				case "is": {
-					const { data, error } = await supabase
-						.from("universities")
-						.select("id")
-						.eq("us_news_ranking_liberal_arts_2018", rankingFilter.values[0]);
-					if (error) {
-						console.error(
-							"Error fetching universities for US News Liberal Arts filter:",
-							error,
-						);
-						return { success: false, error: error.message };
+					// "is 0" means "no ranking" (null) - use inverse approach
+					if (rankingFilter.values[0] === 0) {
+						const { data, error } = await supabase
+							.from("universities")
+							.select("id")
+							.not("us_news_ranking_liberal_arts_2018", "is", null);
+						if (error) {
+							console.error(
+								"Error fetching universities for US News Liberal Arts filter:",
+								error,
+							);
+							return { success: false, error: error.message };
+						}
+						usNewsLiberalArtsExcludeUniversityIds =
+							data?.map((u) => u.id) || [];
+					} else {
+						const { data, error } = await supabase
+							.from("universities")
+							.select("id")
+							.eq("us_news_ranking_liberal_arts_2018", rankingFilter.values[0]);
+						if (error) {
+							console.error(
+								"Error fetching universities for US News Liberal Arts filter:",
+								error,
+							);
+							return { success: false, error: error.message };
+						}
+						usNewsLiberalArtsFilteredUniversityIds =
+							data?.map((u) => u.id) || [];
 					}
-					usNewsLiberalArtsFilteredUniversityIds = data?.map((u) => u.id) || [];
 					break;
 				}
 				case "is not": {
@@ -765,23 +819,40 @@ export async function getCampaignCoachesAction(
 				}
 				case "is between": {
 					if (rankingFilter.values.length >= 2) {
-						const { data, error } = await supabase
-							.from("universities")
-							.select("id")
-							.gte("us_news_ranking_liberal_arts_2018", rankingFilter.values[0])
-							.lte(
-								"us_news_ranking_liberal_arts_2018",
-								rankingFilter.values[1],
-							);
-						if (error) {
-							console.error(
-								"Error fetching universities for US News Liberal Arts filter:",
-								error,
-							);
-							return { success: false, error: error.message };
+						const minVal = rankingFilter.values[0];
+						const maxVal = rankingFilter.values[1];
+
+						// "is between 0 and 0" means "no ranking" (null) - use inverse approach
+						if (minVal === 0 && maxVal === 0) {
+							const { data, error } = await supabase
+								.from("universities")
+								.select("id")
+								.not("us_news_ranking_liberal_arts_2018", "is", null);
+							if (error) {
+								console.error(
+									"Error fetching universities for US News Liberal Arts filter:",
+									error,
+								);
+								return { success: false, error: error.message };
+							}
+							usNewsLiberalArtsExcludeUniversityIds =
+								data?.map((u) => u.id) || [];
+						} else {
+							const { data, error } = await supabase
+								.from("universities")
+								.select("id")
+								.gte("us_news_ranking_liberal_arts_2018", minVal)
+								.lte("us_news_ranking_liberal_arts_2018", maxVal);
+							if (error) {
+								console.error(
+									"Error fetching universities for US News Liberal Arts filter:",
+									error,
+								);
+								return { success: false, error: error.message };
+							}
+							usNewsLiberalArtsFilteredUniversityIds =
+								data?.map((u) => u.id) || [];
 						}
-						usNewsLiberalArtsFilteredUniversityIds =
-							data?.map((u) => u.id) || [];
 					}
 					break;
 				}
