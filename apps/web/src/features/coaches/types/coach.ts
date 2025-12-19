@@ -1,4 +1,4 @@
-import type { Database, Enums, Tables } from "@/utils/supabase/database.types";
+import type { Enums, Tables } from "@/utils/supabase/database.types";
 
 import { z } from "zod";
 
@@ -12,6 +12,16 @@ export type CoachRow = Tables<"coaches"> & {
 				universities?: {
 					name: string | null;
 					state: string | null;
+					institution_flags_raw: string | null;
+					us_news_ranking_national_2018: number | null;
+					us_news_ranking_liberal_arts_2018: number | null;
+					university_conferences?:
+						| {
+								conferences: {
+									name: string | null;
+								} | null;
+						  }[]
+						| null;
 				} | null;
 		  }[]
 		| null;

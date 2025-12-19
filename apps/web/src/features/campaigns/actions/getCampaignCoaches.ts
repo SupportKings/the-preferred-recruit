@@ -45,6 +45,15 @@ export async function getCampaignCoachesAction(
 			filters?.tuition && filters.tuition.values.length > 0;
 		const hasDivisionFilter =
 			filters?.divisions && filters.divisions.values.length > 0;
+		const hasStateFilter = filters?.states && filters.states.values.length > 0;
+		const hasConferenceFilter =
+			filters?.conferences && filters.conferences.values.length > 0;
+		const hasInstitutionFlagsFilter =
+			filters?.institutionFlags && filters.institutionFlags.values.length > 0;
+		const hasUsNewsNationalFilter =
+			filters?.usNewsNational && filters.usNewsNational.values.length > 0;
+		const hasUsNewsLiberalArtsFilter =
+			filters?.usNewsLiberalArts && filters.usNewsLiberalArts.values.length > 0;
 
 		// If we have division filters, get matching university IDs first
 		let divisionFilteredUniversityIds: string[] | null = null;
@@ -285,6 +294,622 @@ export async function getCampaignCoachesAction(
 			}
 		}
 
+		// If we have state filters, get matching university IDs
+		let stateFilteredUniversityIds: string[] | null = null;
+		if (hasStateFilter && filters?.states) {
+			const stateFilter = filters.states;
+
+			if (isNegatedOperator(stateFilter.operator)) {
+				// For negated operators, get universities WITH these states (to exclude)
+				const { data: stateUniversities, error: stateError } = await supabase
+					.from("universities")
+					.select("id")
+					.in("state", stateFilter.values);
+
+				if (stateError) {
+					console.error(
+						"Error fetching universities for state filter:",
+						stateError,
+					);
+					return {
+						success: false,
+						error: stateError.message,
+					};
+				}
+				stateFilteredUniversityIds = stateUniversities?.map((u) => u.id) || [];
+			} else {
+				// For include operators, get universities with these states
+				const { data: stateUniversities, error: stateError } = await supabase
+					.from("universities")
+					.select("id")
+					.in("state", stateFilter.values);
+
+				if (stateError) {
+					console.error(
+						"Error fetching universities for state filter:",
+						stateError,
+					);
+					return {
+						success: false,
+						error: stateError.message,
+					};
+				}
+				stateFilteredUniversityIds = stateUniversities?.map((u) => u.id) || [];
+
+				if (stateFilteredUniversityIds.length === 0) {
+					return {
+						success: true,
+						data: [],
+						pagination: {
+							page,
+							pageSize,
+							totalCount: 0,
+							totalPages: 0,
+						},
+					};
+				}
+			}
+		}
+
+		// If we have conference filters, get matching university IDs
+		let conferenceFilteredUniversityIds: string[] | null = null;
+		if (hasConferenceFilter && filters?.conferences) {
+			const conferenceFilter = filters.conferences;
+
+			// Get university IDs that have these conferences
+			const uniConfQuery = supabase
+				.from("university_conferences")
+				.select("university_id")
+				.in("conference_id", conferenceFilter.values);
+
+			const { data: uniConfs, error: uniConfError } = await uniConfQuery;
+			if (uniConfError) {
+				console.error("Error fetching university conferences:", uniConfError);
+				return {
+					success: false,
+					error: uniConfError.message,
+				};
+			}
+
+			const matchedUniIds = [
+				...new Set(uniConfs?.map((uc) => uc.university_id) || []),
+			];
+
+			if (isNegatedOperator(conferenceFilter.operator)) {
+				// For negated operators, these are to be excluded
+				conferenceFilteredUniversityIds = matchedUniIds;
+			} else {
+				conferenceFilteredUniversityIds = matchedUniIds;
+
+				if (conferenceFilteredUniversityIds.length === 0) {
+					return {
+						success: true,
+						data: [],
+						pagination: {
+							page,
+							pageSize,
+							totalCount: 0,
+							totalPages: 0,
+						},
+					};
+				}
+			}
+		}
+
+		// If we have institution flags filter, get matching university IDs
+		let institutionFlagsFilteredUniversityIds: string[] | null = null;
+		let institutionFlagsExcludeUniversityIds: string[] | null = null;
+		if (hasInstitutionFlagsFilter && filters?.institutionFlags) {
+			const flagsFilter = filters.institutionFlags;
+
+			// Check if "No data" is in the values (meaning user wants nulls)
+			const hasNoData = flagsFilter.values.includes("No data");
+			const otherValues = flagsFilter.values.filter((v) => v !== "No data");
+
+			// For option filters, use exact matching
+			if (isNegatedOperator(flagsFilter.operator)) {
+				// Exclude these institution types
+				if (otherValues.length > 0) {
+					// Get universities that DON'T have these institution types
+					// This includes nulls unless "No data" is specifically excluded
+					let excludeQuery = supabase.from("universities").select("id");
+
+					for (const flagValue of otherValues) {
+						excludeQuery = excludeQuery.neq("institution_flags_raw", flagValue);
+					}
+
+					// If "No data" is excluded, also exclude nulls
+					if (hasNoData) {
+						excludeQuery = excludeQuery.not(
+							"institution_flags_raw",
+							"is",
+							null,
+						);
+					}
+
+					const { data: excludeUniversities, error: excludeError } =
+						await excludeQuery;
+					if (excludeError) {
+						console.error(
+							"Error fetching universities for institution flags filter:",
+							excludeError,
+						);
+						return { success: false, error: excludeError.message };
+					}
+					institutionFlagsFilteredUniversityIds =
+						excludeUniversities?.map((u) => u.id) || [];
+				} else if (hasNoData) {
+					// Only "No data" is excluded - get universities with non-null values
+					const { data: withDataUniversities, error: withDataError } =
+						await supabase
+							.from("universities")
+							.select("id")
+							.not("institution_flags_raw", "is", null);
+					if (withDataError) {
+						console.error(
+							"Error fetching universities for institution flags filter:",
+							withDataError,
+						);
+						return { success: false, error: withDataError.message };
+					}
+					institutionFlagsFilteredUniversityIds =
+						withDataUniversities?.map((u) => u.id) || [];
+				}
+			} else {
+				// Include these institution types
+				// Special handling for "No data" alone to avoid URL-too-long errors
+				if (hasNoData && otherValues.length === 0) {
+					// Only "No data" selected - use inverse approach
+					// Get universities WITH data (fewer) and exclude them
+					const { data: withDataUniversities, error: withDataError } =
+						await supabase
+							.from("universities")
+							.select("id")
+							.not("institution_flags_raw", "is", null);
+					if (withDataError) {
+						console.error(
+							"Error fetching universities for institution flags filter:",
+							withDataError,
+						);
+						return { success: false, error: withDataError.message };
+					}
+					// Store as exclude list - handled in final filter combining
+					institutionFlagsExcludeUniversityIds =
+						withDataUniversities?.map((u) => u.id) || [];
+				} else {
+					// Mixed selection or only specific values
+					const universityIdSets: string[][] = [];
+
+					// Get universities with specified institution types
+					if (otherValues.length > 0) {
+						const { data: matchingUniversities, error: matchError } =
+							await supabase
+								.from("universities")
+								.select("id")
+								.in("institution_flags_raw", otherValues);
+						if (matchError) {
+							console.error(
+								"Error fetching universities for institution flags filter:",
+								matchError,
+							);
+							return { success: false, error: matchError.message };
+						}
+						universityIdSets.push(matchingUniversities?.map((u) => u.id) || []);
+					}
+
+					// Get universities with null institution_flags_raw (for "No data" option)
+					// Only when combined with other values
+					if (hasNoData && otherValues.length > 0) {
+						const { data: nullUniversities, error: nullError } = await supabase
+							.from("universities")
+							.select("id")
+							.is("institution_flags_raw", null);
+						if (nullError) {
+							console.error(
+								"Error fetching universities for institution flags filter:",
+								nullError,
+							);
+							return { success: false, error: nullError.message };
+						}
+						universityIdSets.push(nullUniversities?.map((u) => u.id) || []);
+					}
+
+					// Combine all matching university IDs
+					institutionFlagsFilteredUniversityIds = [
+						...new Set(universityIdSets.flat()),
+					];
+				}
+			}
+
+			// Check for empty results (only when using inclusion, not exclusion)
+			if (
+				institutionFlagsFilteredUniversityIds &&
+				institutionFlagsFilteredUniversityIds.length === 0 &&
+				!institutionFlagsExcludeUniversityIds
+			) {
+				return {
+					success: true,
+					data: [],
+					pagination: {
+						page,
+						pageSize,
+						totalCount: 0,
+						totalPages: 0,
+					},
+				};
+			}
+		}
+
+		// If we have US News National ranking filter, get matching university IDs
+		// Use exclusion approach for "less than 1" to get nulls (avoids URL-too-long)
+		let usNewsNationalFilteredUniversityIds: string[] | null = null;
+		let usNewsNationalExcludeUniversityIds: string[] | null = null;
+		if (hasUsNewsNationalFilter && filters?.usNewsNational) {
+			const rankingFilter = filters.usNewsNational;
+
+			// Handle different number operators
+			switch (rankingFilter.operator) {
+				case "is": {
+					const { data, error } = await supabase
+						.from("universities")
+						.select("id")
+						.eq("us_news_ranking_national_2018", rankingFilter.values[0]);
+					if (error) {
+						console.error(
+							"Error fetching universities for US News National filter:",
+							error,
+						);
+						return { success: false, error: error.message };
+					}
+					usNewsNationalFilteredUniversityIds = data?.map((u) => u.id) || [];
+					break;
+				}
+				case "is not": {
+					// Include universities where ranking != value OR ranking is null
+					const { data, error } = await supabase
+						.from("universities")
+						.select("id")
+						.or(
+							`us_news_ranking_national_2018.neq.${rankingFilter.values[0]},us_news_ranking_national_2018.is.null`,
+						);
+					if (error) {
+						console.error(
+							"Error fetching universities for US News National filter:",
+							error,
+						);
+						return { success: false, error: error.message };
+					}
+					usNewsNationalFilteredUniversityIds = data?.map((u) => u.id) || [];
+					break;
+				}
+				case "is between": {
+					if (rankingFilter.values.length >= 2) {
+						const { data, error } = await supabase
+							.from("universities")
+							.select("id")
+							.gte("us_news_ranking_national_2018", rankingFilter.values[0])
+							.lte("us_news_ranking_national_2018", rankingFilter.values[1]);
+						if (error) {
+							console.error(
+								"Error fetching universities for US News National filter:",
+								error,
+							);
+							return { success: false, error: error.message };
+						}
+						usNewsNationalFilteredUniversityIds = data?.map((u) => u.id) || [];
+					}
+					break;
+				}
+				case "is less than": {
+					// "Less than 1" means "no ranking" - use inverse approach
+					if (rankingFilter.values[0] <= 1) {
+						// Get universities WITH rankings and exclude them
+						const { data, error } = await supabase
+							.from("universities")
+							.select("id")
+							.not("us_news_ranking_national_2018", "is", null);
+						if (error) {
+							console.error(
+								"Error fetching universities for US News National filter:",
+								error,
+							);
+							return { success: false, error: error.message };
+						}
+						usNewsNationalExcludeUniversityIds = data?.map((u) => u.id) || [];
+					} else {
+						// Normal less than with nulls included
+						const { data, error } = await supabase
+							.from("universities")
+							.select("id")
+							.or(
+								`us_news_ranking_national_2018.lt.${rankingFilter.values[0]},us_news_ranking_national_2018.is.null`,
+							);
+						if (error) {
+							console.error(
+								"Error fetching universities for US News National filter:",
+								error,
+							);
+							return { success: false, error: error.message };
+						}
+						usNewsNationalFilteredUniversityIds = data?.map((u) => u.id) || [];
+					}
+					break;
+				}
+				case "is less than or equal to": {
+					// "Less than or equal to 0" means "no ranking" - use inverse approach
+					if (rankingFilter.values[0] <= 0) {
+						// Get universities WITH rankings and exclude them
+						const { data, error } = await supabase
+							.from("universities")
+							.select("id")
+							.not("us_news_ranking_national_2018", "is", null);
+						if (error) {
+							console.error(
+								"Error fetching universities for US News National filter:",
+								error,
+							);
+							return { success: false, error: error.message };
+						}
+						usNewsNationalExcludeUniversityIds = data?.map((u) => u.id) || [];
+					} else {
+						// Normal less than or equal with nulls included
+						const { data, error } = await supabase
+							.from("universities")
+							.select("id")
+							.or(
+								`us_news_ranking_national_2018.lte.${rankingFilter.values[0]},us_news_ranking_national_2018.is.null`,
+							);
+						if (error) {
+							console.error(
+								"Error fetching universities for US News National filter:",
+								error,
+							);
+							return { success: false, error: error.message };
+						}
+						usNewsNationalFilteredUniversityIds = data?.map((u) => u.id) || [];
+					}
+					break;
+				}
+				case "is greater than": {
+					const { data, error } = await supabase
+						.from("universities")
+						.select("id")
+						.gt("us_news_ranking_national_2018", rankingFilter.values[0]);
+					if (error) {
+						console.error(
+							"Error fetching universities for US News National filter:",
+							error,
+						);
+						return { success: false, error: error.message };
+					}
+					usNewsNationalFilteredUniversityIds = data?.map((u) => u.id) || [];
+					break;
+				}
+				case "is greater than or equal to": {
+					const { data, error } = await supabase
+						.from("universities")
+						.select("id")
+						.gte("us_news_ranking_national_2018", rankingFilter.values[0]);
+					if (error) {
+						console.error(
+							"Error fetching universities for US News National filter:",
+							error,
+						);
+						return { success: false, error: error.message };
+					}
+					usNewsNationalFilteredUniversityIds = data?.map((u) => u.id) || [];
+					break;
+				}
+			}
+
+			// Check for empty results (only when using inclusion, not exclusion)
+			if (
+				usNewsNationalFilteredUniversityIds &&
+				usNewsNationalFilteredUniversityIds.length === 0 &&
+				!usNewsNationalExcludeUniversityIds
+			) {
+				return {
+					success: true,
+					data: [],
+					pagination: {
+						page,
+						pageSize,
+						totalCount: 0,
+						totalPages: 0,
+					},
+				};
+			}
+		}
+
+		// If we have US News Liberal Arts ranking filter, get matching university IDs
+		// Use exclusion approach for "less than 1" to get nulls (avoids URL-too-long)
+		let usNewsLiberalArtsFilteredUniversityIds: string[] | null = null;
+		let usNewsLiberalArtsExcludeUniversityIds: string[] | null = null;
+		if (hasUsNewsLiberalArtsFilter && filters?.usNewsLiberalArts) {
+			const rankingFilter = filters.usNewsLiberalArts;
+
+			// Handle different number operators
+			switch (rankingFilter.operator) {
+				case "is": {
+					const { data, error } = await supabase
+						.from("universities")
+						.select("id")
+						.eq("us_news_ranking_liberal_arts_2018", rankingFilter.values[0]);
+					if (error) {
+						console.error(
+							"Error fetching universities for US News Liberal Arts filter:",
+							error,
+						);
+						return { success: false, error: error.message };
+					}
+					usNewsLiberalArtsFilteredUniversityIds = data?.map((u) => u.id) || [];
+					break;
+				}
+				case "is not": {
+					// Include universities where ranking != value OR ranking is null
+					const { data, error } = await supabase
+						.from("universities")
+						.select("id")
+						.or(
+							`us_news_ranking_liberal_arts_2018.neq.${rankingFilter.values[0]},us_news_ranking_liberal_arts_2018.is.null`,
+						);
+					if (error) {
+						console.error(
+							"Error fetching universities for US News Liberal Arts filter:",
+							error,
+						);
+						return { success: false, error: error.message };
+					}
+					usNewsLiberalArtsFilteredUniversityIds = data?.map((u) => u.id) || [];
+					break;
+				}
+				case "is between": {
+					if (rankingFilter.values.length >= 2) {
+						const { data, error } = await supabase
+							.from("universities")
+							.select("id")
+							.gte("us_news_ranking_liberal_arts_2018", rankingFilter.values[0])
+							.lte(
+								"us_news_ranking_liberal_arts_2018",
+								rankingFilter.values[1],
+							);
+						if (error) {
+							console.error(
+								"Error fetching universities for US News Liberal Arts filter:",
+								error,
+							);
+							return { success: false, error: error.message };
+						}
+						usNewsLiberalArtsFilteredUniversityIds =
+							data?.map((u) => u.id) || [];
+					}
+					break;
+				}
+				case "is less than": {
+					// "Less than 1" means "no ranking" - use inverse approach
+					if (rankingFilter.values[0] <= 1) {
+						// Get universities WITH rankings and exclude them
+						const { data, error } = await supabase
+							.from("universities")
+							.select("id")
+							.not("us_news_ranking_liberal_arts_2018", "is", null);
+						if (error) {
+							console.error(
+								"Error fetching universities for US News Liberal Arts filter:",
+								error,
+							);
+							return { success: false, error: error.message };
+						}
+						usNewsLiberalArtsExcludeUniversityIds =
+							data?.map((u) => u.id) || [];
+					} else {
+						// Normal less than with nulls included
+						const { data, error } = await supabase
+							.from("universities")
+							.select("id")
+							.or(
+								`us_news_ranking_liberal_arts_2018.lt.${rankingFilter.values[0]},us_news_ranking_liberal_arts_2018.is.null`,
+							);
+						if (error) {
+							console.error(
+								"Error fetching universities for US News Liberal Arts filter:",
+								error,
+							);
+							return { success: false, error: error.message };
+						}
+						usNewsLiberalArtsFilteredUniversityIds =
+							data?.map((u) => u.id) || [];
+					}
+					break;
+				}
+				case "is less than or equal to": {
+					// "Less than or equal to 0" means "no ranking" - use inverse approach
+					if (rankingFilter.values[0] <= 0) {
+						// Get universities WITH rankings and exclude them
+						const { data, error } = await supabase
+							.from("universities")
+							.select("id")
+							.not("us_news_ranking_liberal_arts_2018", "is", null);
+						if (error) {
+							console.error(
+								"Error fetching universities for US News Liberal Arts filter:",
+								error,
+							);
+							return { success: false, error: error.message };
+						}
+						usNewsLiberalArtsExcludeUniversityIds =
+							data?.map((u) => u.id) || [];
+					} else {
+						// Normal less than or equal with nulls included
+						const { data, error } = await supabase
+							.from("universities")
+							.select("id")
+							.or(
+								`us_news_ranking_liberal_arts_2018.lte.${rankingFilter.values[0]},us_news_ranking_liberal_arts_2018.is.null`,
+							);
+						if (error) {
+							console.error(
+								"Error fetching universities for US News Liberal Arts filter:",
+								error,
+							);
+							return { success: false, error: error.message };
+						}
+						usNewsLiberalArtsFilteredUniversityIds =
+							data?.map((u) => u.id) || [];
+					}
+					break;
+				}
+				case "is greater than": {
+					const { data, error } = await supabase
+						.from("universities")
+						.select("id")
+						.gt("us_news_ranking_liberal_arts_2018", rankingFilter.values[0]);
+					if (error) {
+						console.error(
+							"Error fetching universities for US News Liberal Arts filter:",
+							error,
+						);
+						return { success: false, error: error.message };
+					}
+					usNewsLiberalArtsFilteredUniversityIds = data?.map((u) => u.id) || [];
+					break;
+				}
+				case "is greater than or equal to": {
+					const { data, error } = await supabase
+						.from("universities")
+						.select("id")
+						.gte("us_news_ranking_liberal_arts_2018", rankingFilter.values[0]);
+					if (error) {
+						console.error(
+							"Error fetching universities for US News Liberal Arts filter:",
+							error,
+						);
+						return { success: false, error: error.message };
+					}
+					usNewsLiberalArtsFilteredUniversityIds = data?.map((u) => u.id) || [];
+					break;
+				}
+			}
+
+			// Check for empty results (only when using inclusion, not exclusion)
+			if (
+				usNewsLiberalArtsFilteredUniversityIds &&
+				usNewsLiberalArtsFilteredUniversityIds.length === 0 &&
+				!usNewsLiberalArtsExcludeUniversityIds
+			) {
+				return {
+					success: true,
+					data: [],
+					pagination: {
+						page,
+						pageSize,
+						totalCount: 0,
+						totalPages: 0,
+					},
+				};
+			}
+		}
+
 		// Combine all university filters into a single set
 		// Priority: tuition > division > university selection
 		let finalUniversityIds: string[] | null = null;
@@ -337,6 +962,136 @@ export async function getCampaignCoachesAction(
 				} else {
 					finalUniversityIds = universityFilter.values;
 				}
+			}
+		}
+
+		// Apply state filter (intersect with existing)
+		if (stateFilteredUniversityIds) {
+			if (
+				hasStateFilter &&
+				filters?.states &&
+				isNegatedOperator(filters.states.operator)
+			) {
+				// For negated state filter, exclude these universities
+				if (excludeUniversityIds) {
+					excludeUniversityIds = [
+						...new Set([
+							...excludeUniversityIds,
+							...stateFilteredUniversityIds,
+						]),
+					];
+				} else {
+					excludeUniversityIds = stateFilteredUniversityIds;
+				}
+			} else {
+				if (finalUniversityIds) {
+					finalUniversityIds = finalUniversityIds.filter((id) =>
+						stateFilteredUniversityIds.includes(id),
+					);
+				} else {
+					finalUniversityIds = stateFilteredUniversityIds;
+				}
+			}
+		}
+
+		// Apply conference filter (intersect with existing)
+		if (conferenceFilteredUniversityIds) {
+			if (
+				hasConferenceFilter &&
+				filters?.conferences &&
+				isNegatedOperator(filters.conferences.operator)
+			) {
+				// For negated conference filter, exclude these universities
+				if (excludeUniversityIds) {
+					excludeUniversityIds = [
+						...new Set([
+							...excludeUniversityIds,
+							...conferenceFilteredUniversityIds,
+						]),
+					];
+				} else {
+					excludeUniversityIds = conferenceFilteredUniversityIds;
+				}
+			} else {
+				if (finalUniversityIds) {
+					finalUniversityIds = finalUniversityIds.filter((id) =>
+						conferenceFilteredUniversityIds.includes(id),
+					);
+				} else {
+					finalUniversityIds = conferenceFilteredUniversityIds;
+				}
+			}
+		}
+
+		// Apply institution flags filter (intersect with existing or exclude)
+		if (institutionFlagsFilteredUniversityIds) {
+			if (finalUniversityIds) {
+				finalUniversityIds = finalUniversityIds.filter((id) =>
+					institutionFlagsFilteredUniversityIds.includes(id),
+				);
+			} else {
+				finalUniversityIds = institutionFlagsFilteredUniversityIds;
+			}
+		}
+		// Handle "No data" exclusion approach (exclude universities WITH data)
+		if (institutionFlagsExcludeUniversityIds) {
+			if (excludeUniversityIds) {
+				excludeUniversityIds = [
+					...new Set([
+						...excludeUniversityIds,
+						...institutionFlagsExcludeUniversityIds,
+					]),
+				];
+			} else {
+				excludeUniversityIds = institutionFlagsExcludeUniversityIds;
+			}
+		}
+
+		// Apply US News National ranking filter (intersect with existing or exclude)
+		if (usNewsNationalFilteredUniversityIds) {
+			if (finalUniversityIds) {
+				finalUniversityIds = finalUniversityIds.filter((id) =>
+					usNewsNationalFilteredUniversityIds.includes(id),
+				);
+			} else {
+				finalUniversityIds = usNewsNationalFilteredUniversityIds;
+			}
+		}
+		// Handle "less than 1" exclusion approach (exclude universities WITH rankings)
+		if (usNewsNationalExcludeUniversityIds) {
+			if (excludeUniversityIds) {
+				excludeUniversityIds = [
+					...new Set([
+						...excludeUniversityIds,
+						...usNewsNationalExcludeUniversityIds,
+					]),
+				];
+			} else {
+				excludeUniversityIds = usNewsNationalExcludeUniversityIds;
+			}
+		}
+
+		// Apply US News Liberal Arts ranking filter (intersect with existing or exclude)
+		if (usNewsLiberalArtsFilteredUniversityIds) {
+			if (finalUniversityIds) {
+				finalUniversityIds = finalUniversityIds.filter((id) =>
+					usNewsLiberalArtsFilteredUniversityIds.includes(id),
+				);
+			} else {
+				finalUniversityIds = usNewsLiberalArtsFilteredUniversityIds;
+			}
+		}
+		// Handle "less than 1" exclusion approach (exclude universities WITH rankings)
+		if (usNewsLiberalArtsExcludeUniversityIds) {
+			if (excludeUniversityIds) {
+				excludeUniversityIds = [
+					...new Set([
+						...excludeUniversityIds,
+						...usNewsLiberalArtsExcludeUniversityIds,
+					]),
+				];
+			} else {
+				excludeUniversityIds = usNewsLiberalArtsExcludeUniversityIds;
 			}
 		}
 
@@ -441,6 +1196,9 @@ export async function getCampaignCoachesAction(
 					act_composite_75th,
 					acceptance_rate_pct,
 					undergraduate_enrollment,
+					institution_flags_raw,
+					us_news_ranking_national_2018,
+					us_news_ranking_liberal_arts_2018,
 					university_divisions (
 						divisions (
 							name
@@ -558,6 +1316,13 @@ export async function getCampaignCoachesAction(
 					acceptanceRate: job.universities?.acceptance_rate_pct || null,
 					undergraduateEnrollment:
 						job.universities?.undergraduate_enrollment || null,
+
+					// Additional university info (new fields)
+					institutionFlags: job.universities?.institution_flags_raw || null,
+					usNewsNational:
+						job.universities?.us_news_ranking_national_2018 || null,
+					usNewsLiberalArts:
+						job.universities?.us_news_ranking_liberal_arts_2018 || null,
 
 					// Program info
 					programId: job.programs?.id || null,

@@ -15,6 +15,9 @@ export interface CoachFilterOptions {
 		universityId: string;
 		count: number;
 	}>;
+	states: Array<{ name: string; count: number }>;
+	conferences: Array<{ id: string; name: string; count: number }>;
+	institutionTypes: Array<{ name: string; count: number }>;
 }
 
 export async function getCampaignCoachFilterOptionsAction(
@@ -35,24 +38,63 @@ export async function getCampaignCoachFilterOptionsAction(
 		const divisionNames = filters?.divisions?.values || null;
 		const universityIds = filters?.universities?.values || null;
 		const programIds = filters?.programs?.values || null;
+		const stateNames = filters?.states?.values || null;
+		const conferenceIds = filters?.conferences?.values || null;
+		const institutionTypes = filters?.institutionFlags?.values || null;
 
 		// Query counts via filtered RPC functions
-		const [divisionResult, universityResult, programResult] = await Promise.all(
-			[
-				supabase.rpc("get_filtered_coach_division_counts", {
-					p_university_ids: universityIds,
-					p_program_ids: programIds,
-				}),
-				supabase.rpc("get_filtered_coach_university_counts", {
-					p_division_names: divisionNames,
-					p_program_ids: programIds,
-				}),
-				supabase.rpc("get_filtered_coach_program_counts", {
-					p_division_names: divisionNames,
-					p_university_ids: universityIds,
-				}),
-			],
-		);
+		// Each filter excludes itself but includes all other active filters
+		const [
+			divisionResult,
+			universityResult,
+			programResult,
+			stateResult,
+			conferenceResult,
+			institutionTypeResult,
+		] = await Promise.all([
+			supabase.rpc("get_filtered_coach_division_counts", {
+				p_university_ids: universityIds,
+				p_program_ids: programIds,
+				p_state_names: stateNames,
+				p_conference_ids: conferenceIds,
+				p_institution_types: institutionTypes,
+			}),
+			supabase.rpc("get_filtered_coach_university_counts", {
+				p_division_names: divisionNames,
+				p_program_ids: programIds,
+				p_state_names: stateNames,
+				p_conference_ids: conferenceIds,
+				p_institution_types: institutionTypes,
+			}),
+			supabase.rpc("get_filtered_coach_program_counts", {
+				p_division_names: divisionNames,
+				p_university_ids: universityIds,
+				p_state_names: stateNames,
+				p_conference_ids: conferenceIds,
+				p_institution_types: institutionTypes,
+			}),
+			supabase.rpc("get_filtered_coach_state_counts", {
+				p_division_names: divisionNames,
+				p_university_ids: universityIds,
+				p_program_ids: programIds,
+				p_conference_ids: conferenceIds,
+				p_institution_types: institutionTypes,
+			}),
+			supabase.rpc("get_filtered_coach_conference_counts", {
+				p_division_names: divisionNames,
+				p_university_ids: universityIds,
+				p_program_ids: programIds,
+				p_state_names: stateNames,
+				p_institution_types: institutionTypes,
+			}),
+			supabase.rpc("get_filtered_coach_institution_type_counts", {
+				p_division_names: divisionNames,
+				p_university_ids: universityIds,
+				p_program_ids: programIds,
+				p_state_names: stateNames,
+				p_conference_ids: conferenceIds,
+			}),
+		]);
 
 		// Process division counts
 		let divisionsWithCounts: Array<{ name: string; count: number }> = [];
@@ -120,6 +162,66 @@ export async function getCampaignCoachFilterOptionsAction(
 			}));
 		}
 
+		// Process state counts
+		let statesWithCounts: Array<{ name: string; count: number }> = [];
+		if (stateResult.error) {
+			console.error("Error fetching state counts:", stateResult.error);
+		} else {
+			statesWithCounts = (
+				stateResult.data as Array<{
+					state_name: string;
+					coach_count: number;
+				}>
+			).map((s) => ({
+				name: s.state_name,
+				count: Number(s.coach_count),
+			}));
+		}
+
+		// Process conference counts
+		let conferencesWithCounts: Array<{
+			id: string;
+			name: string;
+			count: number;
+		}> = [];
+		if (conferenceResult.error) {
+			console.error(
+				"Error fetching conference counts:",
+				conferenceResult.error,
+			);
+		} else {
+			conferencesWithCounts = (
+				conferenceResult.data as Array<{
+					conference_id: string;
+					conference_name: string;
+					coach_count: number;
+				}>
+			).map((c) => ({
+				id: c.conference_id,
+				name: c.conference_name,
+				count: Number(c.coach_count),
+			}));
+		}
+
+		// Process institution type counts
+		let institutionTypesWithCounts: Array<{ name: string; count: number }> = [];
+		if (institutionTypeResult.error) {
+			console.error(
+				"Error fetching institution type counts:",
+				institutionTypeResult.error,
+			);
+		} else {
+			institutionTypesWithCounts = (
+				institutionTypeResult.data as Array<{
+					institution_type: string;
+					coach_count: number;
+				}>
+			).map((i) => ({
+				name: i.institution_type,
+				count: Number(i.coach_count),
+			}));
+		}
+
 		const filterOptions: CoachFilterOptions = {
 			divisions: divisionsWithCounts.sort((a, b) =>
 				a.name.localeCompare(b.name),
@@ -128,6 +230,16 @@ export async function getCampaignCoachFilterOptionsAction(
 				a.name.localeCompare(b.name),
 			),
 			programs: programsWithCounts.sort((a, b) => a.name.localeCompare(b.name)),
+			states: statesWithCounts.sort((a, b) => a.name.localeCompare(b.name)),
+			conferences: conferencesWithCounts.sort((a, b) =>
+				a.name.localeCompare(b.name),
+			),
+			// Sort institution types with "No data" first, then alphabetically
+			institutionTypes: institutionTypesWithCounts.sort((a, b) => {
+				if (a.name === "No data") return -1;
+				if (b.name === "No data") return 1;
+				return a.name.localeCompare(b.name);
+			}),
 		};
 
 		return {

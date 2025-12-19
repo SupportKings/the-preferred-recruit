@@ -1,6 +1,7 @@
+import { formatLocalDate as format } from "@/lib/date-utils";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { formatLocalDate as format } from "@/lib/date-utils";
 import { Clock } from "lucide-react";
 
 const formatDate = (dateString: string | null | undefined) => {

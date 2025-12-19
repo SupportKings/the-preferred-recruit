@@ -2,38 +2,18 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Project Overview
+
+**The Preferred Recruit** is a sports recruiting platform that connects athletes with college coaches. Key domain concepts:
+
+- **Athletes** - Student athletes seeking college recruitment
+- **Coaches** - College coaches at universities/programs
+- **Campaigns** - Outreach campaigns to coaches on behalf of athletes
+- **Universities** - Educational institutions with athletic programs
+- **Programs** - Specific sports programs within universities (e.g., "Duke Men's Basketball")
+- **School Lead Lists** - Curated lists of target schools for recruitment
+
 ## 🚨 CRITICAL - READ FIRST
-
-### ⚠️ Template Repository Status
-This is initially a **TEMPLATE REPOSITORY** that requires setup:
-
-1. **Initial State**: Contains placeholder code with `@ts-ignore` comments marked as "Template build"
-2. **After Setup**: Once Supabase, Better Auth, and other services are configured:
-   - **REMOVE all `@ts-ignore` comments** marked with "Template build"  
-   - **Generate proper types** using `npx supabase gen types typescript`
-   - **Connect real database** - Update all mock data with actual queries
-   - **Fix type safety** - Resolve any `as any` or type assertions
-3. **Detection**: If you see commits with real features or populated `.env` files, treat as production codebase
-4. **Action Required**: Search for `@ts-ignore.*Template build` and resolve all instances
-
-### Customization Points (Template Mode)
-When using as template for new projects:
-- `/apps/web/src/siteConfig.ts` - Central configuration file:
-  - `name`: Company/app name (appears in emails, page titles, dashboard welcome)
-  - `logo`: Light/dark mode logo paths
-  - `email.from`: Sender email (uses `RESEND_EMAIL_FROM` env var)
-  - `contact`: Business analyst info and Slack channel details
-- `/apps/web/src/lib/permissions.ts` - Role definitions and permission system
-- `/apps/server/src/db/schema/` - Database schema via Drizzle ORM
-- `/packages/emails/` - React Email templates
-- `/features/*/data/` - Mock data for development
-
-**Note**: Changing `siteConfig.name` automatically updates:
-- Email sender name
-- Email subjects and content
-- Dashboard welcome message
-- Page metadata (Note: root layout.tsx has hardcoded "OpsKings" in metadata that may need updating)
-- Team invite emails
 
 ### Required Runtime
 - **Bun 1.2.13+** - npm/pnpm will fail (preinstall check blocks them)
@@ -105,67 +85,35 @@ cd ../.. && bun install
 ## Tech Stack
 - **Next.js 15** + React 19 with App Router (Turbopack in dev)
 - **Better Auth** - Modern authentication with email OTP, sign-up, and sign-in
-- **Supabase** - PostgreSQL database
+- **Supabase** - PostgreSQL database with MCP integration
 - **Drizzle ORM** - Type-safe queries (server app)
 - **tRPC** - End-to-end typesafe APIs
-- **TailwindCSS v4** + shadcn/ui
+- **TailwindCSS v4** + shadcn/ui + Base UI components
 - **Biome** - Formatting/linting (tabs, double quotes)
 - **Turborepo** - Monorepo management
 - **React Email** - Email templates with preview server
+- **Trigger.dev** - Background jobs and scheduled tasks
 - **Bun** - Package manager with isolated linker (bunfig.toml)
 
-## Template → Production Checklist
+## Database Type Generation
 
-When transitioning from template to production:
+After schema changes, regenerate TypeScript types:
 ```bash
-# 1. Set up Supabase project
-- Create project at supabase.com
-- Get connection strings and API keys
-- Configure .env files with real values
-
-# 2. Generate database types
 npx supabase gen types typescript --project-id YOUR_PROJECT_ID > apps/web/src/utils/supabase/database.types.ts
-
-# 3. Configure email service (Resend)
-- Sign up at resend.com and get API key
-- Add RESEND_API_KEY to .env file
-- Add RESEND_EMAIL_FROM to .env file (e.g., "onboarding@resend.dev" for dev, "notifications@yourdomain.com" for production)
-- Verify your domain in Resend dashboard for production use
-
-# 4. Clean up template code
-- Search and fix: @ts-ignore.*Template build
-- Remove mock data from /features/*/data/
-- Connect real database queries
-- Fix any remaining type safety issues
-
-# 5. Initialize database
-bun db:push      # Push Drizzle schema
-bun db:migrate   # Run migrations
-
-# 5. Create initial admin user
-- No default login credentials exist!
-- Signups are disabled by default (disableSignUp: true)
-- Seed creates support@opskings.com but no password
-- Options to create first user:
-  a) Temporarily enable signups in auth.ts
-  b) Use team invite feature (requires existing admin)
-  c) Manually insert user via Supabase dashboard
-  d) Create custom seed script with Better Auth
 ```
+Use `Tables<"table_name">` for database types in the codebase.
 
-## MCP (Model Context Protocol) Setup
+## MCP (Model Context Protocol)
 
-**Note**: MCP configuration (.mcp.json) not yet created. When configured, it will provide:
+MCP is configured via `.mcp.json` in the project root. Available Supabase tools:
 
-### Available MCP Tools
-- `mcp__supabase__execute_sql` - Run SQL queries
-- `mcp__supabase__list_tables` - List database tables  
-- `mcp__supabase__select` - Query data from tables
+- `mcp__supabase__execute_sql` - Run SQL queries directly
+- `mcp__supabase__list_tables` - List database tables
+- `mcp__supabase__apply_migration` - Apply DDL migrations
+- `mcp__supabase__get_logs` - Debug via service logs
+- `mcp__supabase__generate_typescript_types` - Generate DB types
 
-### Setup Required
-1. Create `.mcp.json` with Supabase configuration
-2. Set `SUPABASE_ACCESS_TOKEN` environment variable
-3. See [security-config.md](./docs/claude/security-config.md) for details
+Use MCP tools for database exploration and schema changes instead of manual SQL.
 
 ## Essential Commands
 
@@ -174,7 +122,7 @@ bun db:migrate   # Run migrations
 bun dev              # All apps (web:3001, server:3000, emails:3002)
 bun dev:web          # Next.js only (port 3001) - runs custom dev script with ASCII art
 bun dev:server       # Server only (port 3000) - hot reload with --hot flag
-bun dev:native       # Native app development (if configured)
+bun trigger:dev      # Trigger.dev background jobs development
 
 # Database (Drizzle ORM in server app)
 bun db:push          # Push Drizzle schema changes to database
@@ -185,10 +133,6 @@ bun db:generate      # Generate new migration files from schema changes
 # Email Development
 bun --filter @workspace/emails dev    # React Email dev server (port 3002)
 bun --filter @workspace/emails export # Export email templates to static HTML
-
-# Type Generation
-npx supabase gen types typescript --project-id YOUR_PROJECT_ID > apps/web/src/utils/supabase/database.types.ts
-# Generate types after any schema changes, use Tables<"table_name"> for DB types
 
 # Build & Type Checking
 bun build            # Build all apps via Turborepo
@@ -222,9 +166,9 @@ bun install          # Install dependencies (npm/pnpm will fail due to preinstal
     /src/lib        → Server utilities
 
 /packages/emails    → React Email templates (dev server port 3002)
+/supabase           → Supabase config and migrations
 /docs/claude        → Detailed documentation
 /biome-plugins      → Custom Biome rules (object-assign.grit)
-/bunfig.toml        → Bun config (isolated linker mode)
 ```
 
 ## Authentication & Middleware Flow
@@ -328,49 +272,27 @@ DATABASE_URL=postgresql://...              # Supabase PostgreSQL connection
 BETTER_AUTH_DATABASE_URL=postgresql://...  # Better Auth database (can be same as DATABASE_URL)
 NEXT_PUBLIC_SUPABASE_URL=https://...      # Your Supabase project URL
 NEXT_PUBLIC_SUPABASE_ANON_KEY=...         # Supabase anonymous key
+SUPABASE_SERVICE_ROLE_KEY=...             # Service role key for admin operations
 NEXT_PUBLIC_APP_URL=http://localhost:3001 # App URL
 NEXT_PUBLIC_SERVER_URL=http://localhost:3000 # tRPC server URL
 BETTER_AUTH_SECRET=...                     # Secret for auth sessions
 RESEND_API_KEY=re_...                      # Resend API key for emails
-RESEND_EMAIL_FROM=...                      # Sender email (e.g., "onboarding@resend.dev" or "noreply@yourdomain.com")
+TRIGGER_PROJECT_ID=...                     # Trigger.dev project ID
+TRIGGER_SECRET_KEY=...                     # Trigger.dev secret key
 
-# apps/server/.env  
+# apps/server/.env
 DATABASE_URL=postgresql://...              # Same as web app
 CORS_ORIGIN=http://localhost:3001         # CORS allowed origin
 ```
 
-## 📚 Documentation Modules
+## 📚 Documentation
 
-For detailed information, see `/docs/claude/`:
+Detailed guides are in `/docs/claude/`. Key references:
 
-### Development
-- [commands.md](./docs/claude/commands.md) - All commands reference
-- [architecture.md](./docs/claude/architecture.md) - System design
-- [security-config.md](./docs/claude/security-config.md) - Environment setup
-- [date-handling.md](./docs/claude/date-handling.md) - **Timezone-safe date handling guide**
-- [project-documentation-guidelines.md](./docs/claude/project-documentation-guidelines.md) - Guidelines for maintaining PROJECT_OVERVIEW.md
-
-### Best Practices  
-- [critical-thinking.md](./docs/claude/critical-thinking.md) - **STOP AND THINK** before coding
-- [senior-engineer-execution.md](./docs/claude/senior-engineer-execution.md) - Senior engineer task execution
-- [debug.md](./docs/claude/debug.md) - Systematic debugging approach
-- [code-quality.md](./docs/claude/code-quality.md) - TypeScript & standards
-- [ui-ux-standards.md](./docs/claude/ui-ux-standards.md) - Component patterns
-
-### Implementation
-- [feature-patterns.md](./docs/claude/feature-patterns.md) - Common patterns
-- [data-fetching.md](./docs/claude/data-fetching.md) - Query strategies
-
-### Troubleshooting
-- [common-mistakes.md](./docs/claude/common-mistakes.md) - Frequent issues
-- [linting-errors.md](./docs/claude/linting-errors.md) - Biome fixes
-- [troubleshooting.md](./docs/claude/troubleshooting.md) - Debug guide (includes Email/OTP auth issues)
-
-### Deployment
-- [deployment.md](./docs/claude/deployment.md) - Production setup
-
-### Init Handler
-- [init-handler.md](./docs/claude/init-handler.md) - Creating new documentation
+- **[critical-thinking.md](./docs/claude/critical-thinking.md)** - STOP AND THINK before coding
+- **[date-handling.md](./docs/claude/date-handling.md)** - Timezone-safe date handling (use `@date-fns/tz`)
+- **[ui-ux-standards.md](./docs/claude/ui-ux-standards.md)** - Component patterns and shadcn/ui usage
+- **[troubleshooting.md](./docs/claude/troubleshooting.md)** - Common issues including auth/OTP debugging
 
 ## Authentication Details
 
@@ -379,20 +301,17 @@ For detailed information, see `/docs/claude/`:
 - **Passkey support** for biometric authentication
 - **Admin plugin** for role-based access control (admin, user roles)
 - **Session caching** enabled (5 min cache)
-- **⚠️ No default login**: Signups disabled, no test credentials provided
-- **Initial user setup**: See Template → Production Checklist step #5
 
 ## Feature Development Workflow
 
 1. **Read relevant docs** in `/docs/claude/` for your task
 2. **Think critically** before implementing (see critical-thinking.md)
-3. **Follow established patterns**: Look at `/features/clients/` as reference implementation
-4. **Use feature generation prompts**: See `FEATURE_GENERATION_PROMPT.md` for complete patterns
-5. **Type-first development**: Create types in `/features/[name]/types/` before implementation
-6. **Use existing components**: Check `/components/ui/` and `/components/` before creating new ones
-7. **Server Actions**: Use `actionClient` from `@/lib/safe-action` with Zod validation
-8. **Check specific files** with Biome, never run globally
-9. **Use MCP tools** for database queries when available
+3. **Follow established patterns**: Look at `/features/clients/` or `/features/coaches/` as reference
+4. **Type-first development**: Create types in `/features/[name]/types/` before implementation
+5. **Use existing components**: Check `/components/ui/` and `/components/` before creating new ones
+6. **Server Actions**: Use `actionClient` from `@/lib/safe-action` with Zod validation
+7. **Check specific files** with Biome, never run globally
+8. **Use MCP tools** for database queries
 
 ### Auto-Documentation Protocol
 **IMPORTANT**: Keep `PROJECT_OVERVIEW.md` current using a two-tier approach:
@@ -421,25 +340,10 @@ Follow `/docs/claude/project-documentation-guidelines.md` for update format.
 - Do exactly what's asked, nothing more
 - Prefer editing existing files over creating new ones
 - Never create documentation unless explicitly requested
-- **Template Detection**: Check for `@ts-ignore.*Template build` comments - if present, this is still a template
-- **After Real Development Starts**: Remove all template workarounds and connect real services
-- Use MCP tools for database exploration when configured
-- Authentication uses Better Auth, not Supabase Auth
-- **No test framework configured** - manual testing only (no Jest/Vitest/Playwright)
-- Next.js configuration:
-  - Experimental optimizations: `optimizePackageImports` for lucide-react, framer-motion
-  - `useCache` enabled for performance
-  - Images from all HTTPS sources allowed
+- Use MCP tools for database exploration and queries
+- Authentication uses **Better Auth**, not Supabase Auth
+- **No test framework configured** - manual testing only
 - Monorepo structure: separate server (Hono+tRPC) and web (Next.js) apps
-- Database schema managed via Drizzle ORM in server app (`/apps/server/src/db/`)
-- Site configuration (logo, emails, contacts) managed via `/apps/web/src/siteConfig.ts`
-- Dashboard pages already have SidebarProvider in layout - use MainLayout for content only
-- **TypeScript project references** enable type sharing between web and server apps
-- **Custom dev script** at `/apps/web/scripts/dev.ts` shows ASCII art splash screen
-- **Turborepo caching** enabled for build tasks, disabled for dev/db tasks
-- **Global env vars** configured in turbo.json for cross-package access
-- **Middleware matcher** configured for `/` and `/dashboard/:path*` routes only
-- **Bun isolated linker** configured in `bunfig.toml` for better dependency isolation
-- **Theme provider** uses next-themes for dark/light mode support
-- **Fonts**: Uses Geist and Geist Mono from Google Fonts (configured in root layout)
-- **Metadata**: Root layout has hardcoded title "OpsKings" and description "OpsOS Template" that may need customization
+- Database schema managed via Drizzle ORM in `/apps/server/src/db/`
+- Site configuration in `/apps/web/src/siteConfig.ts`
+- Dashboard pages already have SidebarProvider - use MainLayout for content only

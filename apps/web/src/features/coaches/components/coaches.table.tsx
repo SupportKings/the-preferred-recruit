@@ -27,7 +27,6 @@ import {
 	EyeIcon,
 	InstagramIcon,
 	MailIcon,
-	MapPinIcon,
 	PhoneIcon,
 	PlusIcon,
 	TrashIcon,
@@ -216,16 +215,6 @@ const coachTableColumns = [
 			return <div className="text-sm">{job?.universities?.name || "N/A"}</div>;
 		},
 	}),
-	columnHelper.display({
-		id: "university_state",
-		header: "State",
-		enableColumnFilter: true,
-		enableSorting: false,
-		cell: ({ row }) => {
-			const job = row.original.university_jobs?.[0];
-			return <div className="text-sm">{job?.universities?.state || "N/A"}</div>;
-		},
-	}),
 ];
 
 // Filter configuration using universal column helper
@@ -266,11 +255,6 @@ const coachFilterConfig = [
 		.text("university_name" as any)
 		.displayName("University")
 		.icon(BuildingIcon)
-		.build(),
-	universalColumnHelper
-		.text("university_state" as any)
-		.displayName("State")
-		.icon(MapPinIcon)
 		.build(),
 ];
 
@@ -364,11 +348,6 @@ function CoachesTableContent({
 			.text("university_name" as any)
 			.displayName("University")
 			.icon(BuildingIcon)
-			.build(),
-		universalColumnHelper
-			.text("university_state" as any)
-			.displayName("State")
-			.icon(MapPinIcon)
 			.build(),
 	];
 

@@ -124,11 +124,7 @@ export const coachExportColumns = [
 			const tuition = row.original.tuition;
 			if (!tuition) return <span className="text-muted-foreground">—</span>;
 
-			return (
-				<span className="font-medium">
-					${tuition.toLocaleString()}
-				</span>
-			);
+			return <span className="font-medium">${tuition.toLocaleString()}</span>;
 		},
 	}),
 	columnHelper.accessor("jobTitle", {
@@ -146,6 +142,56 @@ export const coachExportColumns = [
 					)}
 				</div>
 			);
+		},
+	}),
+	columnHelper.accessor("state", {
+		id: "state",
+		header: "State",
+		cell: ({ row }) => {
+			const state = row.original.state;
+			return <span>{state || "—"}</span>;
+		},
+	}),
+	columnHelper.accessor("conferenceName", {
+		id: "conferenceName",
+		header: "Conference",
+		cell: ({ row }) => {
+			const conference = row.original.conferenceName;
+			return <span>{conference || "—"}</span>;
+		},
+	}),
+	columnHelper.accessor("institutionFlags", {
+		id: "institutionFlags",
+		header: "Institution Type",
+		cell: ({ row }) => {
+			const flags = row.original.institutionFlags;
+			if (!flags) return <span className="text-muted-foreground">—</span>;
+
+			return (
+				<Badge variant="outline" className="font-normal">
+					{flags}
+				</Badge>
+			);
+		},
+	}),
+	columnHelper.accessor("usNewsNational", {
+		id: "usNewsNational",
+		header: "US News (Nat.)",
+		cell: ({ row }) => {
+			const ranking = row.original.usNewsNational;
+			if (!ranking) return <span className="text-muted-foreground">—</span>;
+
+			return <span className="tabular-nums">#{ranking}</span>;
+		},
+	}),
+	columnHelper.accessor("usNewsLiberalArts", {
+		id: "usNewsLiberalArts",
+		header: "US News (L.A.)",
+		cell: ({ row }) => {
+			const ranking = row.original.usNewsLiberalArts;
+			if (!ranking) return <span className="text-muted-foreground">—</span>;
+
+			return <span className="tabular-nums">#{ranking}</span>;
 		},
 	}),
 ];

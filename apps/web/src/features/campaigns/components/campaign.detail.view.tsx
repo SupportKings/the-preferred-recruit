@@ -11,10 +11,10 @@ import { deleteReply } from "@/features/athletes/actions/replies";
 import { deleteSendingToolLeadList } from "@/features/athletes/actions/sendingToolLeadLists";
 
 import { useQueryClient } from "@tanstack/react-query";
-import type { CampaignCoachData } from "../types/coach-export-types";
 import { toast } from "sonner";
 import { updateCampaignAction } from "../actions/updateCampaign";
 import { campaignQueries, useCampaign } from "../queries/useCampaigns";
+import type { CampaignCoachData } from "../types/coach-export-types";
 import { CampaignMetricsNotes } from "./detail-sections/campaign-metrics-notes";
 import { CampaignOwnershipSetup } from "./detail-sections/campaign-ownership-setup";
 import { CampaignScheduleSending } from "./detail-sections/campaign-schedule-sending";

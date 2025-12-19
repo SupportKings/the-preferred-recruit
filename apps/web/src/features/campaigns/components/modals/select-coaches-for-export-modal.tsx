@@ -35,10 +35,13 @@ import {
 	useReactTable,
 } from "@tanstack/react-table";
 import {
+	BarChartIcon,
 	Building2Icon,
 	DollarSignIcon,
+	FlagIcon,
 	GraduationCapIcon,
 	Loader2,
+	MapPinIcon,
 	PlusIcon,
 	TrophyIcon,
 	X,
@@ -109,6 +112,64 @@ function convertFiltersToServerFormat(
 						| "is greater than or equal to",
 				};
 				break;
+			case "state":
+				serverFilters.states = {
+					values: filter.values as string[],
+					operator: filter.operator as
+						| "is"
+						| "is not"
+						| "is any of"
+						| "is none of",
+				};
+				break;
+			case "conference":
+				serverFilters.conferences = {
+					values: filter.values as string[],
+					operator: filter.operator as
+						| "is"
+						| "is not"
+						| "is any of"
+						| "is none of",
+				};
+				break;
+			case "institutionFlags":
+				serverFilters.institutionFlags = {
+					values: filter.values as string[],
+					operator: filter.operator as
+						| "is"
+						| "is not"
+						| "is any of"
+						| "is none of",
+				};
+				break;
+			case "usNewsNational":
+				serverFilters.usNewsNational = {
+					values: filter.values as number[],
+					operator: filter.operator as
+						| "is"
+						| "is not"
+						| "is between"
+						| "is not between"
+						| "is less than"
+						| "is less than or equal to"
+						| "is greater than"
+						| "is greater than or equal to",
+				};
+				break;
+			case "usNewsLiberalArts":
+				serverFilters.usNewsLiberalArts = {
+					values: filter.values as number[],
+					operator: filter.operator as
+						| "is"
+						| "is not"
+						| "is between"
+						| "is not between"
+						| "is less than"
+						| "is less than or equal to"
+						| "is greater than"
+						| "is greater than or equal to",
+				};
+				break;
 		}
 	}
 
@@ -121,6 +182,11 @@ interface CoachFilterData {
 	university: string | null;
 	program: string | null;
 	tuition: number | null;
+	state: string | null;
+	conference: string | null;
+	institutionFlags: string | null;
+	usNewsNational: number | null;
+	usNewsLiberalArts: number | null;
 }
 
 interface SelectCoachesForExportModalProps {
@@ -154,6 +220,9 @@ export function SelectCoachesForExportModal({
 		divisions: [],
 		universities: [],
 		programs: [],
+		states: [],
+		conferences: [],
+		institutionTypes: [],
 	});
 	const [pagination, setPagination] = useState({
 		page: 1,
@@ -255,6 +324,78 @@ export function SelectCoachesForExportModal({
 				.number("tuition")
 				.displayName("Tuition Budget")
 				.icon(DollarSignIcon)
+				.build(),
+		);
+
+		// Add state filter
+		const stateFacetedOptions = new Map<string, number>();
+		for (const state of filterOptions.states) {
+			stateFacetedOptions.set(state.name, state.count);
+		}
+		baseConfig.push({
+			...universalColumnHelper
+				.option("state")
+				.displayName("State")
+				.icon(MapPinIcon)
+				.build(),
+			options: filterOptions.states.map((state) => ({
+				value: state.name,
+				label: state.name,
+			})),
+			facetedOptions: stateFacetedOptions,
+		});
+
+		// Add conference filter
+		const conferenceFacetedOptions = new Map<string, number>();
+		for (const conf of filterOptions.conferences) {
+			conferenceFacetedOptions.set(conf.id, conf.count);
+		}
+		baseConfig.push({
+			...universalColumnHelper
+				.option("conference")
+				.displayName("Conference")
+				.icon(TrophyIcon)
+				.build(),
+			options: filterOptions.conferences.map((conf) => ({
+				value: conf.id,
+				label: conf.name,
+			})),
+			facetedOptions: conferenceFacetedOptions,
+		});
+
+		// Add institution type filter (option filter with dynamic values)
+		const institutionTypeFacetedOptions = new Map<string, number>();
+		for (const instType of filterOptions.institutionTypes) {
+			institutionTypeFacetedOptions.set(instType.name, instType.count);
+		}
+		baseConfig.push({
+			...universalColumnHelper
+				.option("institutionFlags")
+				.displayName("Institution Type")
+				.icon(FlagIcon)
+				.build(),
+			options: filterOptions.institutionTypes.map((instType) => ({
+				value: instType.name,
+				label: instType.name,
+			})),
+			facetedOptions: institutionTypeFacetedOptions,
+		});
+
+		// Add US News National ranking filter
+		baseConfig.push(
+			universalColumnHelper
+				.number("usNewsNational")
+				.displayName("US News (National)")
+				.icon(BarChartIcon)
+				.build(),
+		);
+
+		// Add US News Liberal Arts ranking filter
+		baseConfig.push(
+			universalColumnHelper
+				.number("usNewsLiberalArts")
+				.displayName("US News (Liberal Arts)")
+				.icon(BarChartIcon)
 				.build(),
 		);
 
@@ -503,7 +644,7 @@ export function SelectCoachesForExportModal({
 				<DialogOverlay className="bg-black/80" />
 				<DialogContent
 					nested
-					className="!z-50 flex h-[90vh] w-[95vw] max-w-[95vw] flex-col gap-4 overflow-hidden p-6 sm:max-w-[95vw]"
+					className="z-50! flex h-[90vh] w-[95vw] max-w-[95vw] flex-col gap-4 overflow-hidden p-6 sm:max-w-[95vw]"
 					showCloseButton={false}
 				>
 					<DialogTitle className="sr-only">
@@ -556,7 +697,7 @@ export function SelectCoachesForExportModal({
 											value={pagination.pageSize.toString()}
 											onValueChange={handlePageSizeChange}
 										>
-											<SelectTrigger className="!h-6 min-h-0 w-[60px] px-2 py-0">
+											<SelectTrigger className="h-6! min-h-0 w-[60px] px-2 py-0">
 												<SelectValue />
 											</SelectTrigger>
 											<SelectContent>

@@ -1,5 +1,7 @@
 import { useState } from "react";
 
+import { formatLocalDate as format } from "@/lib/date-utils";
+
 import type { Database } from "@/utils/supabase/database.types";
 
 import { Button } from "@/components/ui/button";
@@ -8,7 +10,6 @@ import { DatePicker } from "@/components/ui/date-picker";
 import { Input } from "@/components/ui/input";
 import { UrlActions } from "@/components/url-actions";
 
-import { formatLocalDate as format } from "@/lib/date-utils";
 import { Calendar, Edit3, Save, X } from "lucide-react";
 
 type Campaign = Database["public"]["Tables"]["campaigns"]["Row"];

@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { formatLocalDate as format } from "@/lib/date-utils";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { UniversalDataTable } from "@/components/universal-data-table/universal-data-table";
@@ -12,7 +14,6 @@ import {
 	getSortedRowModel,
 	useReactTable,
 } from "@tanstack/react-table";
-import { formatLocalDate as format } from "@/lib/date-utils";
 import { GitBranch } from "lucide-react";
 import { formatCampaignType } from "../../utils/format";
 

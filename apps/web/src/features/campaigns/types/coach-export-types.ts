@@ -11,6 +11,7 @@ export type { FiltersState };
 
 // Server-side filter format with operator support
 export interface CoachExportServerFilters {
+	// Existing filters
 	divisions?: {
 		values: string[];
 		operator: OptionFilterOperator;
@@ -24,6 +25,27 @@ export interface CoachExportServerFilters {
 		operator: OptionFilterOperator;
 	};
 	tuition?: {
+		values: number[];
+		operator: NumberFilterOperator;
+	};
+	// New filters
+	states?: {
+		values: string[];
+		operator: OptionFilterOperator;
+	};
+	conferences?: {
+		values: string[];
+		operator: OptionFilterOperator;
+	};
+	institutionFlags?: {
+		values: string[];
+		operator: OptionFilterOperator;
+	};
+	usNewsNational?: {
+		values: number[];
+		operator: NumberFilterOperator;
+	};
+	usNewsLiberalArts?: {
 		values: number[];
 		operator: NumberFilterOperator;
 	};
@@ -128,6 +150,11 @@ export interface CampaignCoachData {
 	actComposite75th: number | null;
 	acceptanceRate: number | null;
 	undergraduateEnrollment: number | null;
+
+	// Additional university info (new fields)
+	institutionFlags: string | null;
+	usNewsNational: number | null;
+	usNewsLiberalArts: number | null;
 
 	// Program info
 	programId: string | null;

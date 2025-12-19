@@ -151,12 +151,27 @@ export async function getCoachesWithFilters(
 				"university_name",
 				"university_state",
 				"work_email",
+				"conference_name",
+				"institution_flags",
+				"us_news_ranking_national",
+				"us_news_ranking_liberal_arts",
 			].includes(filter.columnId),
 		);
 
 		// Check if filtering on universities table (nested)
 		const hasUniversitiesFilter = filters.some((filter) =>
-			["university_name", "university_state"].includes(filter.columnId),
+			[
+				"university_name",
+				"university_state",
+				"institution_flags",
+				"us_news_ranking_national",
+				"us_news_ranking_liberal_arts",
+			].includes(filter.columnId),
+		);
+
+		// Check if filtering on conference (requires deeper join)
+		const hasConferenceFilter = filters.some(
+			(filter) => filter.columnId === "conference_name",
 		);
 
 		// Use !inner when filtering on university_jobs to ensure filters work correctly
@@ -166,6 +181,9 @@ export async function getCoachesWithFilters(
 		const universitiesJoin = hasUniversitiesFilter
 			? "universities!inner"
 			: "universities";
+		const conferenceJoin = hasConferenceFilter
+			? "university_conferences!inner"
+			: "university_conferences";
 
 		let query: any = supabase
 			.from("coaches")
@@ -178,7 +196,15 @@ export async function getCoachesWithFilters(
 					work_email,
 					${universitiesJoin} (
 						name,
-						state
+						state,
+						institution_flags_raw,
+						us_news_ranking_national_2018,
+						us_news_ranking_liberal_arts_2018,
+						${conferenceJoin} (
+							conferences (
+								name
+							)
+						)
 					)
 				)
 			`,
@@ -280,6 +306,78 @@ export async function getCoachesWithFilters(
 								"university_jobs.work_email",
 								"ilike",
 								`%${values[0]}%`,
+							);
+						}
+						break;
+
+					case "conference_name":
+						// Filter by conference name via university_conferences
+						if (operator === "contains") {
+							query = query.ilike(
+								"university_jobs.universities.university_conferences.conferences.name",
+								`%${values[0]}%`,
+							);
+						} else if (operator === "does not contain") {
+							query = query.not(
+								"university_jobs.universities.university_conferences.conferences.name",
+								"ilike",
+								`%${values[0]}%`,
+							);
+						}
+						break;
+
+					case "institution_flags":
+						// Filter by HBCU/Community College/Women only
+						if (operator === "contains") {
+							query = query.ilike(
+								"university_jobs.universities.institution_flags_raw",
+								`%${values[0]}%`,
+							);
+						} else if (operator === "does not contain") {
+							query = query.not(
+								"university_jobs.universities.institution_flags_raw",
+								"ilike",
+								`%${values[0]}%`,
+							);
+						}
+						break;
+
+					case "us_news_ranking_national":
+						// Filter by US News National ranking
+						if (operator === "is less than") {
+							query = query.lte(
+								"university_jobs.universities.us_news_ranking_national_2018",
+								Number(values[0]),
+							);
+						} else if (operator === "is greater than") {
+							query = query.gte(
+								"university_jobs.universities.us_news_ranking_national_2018",
+								Number(values[0]),
+							);
+						} else if (operator === "is") {
+							query = query.eq(
+								"university_jobs.universities.us_news_ranking_national_2018",
+								Number(values[0]),
+							);
+						}
+						break;
+
+					case "us_news_ranking_liberal_arts":
+						// Filter by US News Liberal Arts ranking
+						if (operator === "is less than") {
+							query = query.lte(
+								"university_jobs.universities.us_news_ranking_liberal_arts_2018",
+								Number(values[0]),
+							);
+						} else if (operator === "is greater than") {
+							query = query.gte(
+								"university_jobs.universities.us_news_ranking_liberal_arts_2018",
+								Number(values[0]),
+							);
+						} else if (operator === "is") {
+							query = query.eq(
+								"university_jobs.universities.us_news_ranking_liberal_arts_2018",
+								Number(values[0]),
 							);
 						}
 						break;
