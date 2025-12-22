@@ -323,6 +323,7 @@ export const TALLY_FIELD_KEYS: Record<string, string> = {
 	question_7xQaBz: "actScore",
 	question_bdaYBE: "satScore",
 	question_8x92RY: "ncaaEligibilityUrl",
+	question_DNKK7j: "ncaaNumber",
 	question_0O4GD0: "intendedMajor",
 
 	// ========================================================================
@@ -521,6 +522,13 @@ export const TALLY_FIELD_MAPPINGS = {
 		"NCAA Eligibility URL",
 		"NCAA Eligibility #",
 		"NCAA Eligibility",
+	],
+
+	// NCAA Eligibility Number → onboarding_form_data.ncaa_number
+	ncaaNumber: [
+		"NCAA Eligibility Number",
+		"NCAA Number",
+		"NCAA ID",
 	],
 
 	// Intended Major → onboarding_form_data.intended_major

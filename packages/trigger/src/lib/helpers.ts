@@ -116,18 +116,41 @@ export function parseFloat(value: string | null): number | null {
 }
 
 /**
- * Map division sheet name to division name
+ * Map division column value to database division name
+ * Handles various formats: "DI", "D1", "JC-D2", "JC-NWAC", "NAIA", etc.
  */
-export function mapDivisionCode(sheetName: string): string {
-	const mapping: Record<string, string> = {
-		DI: "DI",
-		DII: "DII",
-		DIII: "DIII",
-		JuCo: "JuCo",
-		NAIA: "NAIA",
-	};
+export function mapDivisionCode(divisionValue: string): string {
+	if (!divisionValue) return divisionValue;
 
-	return mapping[sheetName] || sheetName;
+	const value = divisionValue.toUpperCase();
+
+	// Check for NAIA
+	if (value.includes("NAIA")) {
+		return "NAIA";
+	}
+
+	// Check for JuCo/JC
+	if (value.includes("JC")) {
+		return "JuCo";
+	}
+
+	// Check for DIII/D3
+	if (value.includes("DIII") || value.includes("D3")) {
+		return "DIII";
+	}
+
+	// Check for DII/D2
+	if (value.includes("DII") || value.includes("D2")) {
+		return "DII";
+	}
+
+	// Check for DI/D1
+	if (value.includes("DI") || value.includes("D1")) {
+		return "DI";
+	}
+
+	// Fallback
+	return divisionValue;
 }
 
 /**

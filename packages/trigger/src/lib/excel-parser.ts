@@ -1,4 +1,26 @@
-import XLSX from "xlsx";
+import XLSX, { type WorkSheet } from "xlsx";
+
+/**
+ * Find the header row by looking for "Conference" in any cell
+ * Scans first 10 rows to find the header
+ */
+function findHeaderRow(sheet: WorkSheet): number {
+	const range = XLSX.utils.decode_range(sheet["!ref"] || "A1");
+	const maxRow = Math.min(range.e.r, 10); // Check first 10 rows
+
+	for (let row = 0; row <= maxRow; row++) {
+		for (let col = range.s.c; col <= range.e.c; col++) {
+			const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+			const cell = sheet[cellAddress];
+			if (cell && String(cell.v).toLowerCase() === "conference") {
+				return row;
+			}
+		}
+	}
+
+	// Fallback to row 6 (0-indexed = 5) for legacy Excel format
+	return 5;
+}
 
 export interface CoachRow {
 	// Division identification
@@ -90,10 +112,12 @@ export async function parseExcelFile(
 
 		const sheet = workbook.Sheets[sheetName];
 
-		// Headers are at row 6 (0-indexed = 5), data starts at row 7 (0-indexed = 6)
-		// Using range: 5 means "start reading from row 6, use it as headers"
+		// Find header row by looking for "Conference" column
+		const headerRow = findHeaderRow(sheet);
+		console.log(`[Excel Parser] Sheet "${sheetName}": Header row found at ${headerRow + 1}`);
+
 		const data = XLSX.utils.sheet_to_json<CoachRow>(sheet, {
-			range: 5, // Row 6 as headers, row 7+ as data
+			range: headerRow,
 			defval: null,
 			raw: false, // Convert all values to strings
 		});

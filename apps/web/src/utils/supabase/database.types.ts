@@ -3004,30 +3004,152 @@ export type Database = {
           university_name: string
         }[]
       }
-      get_filtered_coach_division_counts: {
-        Args: { p_program_ids?: string[]; p_university_ids?: string[] }
-        Returns: {
-          coach_count: number
-          division_name: string
-        }[]
-      }
-      get_filtered_coach_program_counts: {
-        Args: { p_division_names?: string[]; p_university_ids?: string[] }
-        Returns: {
-          coach_count: number
-          program_id: string
-          program_name: string
-          university_id: string
-        }[]
-      }
-      get_filtered_coach_university_counts: {
-        Args: { p_division_names?: string[]; p_program_ids?: string[] }
-        Returns: {
-          coach_count: number
-          university_id: string
-          university_name: string
-        }[]
-      }
+      get_filtered_coach_conference_counts:
+        | {
+            Args: {
+              p_division_names?: string[]
+              p_program_ids?: string[]
+              p_university_ids?: string[]
+            }
+            Returns: {
+              coach_count: number
+              conference_id: string
+              conference_name: string
+            }[]
+          }
+        | {
+            Args: {
+              p_division_names?: string[]
+              p_institution_types?: string[]
+              p_program_ids?: string[]
+              p_state_names?: string[]
+              p_university_ids?: string[]
+            }
+            Returns: {
+              coach_count: number
+              conference_id: string
+              conference_name: string
+            }[]
+          }
+      get_filtered_coach_division_counts:
+        | {
+            Args: { p_program_ids?: string[]; p_university_ids?: string[] }
+            Returns: {
+              coach_count: number
+              division_name: string
+            }[]
+          }
+        | {
+            Args: {
+              p_conference_ids?: string[]
+              p_institution_types?: string[]
+              p_program_ids?: string[]
+              p_state_names?: string[]
+              p_university_ids?: string[]
+            }
+            Returns: {
+              coach_count: number
+              division_name: string
+            }[]
+          }
+      get_filtered_coach_institution_type_counts:
+        | {
+            Args: {
+              p_division_names?: string[]
+              p_program_ids?: string[]
+              p_university_ids?: string[]
+            }
+            Returns: {
+              coach_count: number
+              institution_type: string
+            }[]
+          }
+        | {
+            Args: {
+              p_conference_ids?: string[]
+              p_division_names?: string[]
+              p_program_ids?: string[]
+              p_state_names?: string[]
+              p_university_ids?: string[]
+            }
+            Returns: {
+              coach_count: number
+              institution_type: string
+            }[]
+          }
+      get_filtered_coach_program_counts:
+        | {
+            Args: { p_division_names?: string[]; p_university_ids?: string[] }
+            Returns: {
+              coach_count: number
+              program_id: string
+              program_name: string
+              university_id: string
+            }[]
+          }
+        | {
+            Args: {
+              p_conference_ids?: string[]
+              p_division_names?: string[]
+              p_institution_types?: string[]
+              p_state_names?: string[]
+              p_university_ids?: string[]
+            }
+            Returns: {
+              coach_count: number
+              program_id: string
+              program_name: string
+              university_id: string
+            }[]
+          }
+      get_filtered_coach_state_counts:
+        | {
+            Args: {
+              p_division_names?: string[]
+              p_program_ids?: string[]
+              p_university_ids?: string[]
+            }
+            Returns: {
+              coach_count: number
+              state_name: string
+            }[]
+          }
+        | {
+            Args: {
+              p_conference_ids?: string[]
+              p_division_names?: string[]
+              p_institution_types?: string[]
+              p_program_ids?: string[]
+              p_university_ids?: string[]
+            }
+            Returns: {
+              coach_count: number
+              state_name: string
+            }[]
+          }
+      get_filtered_coach_university_counts:
+        | {
+            Args: { p_division_names?: string[]; p_program_ids?: string[] }
+            Returns: {
+              coach_count: number
+              university_id: string
+              university_name: string
+            }[]
+          }
+        | {
+            Args: {
+              p_conference_ids?: string[]
+              p_division_names?: string[]
+              p_institution_types?: string[]
+              p_program_ids?: string[]
+              p_state_names?: string[]
+            }
+            Returns: {
+              coach_count: number
+              university_id: string
+              university_name: string
+            }[]
+          }
     }
     Enums: {
       application_stage_enum:

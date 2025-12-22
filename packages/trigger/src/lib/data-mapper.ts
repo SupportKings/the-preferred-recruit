@@ -79,8 +79,8 @@ export async function processCoachData(
 	// Step 1: Upsert University
 	const university = await upsertUniversity(row, supabase);
 
-	// Step 2: Link Division
-	const divisionName = mapDivisionCode(row._division);
+	// Step 2: Link Division (use Division column from Excel, fallback to sheet name)
+	const divisionName = mapDivisionCode(row.Division || row._division);
 	await linkDivision(university.id, divisionName, supabase);
 
 	// Step 3: Link Conference

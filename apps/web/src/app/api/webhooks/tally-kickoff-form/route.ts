@@ -143,6 +143,13 @@ function extractOnboardingFormData(
 	);
 	if (ncaaUrl) data.ncaa_eligibility_url = ncaaUrl;
 
+	// NCAA Eligibility Number
+	const ncaaNumber = findStringValue(
+		fields,
+		TALLY_FIELD_MAPPINGS.ncaaNumber,
+	);
+	if (ncaaNumber) data.ncaa_number = ncaaNumber;
+
 	// Intended Major
 	const major = findStringValue(fields, TALLY_FIELD_MAPPINGS.intendedMajor);
 	if (major) data.intended_major = major;
