@@ -32,6 +32,7 @@ import { AthletePosterFormData } from "./detail-sections/athlete-poster-form-dat
 import { AthleteProfileResources } from "./detail-sections/athlete-profile-resources";
 import { AthleteResultsSection } from "./detail-sections/athlete-results-section";
 import { AthleteSalesEngagement } from "./detail-sections/athlete-sales-engagement";
+import { AthleteSendingEmails } from "./detail-sections/athlete-sending-emails";
 import { AthleteStatusTracking } from "./detail-sections/athlete-status-tracking";
 import { AthleteSystemInfo } from "./detail-sections/athlete-system-info";
 import { DeleteConfirmModal } from "./shared/delete-confirm-modal";
@@ -308,13 +309,14 @@ export default function AthleteDetailView({
 
 			{/* Relationship Tabs */}
 			<Tabs defaultValue="checklist" className="w-full">
-				<TabsList className="grid w-full grid-cols-6">
+				<TabsList className="grid w-full grid-cols-7">
 					<TabsTrigger value="checklist">Checklist</TabsTrigger>
 					<TabsTrigger value="contacts">Contacts</TabsTrigger>
 					<TabsTrigger value="results">Results</TabsTrigger>
 					<TabsTrigger value="lead-lists">School Lead Lists</TabsTrigger>
 					<TabsTrigger value="campaigns">Campaigns</TabsTrigger>
 					<TabsTrigger value="applications">Offers</TabsTrigger>
+					<TabsTrigger value="sending-emails">Sending Emails</TabsTrigger>
 				</TabsList>
 
 				<TabsContent value="checklist">
@@ -375,6 +377,10 @@ export default function AthleteDetailView({
 						}
 						setDeleteModal={setDeleteModal}
 					/>
+				</TabsContent>
+
+				<TabsContent value="sending-emails">
+					<AthleteSendingEmails athleteId={athleteId} />
 				</TabsContent>
 			</Tabs>
 

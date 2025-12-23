@@ -134,6 +134,8 @@ export const updateAthleteAction = actionClient
 			if (updateData.run_kickoff_automations !== undefined)
 				cleanUpdateData.run_kickoff_automations =
 					updateData.run_kickoff_automations;
+			if (updateData.sending_email_id !== undefined)
+				cleanUpdateData.sending_email_id = updateData.sending_email_id;
 
 			// 4. Update the athlete record
 			const { error: updateError } = await (supabase as any)

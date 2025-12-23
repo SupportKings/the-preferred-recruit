@@ -256,6 +256,9 @@ export const athleteCreateSchema = z.object({
 
 	// Kickoff automation
 	run_kickoff_automations: validationUtils.boolean,
+
+	// Sending Email
+	sending_email_id: validationUtils.optionalUuid,
 });
 
 // Schema for athlete updates (all fields optional except id)
@@ -315,6 +318,9 @@ export const athleteFormSchema = z.object({
 
 	// Kickoff automation
 	run_kickoff_automations: z.boolean().optional().default(false),
+
+	// Sending Email
+	sending_email_id: z.string().optional().default(""),
 });
 
 // Form schema for athlete updates
@@ -388,6 +394,7 @@ export const getFieldValidator = (fieldName: keyof AthleteFormInput) => {
 		discord_username: validationUtils.text(100),
 		internal_notes: validationUtils.textarea(5000),
 		run_kickoff_automations: validationUtils.boolean,
+		sending_email_id: validationUtils.optionalUuid,
 	};
 
 	return (value: any) => validateSingleField(value, fieldSchemas[fieldName]);

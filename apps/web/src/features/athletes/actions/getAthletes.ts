@@ -13,7 +13,7 @@ export async function getAthlete(id: string) {
 				*,
 				sales_setter:team_members!athletes_sales_setter_id_fkey(id, first_name, last_name, job_title),
 				sales_closer:team_members!athletes_sales_closer_id_fkey(id, first_name, last_name, job_title),
-				sending_email:email_sending_accounts!athletes_sending_email_id_fkey(id, username, domain:domains(domain_url)),
+				sending_email:email_sending_accounts!athletes_sending_email_id_fkey(id, username, name, internal_notes, domain_id, domain:domains(domain_url)),
 				checklists(
 					id,
 					checklist_definition_id,
